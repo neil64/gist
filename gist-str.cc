@@ -18,50 +18,69 @@ giStr::concat(const gist & a, const gist & b)
 }
 
 
-char *
-giStr::cast(gist * g, int multi)
+void
+giStr::flatten()
 {
-#if 0
+	if (!index && str->hasNull && str->data)
+		return;
+
+	throw gist::notYetError("giStr::flatten");
+
+	// always add a '\0'
+	// set multiRef and hasNull
+	// may need to move a non-index string if there is no '\0'.
+}
+
+
+long
+giStr::toInt(int sign)
+{
+	throw gist::notYetError("giStr::toInt");
+}
+
+
+double
+giStr::toFloat()
+{
+	throw gist::notYetError("giStr::toFloat");
+}
+
+/**********************************************************************/
+
+/*
+ *	Convert a gist object to a null terminated string and return it.
+ *	Note that we promise not to change the object (const), but we may
+ *	do anyhow, except that the change will not effect the value of the
+ *	object (that is, we may flatten the string or move it to add a '\0',
+ *	but the value will remain the same).
+ */
+char *
+gist::strCast(int multi) const
+{
 	gist x;
 	gist * gp;
 
-	if (g->isStr())
-		gp = g;
+	if (isStr())
+		gp = (gist *)this;
 	else
 	{
-		x = g->toString();
+		x = toString();
 		gp = &x;
 	}
 
 	giStr * sp = (giStr *)gp->ptr;
-#warning "wrong here"
 
-	if (sp->index)
-	{
-		x = sp->flatten();
-		gp = &x;
-	}
+	sp->flatten();
 
-#endif
-
-
-
-	// if this is not a string,
-		// convert with toString
-	// if this string is a multi string (index)
-		// flatten (flatten should always add a '\0'
-	// get the string pointer and return it.
-
-	return 0;
+	return (char *)sp->str->data;
 }
 
-/**********************************************************************/
 
 gist &
 gist::set(const char * s, int l)
 {
 	giStore * st = giStore::alloc(0);
-	st->data = (char *)s;		// Loose const, but multiRef is set.
+	st->data = (char *)s;		// Drop const, but multiRef is set.
 	st->multiRef = 1;
 	if (l < 0)
 	{
@@ -73,10 +92,10 @@ gist::set(const char * s, int l)
 	giStr * sp = new giStr;
 	sp->str = st;
 	sp->index = 0;
-	sp->skip = 0;
 
 	ptr = sp;
 	cnt = l;
+	skip = 0;
 
 	return *this;
 }
@@ -88,20 +107,34 @@ gist::gist(const char * s, int l)
 }
 
 
-gist::operator const char *() const
+gist
+gist::toString() const
 {
-	// char * s = giStr::cast(this, 0);
-	return 0;
+	throw notYetError("giStr::toString");
 }
 
 
-gist::operator char *() const
+int
+gist::cmp(const char * s) const
 {
-	// call (const char *)
-	// set the nultiRef flag (the gist is now a flat string).
+	gist x;
+	gist * gp;
 
-	return 0;
+	if (isStr())
+		gp = (gist *)this;
+	else
+	{
+		x = toString();
+		gp = &x;
+	}
+
+	giStr * sp = (giStr *)gp->ptr;
+
+#warning "here"
+	// scan through the string doing the comparison
+	throw notYetError("cmp");
 }
+
 
 /**********************************************************************/
 /**********************************************************************/

@@ -87,6 +87,8 @@ class gist
 	gist &		operator =(const char *);
 
 
+	gist &		set()			{ ptr = &Nil;
+							return *this; }
 	gist &		set(int v)		{ ptr = &Int; val = v;
 							return *this; }
 	gist &		set(unsigned v)		{ ptr = &Int; val = v;
@@ -94,6 +96,10 @@ class gist
 	gist &		set(long v)		{ ptr = &Int; val = v;
 							return *this; }
 	gist &		set(unsigned long v)	{ ptr = &Int; val = v;
+							return *this; }
+	gist &		set(float v)		{ ptr = &Float; dval = v;
+							return *this; }
+	gist &		set(double v)		{ ptr = &Float; dval = v;
 							return *this; }
 	gist &		set(const gist & g)	{ ptr = g.ptr;
 						  all[0] = g.all[0];
@@ -105,9 +111,9 @@ class gist
 						  return *this; }
 	gist &		set(long long);
 	gist &		set(unsigned long long);
-	gist &		set(float);
-	gist &		set(double);
 	gist &		set(const char *, int = -1);
+
+	void		clear()			{ ptr = &Nil; }
 
 	/********************************/
 	/*
@@ -159,8 +165,8 @@ class gist
 			operator long long() const;
 			operator unsigned long long() const;
 	double		toFloat() const;
-			operator float() const;
-			operator double() const;
+			operator float() const		{ return toFloat(); }
+			operator double() const		{ return toFloat(); }
 
 	/*
 	 *	Obtain a string representation of the gist object (by
@@ -172,8 +178,15 @@ class gist
 	 *	rather than a cache;  modifying this memory might change
 	 *	the original string.
 	 */
-			operator const char *() const;
-			operator char *() const;
+	operator const char *() const
+	{
+		return (const char *)strCast(0);
+	}
+
+	operator char *() const
+	{
+		return strCast(1);
+	}
 
 	/********************************/
 	/*
@@ -288,8 +301,8 @@ class gist
 
 	int		isNil() const		{ return ptr == &Nil; }
 	int		isInt() const		{ return ptr == &Int; }
+	int		isFloat() const		{ return ptr == &Float; }
 	int		isStr() const		{ return type() == GT_STR; }
-	int		isFloat() const		{ return type() == GT_FLOAT; }
 	int		isNumber() const	{ return type() >= GT_INT; }
 	int		isArray() const		{ return type() == GT_ARRAY; }
 	int		isTable() const		{ return type() == GT_TABLE; }
@@ -402,8 +415,34 @@ class gist
 	static gistInternal	Nil;
 	static gistInternal	Int;
 	static gistInternal	Float;
+
+	/*
+	 *	Private methods.
+	 */
+	char *		strCast(int) const;
+
+	/**************************************************************/
+	/**************************************************************/
+	/*
+	 *	Public gist member functions.
+	 */
+    public:
+
+	/*
+	 *	Strings.
+	 */
+	int		cmp(const char *) const;
+
+	/*
+	 *	Formatting.
+	 */
+	char *		fmt(const char *, ...);
 };
 
+/**********************************************************************/
+/*
+ *	Non-member gist functions.
+ */
 
 /**********************************************************************/
 

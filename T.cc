@@ -80,6 +80,10 @@ main(int argc, char ** argv)
 	{
 		report("overflow", e);
 	}
+	catch (gist::notYetError e)
+	{
+		report("not yet", e);
+	}
 	catch (gist::internalError e)
 	{
 		report("internal", e);

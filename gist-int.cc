@@ -27,15 +27,19 @@ gist::operator long() const
 
 	case GT_STR:
 		{
-			if (cnt == 0)
-				return 0;
-			giStr * s = (giStr *)gi;
+			long n;
 
-			// XXX
-			// try to parse the string as a number.
-			// if we can't return 1 anyhow (boolean conversion)
+			try
+			{
+				n = ((giStr *)gi)->toInt(1);
+			}
+			catch (valueError)
+			{
+				n = 1;
+			}
+
+			return n;
 		}
-		return 1;
 
 	case GT_INT:
 		return val;
@@ -69,15 +73,19 @@ gist::operator unsigned long() const
 
 	case GT_STR:
 		{
-			if (cnt == 0)
-				return 0;
-			giStr * s = (giStr *)gi;
+			unsigned long n;
 
-			// XXX
-			// try to parse the string as a number.
-			// if we can't return 1 anyhow (boolean conversion)
+			try
+			{
+				n = ((giStr *)gi)->toInt(0);
+			}
+			catch (valueError)
+			{
+				n = 1;
+			}
+
+			return n;
 		}
-		return 1;
 
 	case GT_INT:
 		return val;
@@ -111,16 +119,7 @@ gist::toInt() const
 		throw valueError("toInt");
 
 	case GT_STR:
-		{
-			if (cnt == 0)
-				return 0;
-			giStr * s = (giStr *)gi;
-
-			// XXX
-			// try to parse the string as a number.
-			// if we can't return 1 anyhow (boolean conversion)
-		}
-		return 1;
+		return ((giStr *)gi)->toInt(1);
 
 	case GT_INT:
 		return val;

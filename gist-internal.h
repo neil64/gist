@@ -78,9 +78,19 @@ class giIndex
 
 struct giStore
 {
+	/*
+	 *	The string buffer and its size.  If the size is zero, then
+	 *	the pointer must be ignored (could be zero, or just bogus).
+	 */
 	void *		data;
 	unsigned	size;
 
+	/*
+	 *	`multiRef' is set if we are not sure that there is only a
+	 *	single reference.  `hasNull' is set if there is a '\0' after
+	 *	the last byte of the string.  `flag' covers all of the
+	 *	other flags, just for convenience.
+	 */
 	union
 	{
 		struct {
@@ -91,7 +101,6 @@ struct giStore
 	};
 
 	static giStore * alloc(unsigned sz);
-	void		promote();
 };
 
 /******************************/
@@ -112,9 +121,6 @@ struct giStr : giBase
 		giStr() : giBase(gist::GT_STR) {}
 		giStr(gist::type_e t) : giBase(t) {}
 
-	static char *	cast(gist *, int);
-	static gist	concat(const gist &, const gist &);
-
 	unsigned	skip;
 	giIndex *	index;
 	union {
@@ -123,6 +129,11 @@ struct giStr : giBase
 			unsigned min, max;
 		};
 	};
+
+	static gist	concat(const gist &, const gist &);
+	void		flatten();
+	long		toInt(int sign);
+	double		toFloat();
 };
 
 /**********************************************************************/
