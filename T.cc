@@ -110,6 +110,4 @@ main(int argc, char ** argv)
 		printf("unknown exception\n");
 		exit(1);
 	}
-
-	return 0;
 }

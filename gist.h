@@ -300,7 +300,7 @@ class gist
 		GT_LONG,
 		GT_REAL
 	};
-	type_e		type() const		{ return (type_e)typ; }
+	type_e		type() const		{ return typ; }
 
 	int		isNil() const		{ return typ == GT_NIL; }
 	int		isInt() const		{ return typ == GT_INT; }
@@ -369,62 +369,103 @@ class gist
 	/**************************************************************/
 	/*
 	 *	Gist per object storage.
-	 */
-
-	/*
-	 *	Gist per object storage.  We try very hard to make this
-	 *	no more than 8 bytes.  The `ptr' is usually a pointer to
-	 *	internal data, or it can be 0.  If 0, the value is an
-	 *	integer with the integer value stored in `value.  If the
-	 *	pointer is non-zero, the type is determined in other ways.
-	 *	For non-integer values, the use of `value' is varied.
 	 *
-	 *	Well ok, it's now 12 bytes.  This should not make a whole
-	 *	lot of difference with the use of the Boehm GC -- the GC
-	 *	defaults to placing a single byte after any allocation,
-	 *	to allow pointer references to the the of an object + 1
-	 *	to still hit the object (reasonable, I guess), then after
-	 *	adding the byte, it rounds up to the next allocation size.
-	 *	So for 8 bytes, to really get 16.  For 12 bytes we still
-	 *	get 16.  Voila.  (Tellement maintenant nous devons essayer
-	 *	tres dur de ne pas lui faire plus de 15 bytes.)
+	 *	On most architectures, a gist object will fit within
+	 *	16 bytes.
 	 *
-	 *	In my opinion, C++ is broken when it comes to nested classes
-	 *	and unions.  What I want is to use anonymous structs and
-	 *	unions to effect the layout of a gist object, but I want
-	 *	those members to be private to gist.  The C++ spec says
-	 *	no private members of an anonymous union, and nested class
-	 *	obey the same access rules as regular classes.	So, a nested
-	 *	class called, say, `x_t' cannot be accessed by the world,
-	 *	but its members can.  Who's bright idea was that?  I'm sure
-	 *	I could make it right by naming everything, but then I'd
-	 *	have to change several thousand lines of internal gist code,
-	 *	or use macros.	So, the data members of the gist class are
-	 *	not private.  User's, please pretend that they are private.
+	 *	[ Originally, this structure was 8 bytes.  For various
+	 *	  implementation reasons, it was not possible to keep it
+	 *	  that small.  It survived at 12 bytes for a short while
+	 *	  until more problems arose and it was realized that most
+	 *	  allocators rounded up to 16 in any case.  In the case
+	 *	  of strings (which is expected to be the most common gist
+	 *	  data type), it is a win, since the data here used to be
+	 *	  elsewhere; with the current arrangement, some of the code
+	 *	  is simplified, and faster. ]
+	 *
+	 *	[ Rant:  In my opinion, C++ is broken when it comes to
+	 *	  nested classes and unions.  What I want is to use anonymous
+	 *	  structs and unions to effect the layout of a gist object,
+	 *	  but I want those members to be private to gist.  The C++
+	 *	  spec says no private members of an anonymous union,
+	 *	  and nested class obey the same access rules as regular
+	 *	  classes.  So, a nested class called, say, `x_t' cannot be
+	 *	  accessed by the world, but its members can.  Who's bright
+	 *	  idea was that?  I'm sure I could make it right by naming
+	 *	  everything, but then I'd have to change several thousand
+	 *	  lines of internal gist code, or use macros.  So, the data
+	 *	  members of the gist class are not private.  User's, please
+	 *	  pretend that they are private. ]
 	 */
     private:
 	union
 	{
 	    struct
 	    {
-		char	typ;		// Object type
-		char	unique;		// Set if no other refs to this
-		char	res0;
-		char	res1;
+		/*
+		 *  Object type.  Set to one of the values from the
+		 *  enum above.  The bit field syntax is used to ensure that
+		 *  the type only takes a byte of storage.  The size will
+		 *  be rounded up on architectures that have other than
+		 *  8-bits per byte.
+		 */
+		type_e	typ : 8;		// Object type
 
+		/*
+		 *  True if the value of this object is known not to be
+		 *  referenced by another object;  this is of most use
+		 *  for string types, to allow the string to be modified
+		 *  directly rather than having to copy it first; it is
+		 *  not initialized on objects that don't use it, such as
+		 *  integer and floating types.
+		 */
+		bool	unique;			// Set if no other refs to this
+
+		/*
+		 *	2 bytes reserved for future use.
+		 */
+		// short	res0;
+
+		/*
+		 *  A pointer to internal data, if required.  For string
+		 *  and array types, this is the string / array storage.
+		 */
 		struct gistInternal * ptr;	// Internal data
 
 		union
 		{
+		    /*
+		     *	The value of this object if the object type is
+		     *	GT_INT.
+		     */
 		    long	val;		// Integer type
+
+		    /*
+		     *	The value of this object if the object type is
+		     *	GT_FLOAT.
+		     */
 		    double	dval;		// Float type
+
+		    /*
+		     *	String and array bounds.  Usually `skip' is zero and
+		     *	`cnt' equal to the object size.	 These values are
+		     *	adjusted to provide a subset of the underlying value,
+		     *	such as that returned by the `substr' function.
+		     */
 		    struct
 		    {
-			unsigned    cnt;	// String/Array type
+			unsigned    cnt;
 			unsigned    skip;
 		    };
 		};
 	    };
+
+	    /*
+	     *	A structure to cover the whole object, to make it easy
+	     *	to copy.  Copying a gist object using something like
+	     *	"a.all = b.all" gives compilers a chance to generate more
+	     *	efficient code for the copy.
+	     */
 	    struct {
 		long	x[4];
 	    } all;
