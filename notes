@@ -188,3 +188,19 @@ My scripting language and object library
    list and just a single block.
 
 *  What about adding lists?
+
+
+========
+
+041114
+
+*  How to make an array in gist?  There is no such thing as an array
+   value, just an initializer, that I can't use.
+
+*  Methods:
+
+	-  Assigning to a NIL object using a subscript.		(good)
+	-  Calling a special "create array" method.		(nah...)
+	-  assigning from gist::array, which is an empty	(hmmm...)
+	   array object.	(won't work, since array's are by reference)
+

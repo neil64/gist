@@ -177,9 +177,12 @@ class gist
 			operator unsigned long() const;
 			operator long long() const;
 			operator unsigned long long() const;
+
 	double		toFloat() const;
 			operator float() const		{ return toFloat(); }
 			operator double() const		{ return toFloat(); }
+
+			operator bool() const;
 
 	/*
 	 *	Return a pointer to the string storage of the gist object.
@@ -205,8 +208,12 @@ class gist
 	 *	changing the string data though the pointer after the object
 	 *	has been used or modified can have unpredictable results.
 	 */
-	operator const char *() const  { return (const char *)_strcast(false); }
-	operator char *() const	       { return _strcast(true); }
+			operator const char *() const
+				{ return (const char *)_strcast(false); }
+			operator char *() const
+				{ return _strcast(true); }
+	const char *	CCS() const
+				{ return (const char *)_strcast(false); }
 
 	/********************************/
 	/*
