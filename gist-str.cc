@@ -682,6 +682,9 @@ gist::_strpiece(int & ix, const char *& pt) const
 unsigned
 gist::strpiece(int & ix, const char *& pt) const
 {
+	if (!isStr())
+		throw typeError("strpiece expects a string");
+
 	unsigned l = _strpiece(ix, pt);
 	if (l > 0)
 		((gist *)this)->unique = false;
@@ -692,6 +695,9 @@ gist::strpiece(int & ix, const char *& pt) const
 unsigned
 strpiece(const gist & g, int & ix, const char *& pt)
 {
+	if (!g.isStr())
+		throw gist::typeError("strpiece expects a string");
+
 	unsigned l = g._strpiece(ix, pt);
 	if (l > 0)
 		((gist &)g).unique = false;

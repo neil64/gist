@@ -580,6 +580,24 @@ class gist
 	friend int	strcmp(const char *, const gist &);
 	friend int	strcmp(const gist &, const gist &);
 
+	int		strncmp(const char *, int = -1) const;
+	int		strncmp(const gist &, int = -1) const;
+	friend int	strncmp(const gist &, const char *, int = -1);
+	friend int	strncmp(const char *, const gist &, int = -1);
+	friend int	strncmp(const gist &, const gist &, int = -1);
+
+	int		strcasecmp(const char *) const;
+	int		strcasecmp(const gist &) const;
+	friend int	strcasecmp(const gist &, const char *);
+	friend int	strcasecmp(const char *, const gist &);
+	friend int	strcasecmp(const gist &, const gist &);
+
+	int		strncasecmp(const char *, int = -1) const;
+	int		strncasecmp(const gist &, int = -1) const;
+	friend int	strncasecmp(const gist &, const char *, int = -1);
+	friend int	strncasecmp(const char *, const gist &, int = -1);
+	friend int	strncasecmp(const gist &, const gist &, int = -1);
+
 	unsigned	strpiece(int & index, const char *& ptr) const;
 	friend unsigned	strpiece(const gist &, int & index, const char *& ptr);
 
@@ -613,6 +631,19 @@ class gist
 						unsigned count = (~0U>>1))
 				{ return str.strtrim(start, count); }
 
+	bool		isalnum() const;
+	bool		isalpha() const;
+	bool		isdigit() const;
+	bool		islower() const;
+	bool		isupper() const;
+	bool		isspace() const;
+	friend bool	isalnum(const gist &);
+	friend bool	isalpha(const gist &);
+	friend bool	isdigit(const gist &);
+	friend bool	islower(const gist &);
+	friend bool	isupper(const gist &);
+	friend bool	isspace(const gist &);
+
 	friend int	atoi(const gist &, int base = 0);
 	friend gist	strlower(const gist &);
 	friend gist	strupper(const gist &);
@@ -620,10 +651,13 @@ class gist
 	friend gist	strsplit(const gist & str, const char * sep = 0);
 	friend gist	strsplit(const gist & str, const gist & sep);
 
+	friend bool	strtrue(const gist &);
+
 	/*
 	 *	Arrays.
 	 */
 	gist &		array(unsigned len);
+	gist &		arrayensure(unsigned len);
 	void		push(const gist &);
 	gist &		pop();
 	void		unshift(const gist &);
@@ -633,10 +667,12 @@ class gist
 	 *	Tables.
 	 */
 	gist &		table(bool clear = false);
-	void		tblset(gist & key, gist & val);
-	void		tbladd(gist & key, gist & val);
-	void		tbldel(gist & key);
-	bool		tblisset(gist & key);
+	void		tblset(const gist & key, const gist & val);
+	void		tbladd(const gist & key, const gist & val);
+	void		tbldel(const gist & key);
+	bool		tblisset(const gist & key);
+	bool		tblnext(gist & key, gist & val);
+	bool		tblprev(gist & key, gist & val);
 
 	/*
 	 *	Pointers.

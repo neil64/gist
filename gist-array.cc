@@ -66,6 +66,20 @@ gist::array(unsigned l)
 
 
 gist &
+gist::arrayensure(unsigned l)
+{
+	if (typ == GT_ARRAY)
+	{
+		giArray * ap = (giArray *)intern;
+		if (l + 1 < ap->len)
+			return *this;
+	}
+
+	return array(l + 1);
+}
+
+
+gist &
 gist::_arrayindex(long i)
 {
 	giArray * ap = (giArray *)intern;

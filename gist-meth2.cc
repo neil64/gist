@@ -5,6 +5,8 @@
  *		(all non-core string methods)
  */
 
+#include	<string.h>
+
 #include	"gist.h"
 #include	"gist-internal.h"
 
@@ -92,6 +94,78 @@ strupper(const gist & g)
 	// look at gist-str.cc:copy() for space allocation
 
 	throw gist::notYetError("strupper");
+}
+
+/**********************************************************************/
+
+bool
+isdigit(const gist & l)
+{
+	if (!l.isStr())
+		return false;
+
+	unsigned ll = 0;
+	int li = 0;
+	const char * lp = 0;
+
+	for (;;)
+	{
+		if (ll == 0)
+			ll = l._strpiece(li, lp);
+
+		if (ll == 0)
+			return true;
+
+		while (ll-- > 0)
+		{
+			int c = *lp++;
+			if (c < '0' || c > '9')
+				return false;
+		}
+	}
+}
+
+/**********************************************************************/
+
+int
+strncasecmp(const gist & l, const char * rp, int rl)
+{
+	if (!l.isStr())
+		throw gist::typeError("strncasecmp expects a string");
+
+	if (rl < 0)
+		rl = strlen(rp);
+
+	unsigned ll = 0;
+	int li = 0;
+	const char * lp = 0;
+
+	for (;;)
+	{
+		if (ll == 0)
+			ll = l._strpiece(li, lp);
+
+		if (ll == 0 || rl == 0)
+			break;
+
+		unsigned l = ll;
+		if (l > (unsigned)rl)
+			l = rl;
+
+		int x = strncasecmp(lp, rp, l);
+		if (x)
+			return x;
+
+		lp += l;
+		rp += l;
+		ll -= l;
+		rl -= l;
+	}
+
+	if (rl == 0)
+		return 0;
+	else
+		return -1;
 }
 
 /**********************************************************************/
@@ -254,4 +328,20 @@ strsplit(const gist & str, const gist & sep)
 		r._strsplit(str, sep.CCS(), sep.strlen());
 	}
 	return r;
+}
+
+/**********************************************************************/
+
+bool
+strtrue(const gist & g)
+{
+	if (g.typ != gist::GT_STR)
+		return (bool)g;
+
+	if (strncasecmp(g, "t") == 0 ||
+	    strncasecmp(g, "y") == 0 ||
+	    (isdigit(g) && (int)g != 0))
+		return true;
+	else
+		return false;
 }

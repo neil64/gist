@@ -95,3 +95,34 @@ gist::_tableindex(const char * i, bool make)
 	gist ix = i;
 	return _tableindex(ix, make);
 }
+
+
+bool
+gist::tblnext(gist & key, gist & val)
+{
+	if (typ != GT_TABLE)
+		throw typeError("tblnext() expects a table object");
+
+	switch (key.typ)
+	{
+	case GT_NIL:
+	case GT_STR:
+	case GT_INT:
+	case GT_FLOAT:
+	case GT_PTR:
+		break;
+
+	default:
+		throw indexError("table index must be nil, "
+					"str, int, float or ptr");
+	}
+
+	giTable * tp = (giTable *)intern;
+	gistKey * k = tp->index.next(key);
+	if (!k)
+		return false;
+
+	key = k->key;
+	val = k->val;
+	return true;
+}
