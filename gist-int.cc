@@ -12,9 +12,7 @@
 
 gist::operator long() const
 {
-	giBase * gi = (giBase *)ptr;
-
-	switch (gi->type)
+	switch (typ)
 	{
 	case GT_NIL:
 	case GT_ARRAY:
@@ -31,7 +29,7 @@ gist::operator long() const
 
 			try
 			{
-				n = ((giStr *)gi)->toInt(1);
+				n = ((giStr *)ptr)->toInt(1);
 			}
 			catch (valueError)
 			{
@@ -58,9 +56,7 @@ gist::operator int() const
 
 gist::operator unsigned long() const
 {
-	giBase * gi = (giBase *)ptr;
-
-	switch (gi->type)
+	switch (typ)
 	{
 	case GT_NIL:
 	case GT_ARRAY:
@@ -77,7 +73,7 @@ gist::operator unsigned long() const
 
 			try
 			{
-				n = ((giStr *)gi)->toInt(0);
+				n = ((giStr *)ptr)->toInt(0);
 			}
 			catch (valueError)
 			{
@@ -105,9 +101,7 @@ gist::operator unsigned() const
 long
 gist::toInt() const
 {
-	giBase * gi = (giBase *)ptr;
-
-	switch (gi->type)
+	switch (typ)
 	{
 	case GT_NIL:
 	case GT_ARRAY:
@@ -119,7 +113,7 @@ gist::toInt() const
 		throw valueError("toInt");
 
 	case GT_STR:
-		return ((giStr *)gi)->toInt(1);
+		return ((giStr *)ptr)->toInt(1);
 
 	case GT_INT:
 		return val;

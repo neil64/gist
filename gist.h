@@ -29,13 +29,6 @@
 #ifndef __GIST_H__
 #define __GIST_H__
 
-/****************/
-
-// #if __GNUC__
-// #define PACKED __attribute__ ((packed))
-// #else
-// #define PACKED
-// #endif
 
 /**********************************************************************/
 
@@ -50,15 +43,15 @@ class gist
 	 *	abandoned and left to the garbage collector to find.
 	 *	There is no cleaning up to do with a gist object.
 	 */
-	gist()			{ ptr = &Nil; }
-	gist(int v)		{ ptr = &Int; val = v; }
-	gist(unsigned v)	{ ptr = &Int; val = v; }
-	gist(long v)		{ ptr = &Int; val = v; }
-	gist(unsigned long v)	{ ptr = &Int; val = v; }
-	gist(float v)		{ ptr = &Float; dval = v; }
-	gist(double v)		{ ptr = &Float; dval = v; }
-	gist(const gist & g)	{ gistCopy(g); }
-	gist(const gist * g)	{ gistCopy(*g); }
+	gist()			{ typ = GT_NIL; }
+	gist(int v)		{ typ = GT_INT; val = v; }
+	gist(unsigned v)	{ typ = GT_INT; val = v; }
+	gist(long v)		{ typ = GT_INT; val = v; }
+	gist(unsigned long v)	{ typ = GT_INT; val = v; }
+	gist(float v)		{ typ = GT_FLOAT; dval = v; }
+	gist(double v)		{ typ = GT_FLOAT; dval = v; }
+	gist(const gist & g)	{ ((gist)g).unique = 0; all = g.all; }
+	gist(const gist * g)	{ ((gist *)g)->unique = 0; all = g->all; }
 
 	gist(long long);
 	gist(unsigned long long);
@@ -69,50 +62,54 @@ class gist
 	/*
 	 *	Assignment.
 	 */
-	gist &	operator =(int v)		{ ptr = &Int; val = v;
+	gist &	operator =(int v)		{ typ = GT_INT; val = v;
 							return *this; }
-	gist &	operator =(unsigned v)		{ ptr = &Int; val = v;
+	gist &	operator =(unsigned v)		{ typ = GT_INT; val = v;
 							return *this; }
-	gist &	operator =(long v)		{ ptr = &Int; val = v;
+	gist &	operator =(long v)		{ typ = GT_INT; val = v;
 							return *this; }
-	gist &	operator =(unsigned long v)	{ ptr = &Int; val = v;
+	gist &	operator =(unsigned long v)	{ typ = GT_INT; val = v;
 							return *this; }
-	gist &	operator =(float v)		{ ptr = &Float; dval = v;
+	gist &	operator =(float v)		{ typ = GT_FLOAT; dval = v;
 							return *this; }
-	gist &	operator =(double v)		{ ptr = &Float; dval = v;
+	gist &	operator =(double v)		{ typ = GT_FLOAT; dval = v;
 							return *this; }
-	gist &	operator =(const gist & g)	{ gistCopy(g);
+	gist &	operator =(const gist & g)	{ ((gist)g).unique = 0;
+						  all = g.all;
 						  return *this; }
-	gist &	operator =(const gist * g)	{ gistCopy(*g);
+	gist &	operator =(const gist * g)	{ ((gist *)g)->unique = 0;
+						  all = g->all;
 						  return *this; }
 	gist &		operator =(long long);
 	gist &		operator =(unsigned long long);
 	gist &		operator =(const char *);
 
 
-	gist &		set()			{ ptr = &Nil;
+	gist &		set()			{ typ = GT_NIL;
 							return *this; }
-	gist &		set(int v)		{ ptr = &Int; val = v;
+	gist &		set(int v)		{ typ = GT_INT; val = v;
 							return *this; }
-	gist &		set(unsigned v)		{ ptr = &Int; val = v;
+	gist &		set(unsigned v)		{ typ = GT_INT; val = v;
 							return *this; }
-	gist &		set(long v)		{ ptr = &Int; val = v;
+	gist &		set(long v)		{ typ = GT_INT; val = v;
 							return *this; }
-	gist &		set(unsigned long v)	{ ptr = &Int; val = v;
+	gist &		set(unsigned long v)	{ typ = GT_INT; val = v;
 							return *this; }
-	gist &		set(float v)		{ ptr = &Float; dval = v;
+	gist &		set(float v)		{ typ = GT_FLOAT; dval = v;
 							return *this; }
-	gist &		set(double v)		{ ptr = &Float; dval = v;
+	gist &		set(double v)		{ typ = GT_FLOAT; dval = v;
 							return *this; }
-	gist &		set(const gist & g)	{ gistCopy(g);
+	gist &		set(const gist & g)	{ ((gist)g).unique = 0;
+						  all = g.all;
 						  return *this; }
-	gist &		set(const gist * g)	{ gistCopy(*g);
+	gist &		set(const gist * g)	{ ((gist *)g)->unique = 0;
+						  all = g->all;
 						  return *this; }
 	gist &		set(long long);
 	gist &		set(unsigned long long);
 	gist &		set(const char *, int = -1);
 
-	void		clear()			{ ptr = &Nil; }
+	void		clear()			{ typ = GT_NIL; }
 
 	/********************************/
 	/*
@@ -303,15 +300,15 @@ class gist
 		GT_LONG,
 		GT_REAL
 	};
-	type_e		type() const		{ return ptr->type; }
+	type_e		type() const		{ return (type_e)typ; }
 
-	int		isNil() const		{ return ptr == &Nil; }
-	int		isInt() const		{ return ptr == &Int; }
-	int		isFloat() const		{ return ptr == &Float; }
-	int		isStr() const		{ return type() == GT_STR; }
-	int		isNumber() const	{ return type() >= GT_INT; }
-	int		isArray() const		{ return type() == GT_ARRAY; }
-	int		isTable() const		{ return type() == GT_TABLE; }
+	int		isNil() const		{ return typ == GT_NIL; }
+	int		isInt() const		{ return typ == GT_INT; }
+	int		isFloat() const		{ return typ == GT_FLOAT; }
+	int		isStr() const		{ return typ == GT_STR; }
+	int		isNumber() const	{ return typ >= GT_INT; }
+	int		isArray() const		{ return typ == GT_ARRAY; }
+	int		isTable() const		{ return typ == GT_TABLE; }
 
 	/********************************/
 	/*
@@ -375,14 +372,6 @@ class gist
 	 */
 
 	/*
-	 *	The base type of the internal gist data structure.
-	 */
-	struct gistInternal
-	{
-		type_e	type;
-	};
-
-	/*
 	 *	Gist per object storage.  We try very hard to make this
 	 *	no more than 8 bytes.  The `ptr' is usually a pointer to
 	 *	internal data, or it can be 0.  If 0, the value is an
@@ -399,37 +388,52 @@ class gist
 	 *	So for 8 bytes, to really get 16.  For 12 bytes we still
 	 *	get 16.  Voila.  (Tellement maintenant nous devons essayer
 	 *	tres dur de ne pas lui faire plus de 15 bytes.)
+	 *
+	 *	In my opinion, C++ is broken when it comes to nested classes
+	 *	and unions.  What I want is to use anonymous structs and
+	 *	unions to effect the layout of a gist object, but I want
+	 *	those members to be private to gist.  The C++ spec says
+	 *	no private members of an anonymous union, and nested class
+	 *	obey the same access rules as regular classes.	So, a nested
+	 *	class called, say, `x_t' cannot be accessed by the world,
+	 *	but its members can.  Who's bright idea was that?  I'm sure
+	 *	I could make it right by naming everything, but then I'd
+	 *	have to change several thousand lines of internal gist code,
+	 *	or use macros.	So, the data members of the gist class are
+	 *	not private.  User's, please pretend that they are private.
 	 */
     private:
-	gistInternal *		ptr;
 	union
 	{
-		long		val;		// Integer type
-		double		dval;		// Float type
-		struct
-		{
-		    unsigned	cnt;		// String/Array type
-		    unsigned	skip;
-		};
-		long		all[2];		// One entry to cover it all
-	};
-	char		multiRef;		// Set if this object could
-						// contain data that is
-						// referenced elsewhere.
+	    struct
+	    {
+		char	typ;		// Object type
+		char	unique;		// Set if no other refs to this
+		char	res0;
+		char	res1;
 
-	/*
-	 *	The NIL object and integer typing object.  All NIL objects,
-	 *	and integer objects point here.
-	 */
-	static gistInternal	Nil;
-	static gistInternal	Int;
-	static gistInternal	Float;
+		struct gistInternal * ptr;	// Internal data
+
+		union
+		{
+		    long	val;		// Integer type
+		    double	dval;		// Float type
+		    struct
+		    {
+			unsigned    cnt;	// String/Array type
+			unsigned    skip;
+		    };
+		};
+	    };
+	    struct {
+		long	x[4];
+	    } all;
+	};
 
 	/*
 	 *	Private methods.
 	 */
 	char *		strCast(int) const;
-	void		gistCopy(const gist &);
 
 	/*
 	 *	Some internal structures that we call friends.

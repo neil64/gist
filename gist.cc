@@ -9,11 +9,6 @@
 #include	"gist.h"
 #include	"gist-internal.h"
 
-/**********************************************************************/
-
-gist::gistInternal	gist::Nil = { GT_NIL };
-gist::gistInternal	gist::Int = { GT_INT };
-gist::gistInternal	gist::Float = { GT_FLOAT };
 
 /**********************************************************************/
 /*
@@ -38,10 +33,7 @@ gcInit()
 			GC_init();
 		}
 
-		gist x(0);
-
-		gcInitialized = x.ty;
-		// gcInitialized = 1;
+		gcInitialized = 1;
 	}
 }
 
@@ -65,7 +57,7 @@ gist::operator new(unsigned sz)
 
 
 void *
-giBase::operator new(unsigned sz)
+gistInternal::operator new(unsigned sz)
 {
 	gcInit();
 
@@ -77,7 +69,7 @@ giBase::operator new(unsigned sz)
 
 
 void *
-giBase::alloc(unsigned sz)
+gistInternal::alloc(unsigned sz)
 {
 	void * ptr = GC_malloc(sz);
 	if (!ptr)
@@ -87,28 +79,10 @@ giBase::alloc(unsigned sz)
 
 
 void
-giBase::free(void * p)
+gistInternal::free(void * p)
 {
 	GC_free(p);
 }
 
 /******************************/
 
-/*
- *	This is mostly to ensure that strings have their `multiRef'
- *	flag reset.
- */
-void
-gist::gistCopy(const gist & from)
-{
-	ptr = from.ptr;
-	all[0] = from.all[0];
-	all[1] = from.all[1];
-
-	if (isStr())
-	{
-		giStr * st = (giStr *)ptr;
-		if (!st->index)
-			st->str->multiRef = 1;
-	}
-}

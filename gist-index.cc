@@ -273,7 +273,7 @@ giIndex::insert(const char * key, unsigned len, void * ref)
 	}
 
 	i = sizeof (sk_t) + sizeof (sk_t *) * level;
-	p = (sk_t *)giBase::alloc(i + len);
+	p = (sk_t *)gistInternal::alloc(i + len);
 	p->key = (char *)p + i;
 	memcpy(p->key, key, len);
 	p->len = len;
@@ -326,7 +326,7 @@ giIndex::remove(const char * key, unsigned len)
 		update[i][i] = p->fwd[i];
 	}
 
-	giBase::free(p);
+	gistInternal::free(p);
 
 	while (levels > 1 && head[levels - 1] == 0)
 		levels--;

@@ -13,7 +13,7 @@ giStore::alloc(unsigned sz)
 {
 	unsigned sz1 = sz + sizeof (giStore);
 
-	giStore * st = (giStore *)giBase::alloc(sz1);
+	giStore * st = (giStore *)gistInternal::alloc(sz1);
 
 	st->data = (void *)(st + 1);
 	st->size = sz;

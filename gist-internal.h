@@ -107,10 +107,8 @@ struct giStore
 
 /******************************/
 
-struct giBase : public gist::gistInternal
+struct gistInternal
 {
-			giBase(gist::type_e t) { type = t; }
-
 	void *		operator new(unsigned);
 	void		operator delete(void *) {}
 	static void *	alloc(unsigned);
@@ -118,11 +116,8 @@ struct giBase : public gist::gistInternal
 };
 
 
-struct giStr : giBase
+struct giStr : gistInternal
 {
-		giStr() : giBase(gist::GT_STR) {}
-		giStr(gist::type_e t) : giBase(t) {}
-
 	giIndex *	index;
 	union {
 		giStore *	str;

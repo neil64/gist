@@ -13,9 +13,7 @@
 double
 gist::toFloat() const
 {
-	giBase * gi = (giBase *)ptr;
-
-	switch (gi->type)
+	switch (typ)
 	{
 	case GT_NIL:
 	case GT_ARRAY:
@@ -27,7 +25,7 @@ gist::toFloat() const
 		throw valueError("toFloat");
 
 	case GT_STR:
-		return ((giStr *)gi)->toFloat();
+		return ((giStr *)ptr)->toFloat();
 
 	case GT_INT:
 		return (double)val;
