@@ -184,34 +184,69 @@ struct gistInternal
 
 
 /*
- *	`Index' is a skip list that contains nodes of the string.  If set,
- *	the string is stored as many pieces, indexed by the offset of
- *	the first character in each piece.  Offsets start at zero, but
- *	can go negative if data is prepended.  `min' is the offset of the
- *	first character (usually zero, but can be negative);  `max' is the
- *	offset of the character position just after the last character.
- *	"max - min" is the length of the string.
+ *	A string can be in two major states, dubbed "single" and "multi".
+ *	Single is a string who's data is contained in a single chunk of
+ *	memory with all characters consecutive.	 Multi is a collection of
+ *	memory chunks that together form the string.  If `index' is set,
+ *	the string is mutli, and `index' points to an indexing structure
+ *	containing the string pieces.  If `index' is NIL, the string is
+ *	single.	 `data' and `size' refer to a string chunk;  if single,
+ *	it is the string data, and if multi it is the last string chunk
+ *	(caveat unique).  `hasNull' is set if there is known to be a '\0'
+ *	character after the last character of the string; the '\0' is not
+ *	included in the string length but it is included in the chunk size.
  *
- *	If `index' is NIL, the string contains a single piece referenced by
- *	`str'.
+ *	If `unique' is set in the `gist' that refers to this giStr, some
+ *	special conditions exist.  If the string is single, the whole
+ *	string is known not to be referenced by any other `gist';  this
+ *	allows the string to be modified in place.  If the string is multi,
+ *	then the index structure is known not to be referenced elsewhere,
+ *	but the string chunks themselves may be referenced elsewhere.
  *
- *	Strings use the `unique' value in the gist object that refers to
- *	this giStr.  If `unique' is true then we know that this giStr is not
- *	referenced by any other gist object.  If such a string is modified,
- *	the internal implementation may choose to modify the string in place.
- *	One benefit of this is that appending single characters to a string
- *	is not an exponential operation as it is in some languages with
- *	string types.
+ *	If `unique' is set on a multi string, and if `data' is non-NIL, then
+ *	`data', `size' and `len' refer to a chunk that can be modified --
+ *	known not to be referenced elsewhere; `data' refers to the first
+ *	byte of storage and the first character of the string chunk, "data +
+ *	len - 1" point to the last valid character, and "data + size - 1"
+ *	point to the last byte of storage.
+ *
+ *	For a single string, only `data' and `size' are valid, and `skip'
+ *	and `cnt' are taken from the gist;  `data' points to the first
+ *	byte of storage, "data + skip" points to the first real character,
+ *	"data + skip + cnt - 1" points to the last real character, "data +
+ *	size - 1" points to the last byte of storage.
+ *
+ *	If `hasNull' is set, the byte at "data + skip + cnt" equals '\0',
+ *	and `size' is large enough to contain the '\0'.	 `hasNull' would
+ *	be difficult to take advantage of for multi strings, so it is only
+ *	available for single strings.
+ *
+ *	A multi string stores pieces of the string indexed by the offset in
+ *	the string of the first character of the chunk.	 `index->min' is
+ *	the offset of the first character of the string, and `index->max'
+ *	is the offset of the character just past the last character of
+ *	the string.  Initially, `min' is zero, but it may go negative if
+ *	data is inserted at the front of the string.
  */
 struct giStr : gistInternal
 {
 	giIndexInt *	index;
+	char *		data;
+	unsigned	size;
+	union {
+		unsigned	len;
+		bool		hasNull;
+	};
+
+
+#if 0
 	union {
 		giStore *	str;
 		struct {
 			int min, max;
 		};
 	};
+#endif
 
 	void		mkTmp(giStore &, const char *);
 	static void	concat(gist &, const gist *);
@@ -220,6 +255,12 @@ struct giStr : gistInternal
 	double		toFloat();
 	const char *	piece(int & idx, int & len);
 	int		cmp(giStr *);
+};
+
+struct giChunk
+{
+	char *		data;
+	unsigned	len;
 };
 
 struct giStr0 : gistInternal

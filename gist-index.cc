@@ -522,6 +522,7 @@ giIndex<T>::insert(T * key)
 #warning "insert stuff ..."
 	// i = sizeof (sk_t) + sizeof (sk_t *) * level;
 	// p = (sk_t *)gistInternal::alloc(i + len);
+#warning "no internal pointers"
 	// p->key = (char *)p + i;
 	// memcpy(p->key, key, len);
 	// p->len = len;

@@ -14,12 +14,12 @@
  *	The maximum number of characters that we will copy when concatenating
  *	strings.  If greater than this, we create a "multi" string.
  */
-const int	maxCopy = 32;
+const unsigned	maxCopy = 32;
 
 /*
  *	String space is allocated in multiples of this value.
  */
-const int	strChunk = 64;
+const unsigned	strChunk = 64;
 
 /**********************************************************************/
 /*
@@ -29,10 +29,11 @@ const int	strChunk = 64;
 void
 giStr::mkTmp(giStore & st, const char * s)
 {
-	st.data = (void *)s;
-	st.size = strlen(s);
-	index = 0;
-	str = &st;
+#warning "fix this"
+	// st.data = (void *)s;
+	// st.size = strlen(s);
+	// index = 0;
+	// str = &st;
 }
 
 
@@ -76,14 +77,15 @@ giStr::concat(gist & a, const gist * b)
 void
 giStr::flatten()
 {
-	if (!index && str->hasNull && str->data)
-		return;
+	// if (!index && str->hasNull && str->data)
+		// return;
 
 	throw gist::notYetError("giStr::flatten");
 
 	// always add a '\0'
 	// set multiRef and hasNull
 	// may need to move a non-index string if there is no '\0'.
+	// don't copy if already single and there is space for the '\0'
 
 	// some calls change this gist ((char *)),
 	//	others need a new copy (copy())
@@ -111,7 +113,7 @@ giStr::piece(int & idx, int & len)
 	int i = idx;
 
 	if (!index)
-		st = str;
+		; // st = str;
 	else
 	{
 		/*
@@ -119,7 +121,8 @@ giStr::piece(int & idx, int & len)
 		 *	giIndex::previous() is a "less-than" operation and
 		 *	we want "less-or-equal".
 		 */
-		i += min;
+#warning "wrong here also"
+		// i += min;
 		char k[sizeof (int)];
 		giStore::mkKey(k, i+1);
 		const char * kp = &k[0];
@@ -226,7 +229,8 @@ gist::strCast(int multi) const
 
 	sp->flatten();
 
-	return (char *)sp->str->data;
+	// return (char *)sp->str->data;
+#warning "wrong here"
 }
 
 /**********************************************************************/
@@ -312,7 +316,8 @@ gist::set(const char * s, int l)
 	st->size = l;
 
 	giStr * sp = new giStr;
-	sp->str = st;
+#warning "wrong here"
+	//sp->str = st;
 	sp->index = 0;
 
 	typ = GT_STR;
@@ -333,7 +338,8 @@ gist::copy(const char * s, int l)
 	((char *)st->data)[l] = '\0';
 
 	giStr * sp = new giStr;
-	sp->str = st;
+#warning "wrong here"
+	// sp->str = st;
 	sp->index = 0;
 
 	typ = GT_STR;
@@ -448,40 +454,160 @@ gist::strcat(const gist & r)
 {
 	const gist * rp;
 
+	/*
+	 *	Ensure that the left (this) is a string, and convert the
+	 *	right to a string if necessary.
+	 */
 	if (!isStr())
 		throw typeError("strcat");
-
 	if (r.isStr())
 		rp = &r;
 	else
 		rp = new gist(r.toString());
 
-	giStr * sp = (giStr *)ptr;
+	giStr * ls = (giStr *)ptr;
+	giStr * rs = (giStr *)rp->ptr;
 
-	if (!sp->index && unique)
+	/*
+	 *	If the right side length is less than the copy limit,
+	 *	try for various optimizations.
+	 */
+	if (rp->cnt <= maxCopy)
 	{
 		/*
-		 *	There is a chance that we could just copy the
-		 *	new string data onto the end of the current
-		 *	string, assuming there is space.
+		 *	NOTE:	There is code that expects strcat to do a
+		 *		copy no matter what if the right is below
+		 *		the copy limit.  For instance, strcat(int)
+		 *		(below) creates a gist string using a local
+		 *		variable buffer, so that gist must be
+		 *		completely invalid once strcat finishes.
 		 */
+		do
+		{
+			if (!unique)
+				break;
+
+			/*
+			 *	The left is unique, so we can try to copy
+			 *	the right directly into the left, if there
+			 *	is enough space available.
+			 */
+			unsigned l;
+			if (!ls->index)
+				l = ls->size - skip - cnt;
+			else if (!ls->data)
+				break;
+			else
+				l = ls->size - ls->len;
+
+			if (rp->cnt > l)
+				break;
+			l = rp->cnt;
+
+			/*
+			 *	We are allowed to write to the left directly,
+			 *	and there is space available.  Go for it.
+			 */
+			// memcpy(data + len, ...
+#warning "copy from right"
+			cnt += l;
+			ls->len += l;
+			if (!ls->index)
+				ls->hasNull = false;
+			return;
+
+		} while (0);
+
+		/*
+		 *	There was not enough space at the end of the chunk.
+		 *	Try for a total length that might be less than the
+		 *	copy limit.
+		 */
+		if (cnt + rp->cnt <= maxCopy)
+		{
+			/*
+			 *	Create a new chunk and copy both the left
+			 *	and right strings to it.
+			 */
+			char * np = (char *)gistInternal::alloc(strChunk);
+
+			// giStrCopy(np, this);
+			// giStrCopy(np + cnt, rp);
+			cnt += rp->cnt;
+			if (!ls->index)
+				ls->hasNull = false;
+		}
+
+		/*
+		 *	Simple copies failed, so now allocate a new chunk
+		 *	and add it to the end of the current chunk list,
+		 *	making the left into a multi if needed.
+		 */
+		if (!unique || !ls->index)
+		{
+			// makeNewIndex();
+		}
+
+		giChunk * cp; // = gistInternal::alloc(sizeof (giChunk));
+		cp->data = (char *)gistInternal::alloc(strChunk);
+		cp->len = rp->cnt;
+		ls->data = cp->data;
+		ls->len = rp->cnt;
+		ls->size = strChunk;
+		// giStrCopy(cp->data, rp);
+		return;
+
 	}
+
+	/*
+	 *	Append the right onto the left.  If the right is a single
+	 *	string, make a new chunk header for it, otherwise, copy
+	 *	the chunks from the right to the left.  Both strings will
+	 *	no longer be unique.
+	 */
+	if (!ls->index || !unique)
+	{
+		// makeNewIndex();
+	}
+
 
 /*
 
-	-  This will become "the" concatenation function, since access to
-	   the gist is needed.
 
-	-  if a is a single string
-		if a's string is not a multi
-			if b's size is less than copy limit,
-			   and there is space available to copy it to a
-				copy b into a
-				done
+	-  if b's size is less than the copy limit
+			(must copy, some code depends on it)
+		-  if a is unique
+			-  get final storage pointer and length
+				(if single, then the main pointer)
+				(if multi, last record, or main pointer)
+			-  if there is space available
+				-  copy b directly
+				-  update info
+				-  done
+		-  if the total size is less than the copy limit
+			-  allocate a new chunk
+			-  copy both strings there.
+			-  done
+		-  if a is not unique
+			-  create a new index structure
+			-  (makes a unique)
+		-  add a new chunk to the end of the string.
+		-  copy b into it.
 
-		else if a's size + b's size is less than the copy limit
-			allocate a new string and copy both to it.
-			done
+	(append function from here on...)
+	-  if a is not unique,
+		-  make a new index structure
+
+	-  append the b chunk onto the string (insert into index).
+
+
+---
+
+	*  could say that unique means that the index has not changed,
+	   and that if the giStr has pointers, then that is also unique.
+	   So if another string chunk is appended to the index, the local
+	   pointers will be NIL.
+
 
 */
 
@@ -510,6 +636,15 @@ gist::strcat(const gist & r)
 
 	// return *giStr::concat(ap, bp);
 #endif
+}
+
+
+void
+gist::strcat(int c)
+{
+	char a[2] = { c, '\0' };
+	gist cx(a);
+	strcat(cx);
 }
 
 

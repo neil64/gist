@@ -486,8 +486,20 @@ class gist
 	int		cmp(const gist &) const;
 	const char *	strpiece(int & index, int & len);
 
-	void		strcat(const gist &);
+	void		strcat(int);
 	void		strcat(const char *);
+	void		strcat(const gist &);
+	void		strins(int);
+	void		strins(const char *);
+	void		strins(const gist &);
+
+	/*
+	 *	Array's.
+	 */
+	void		append(const gist &);
+	void		insert(const gist &);
+	gist &		pop();
+	gist &		shift();
 
 	/*
 	 *	Formatting.
