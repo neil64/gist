@@ -39,6 +39,7 @@ gist & gist::operator [](unsigned long long i)		{ OP1(i, true) }
 gist & gist::operator [](float i)			{ OP2(i, true) }
 gist & gist::operator [](double i)			{ OP2(i, true) }
 gist & gist::operator [](const char * i)		{ OP2(i, true) }
+gist & gist::operator [](char * i)			{ OP2(i, true) }
 
 gist &
 gist::operator [](const gist & i)
@@ -83,6 +84,7 @@ const gist & gist::operator [](unsigned long long i) const { OP1(i, false) }
 const gist & gist::operator [](float i) const		{ OP2(i, false) }
 const gist & gist::operator [](double i) const		{ OP2(i, false) }
 const gist & gist::operator [](const char * i) const	{ OP2(i, false) }
+const gist & gist::operator [](char * i) const		{ OP2(i, false) }
 
 const gist &
 gist::operator [](const gist & i) const

@@ -34,6 +34,11 @@ class SGML_t
 	 */
 	void		reset();
 
+	/*
+	 *	An exception for when things go bad in the SGML parser.
+	 */
+	class badSGML {};
+
     public:
 	/*
 	 *	These funcitons are called when the various parts of the
@@ -46,10 +51,14 @@ class SGML_t
 	virtual void	unknownChar(const gist & c);
 
     private:
-	gist		data;		// Accumulated data
+	// gist		data;		// Accumulated data
 	gist		tag;		// Current tag we are parsing
 	gist		attrs;		// Collected attributes (table)
 	gist *		attrv;		// Reference to last attribute value
+
+	enum { datsz = 1024 };
+	char		data[datsz];	// Accumulated data
+	int		datx;
 
 	/*
 	 *	Parser state.
@@ -67,6 +76,8 @@ class SGML_t
 		state;
 
 	void		doHandleData();
+	void		add(int c, bool dat);
+	void		lower();
 };
 
 /**********************************************************************/

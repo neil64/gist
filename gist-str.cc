@@ -252,15 +252,37 @@ gist::_strflatten() const
 void
 gist::set(const char * s)
 {
-	giStr * sp = new giStr;
+	giStr * sp;
+
+	if (!s || !*s)
+	{
+		if (typ == GT_STR)
+			sp = (giStr *)intern;
+		else
+		{
+			sp = new giStr;
+			sp->data = "";
+			typ = GT_STR;
+			unique = false;
+			intern = sp;
+		}
+		skip = 0;
+		cnt = 0;
+
+		return;
+	}
+
+	sp = new giStr;
 	unsigned l;
 
+#if 0
 	if (!s || !*s)
 	{
 		sp->data = "";
 		l = 0;
 		goto hop;
 	}
+#endif
 
 	l = ::strlen(s);
 

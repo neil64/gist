@@ -59,7 +59,7 @@ void
 SGML_t::reset()
 {
 	state = S_text;
-	data = "";
+	datx = 0;
 	tag.clear();
 	attrs.table(true);
 	attrv = 0;
@@ -69,9 +69,39 @@ SGML_t::reset()
 void
 SGML_t::doHandleData()
 {
-	if (data)
-		handleData(data);
-	data = "";
+	if (datx > 0)
+	{
+		data[datx] = '\0';
+		gist da(data);
+		handleData(da);
+		datx = 0;
+	}
+}
+
+
+void
+SGML_t::add(int c, bool dat)
+{
+	if (datx >= datsz - 1)
+	{
+		if (!dat)
+			throw badSGML();
+		doHandleData();
+	}
+	data[datx++] = c;
+}
+
+
+void
+SGML_t::lower()
+{
+	for (char * cp = &data[0]; cp < &data[datx]; cp++)
+	{
+		int c = *cp;
+		if (c >= 'A' && c <= 'Z')
+			*cp = c + ('a' - 'A');
+	}
+	data[datx] = '\0';
 }
 
 
@@ -101,7 +131,7 @@ SGML_t::parse(const char * in, int sz)
 			tag.clear();
 			attrs.table(true);
 			state = S_after_open;
-			data = "";
+			datx = 0;
 			break;
 
 		case S_after_open:
@@ -129,7 +159,7 @@ SGML_t::parse(const char * in, int sz)
 			else if (c == '\n')
 				state = S_nl;
 			else
-				data += c;
+				add(c, true);
 			break;
 
 		case S_nl:
@@ -140,7 +170,7 @@ SGML_t::parse(const char * in, int sz)
 			}
 			else
 			{
-				data += '\n';
+				add('\n', true);
 				goto S_text;
 			}
 			break;
@@ -166,22 +196,23 @@ SGML_t::parse(const char * in, int sz)
 
 		case S_entity:
 			if (isalnum(c))
-				data += c;
+				add(c, true);
 			else
 			{
+				data[datx] = '\0';
 				char * x = 0;
 
-				if (!data)
+				if (datx == 0)
 					x = "& ";
-				else if (data == "lt")
+				else if (strcmp(data, "lt") == 0)
 					x = "<";
-				else if (data == "gt")
+				else if (strcmp(data, "gt") == 0)
 					x = ">";
-				else if (data == "amp")
+				else if (strcmp(data, "amp") == 0)
 					x = "&";
-				else if (data == "quot")
+				else if (strcmp(data, "quot") == 0)
 					x = "\"";
-				else if (data == "apos")
+				else if (strcmp(data, "apos") == 0)
 					x = "'";
 
 				if (x)
@@ -192,7 +223,7 @@ SGML_t::parse(const char * in, int sz)
 				else
 					unknownEntity(data);
 
-				data = "";
+				datx = 0;
 				if (c != ';')
 					goto S_text;
 				state = S_text;
@@ -201,16 +232,17 @@ SGML_t::parse(const char * in, int sz)
 
 		case S_cro:
 			if (isalnum(c))
-				data += c;
+				add(c, false);
 			else
 			{
+				data[datx] = '\0';
 				char x[2];
 				x[0] = atoi(data);
 				x[1] = '\0';
 				gist y = x;
 				handleData(y);
 
-				data = "";
+				datx = 0;
 				if (c != ';')
 					goto S_text;
 				state = S_text;
@@ -220,7 +252,7 @@ SGML_t::parse(const char * in, int sz)
 		case S_tag:
 		handle_S_tag:
 			if (isalnum(c))
-				data += c;
+				add(c, false);
 			else
 			{
 				if (c == '/')
@@ -229,12 +261,13 @@ SGML_t::parse(const char * in, int sz)
 					state = S_md;
 				else
 				{
-					tag = strlower(data);
-					data = "";
+					lower();
+					tag = data;
+					datx = 0;
 					goto S_tag_gap;
 				}
 
-				data = "";
+				datx = 0;
 			}
 			break;
 
@@ -254,7 +287,7 @@ SGML_t::parse(const char * in, int sz)
 		case S_attr:
 			if (!isspace(c) && c != '>' && c != '=')
 			{
-				data += c;
+				add(c, false);
 				break;
 			}
 
@@ -265,8 +298,9 @@ SGML_t::parse(const char * in, int sz)
 			 *	We store that reference an maybe assign to
 			 *	it later.
 			 */
-			attrv = &attrs[strlower(data)];
-			data = "";
+			lower();
+			attrv = &attrs[&data[0]];
+			datx = 0;
 
 			state = S_attr_gap;
 			// fall though
@@ -323,43 +357,47 @@ SGML_t::parse(const char * in, int sz)
 		case S_value:
 			if (isspace(c) || c == '>')
 			{
+				data[datx] = '\0';
 				*attrv = data;
-				data = "";
+				datx = 0;
 				goto S_tag_gap;
 			}
 			else
-				data += c;
+				add(c, false);
 			break;
 		
 		case S_squoted:
 			if (c == '\'')
 			{
+				data[datx] = '\0';
 				*attrv = data;
-				data = "";
+				datx = 0;
 				state = S_tag_gap;
 			}
 			else if (c && c != '\n' && c != '\r')
-				data += c;
+				add(c, false);
 			break;
 	
 		case S_dquoted:
 			if (c == '"')
 			{
+				data[datx] = '\0';
 				*attrv = data;
-				data = "";
+				datx = 0;
 				state = S_tag_gap;
 			}
 			else if (c && c != '\n' && c != '\r')
-				data += c;
+				add(c, false);
 			break;
 
 		case S_end:
 			if (isalnum(c))
-				data += c;
+				add(c, false);
 			else
 			{
-				gist x = strlower(data);
-				data = "";
+				lower();
+				gist x = data;
+				datx = 0;
 				endTag(x);
 
 				if (c != '>')
@@ -383,7 +421,7 @@ SGML_t::parse(const char * in, int sz)
 				state = S_md_sqs;
 			else if (c == '>')
 			{
-				data = "";
+				datx = 0;
 				state = S_text;
 			}
 			break;
@@ -393,7 +431,7 @@ SGML_t::parse(const char * in, int sz)
 				state = S_md;
 			else if (c == '>')
 			{
-				data = "";
+				datx = 0;
 				state = S_text;
 			}
 			break;
@@ -403,7 +441,7 @@ SGML_t::parse(const char * in, int sz)
 				state = S_md;
 			else if (c == '>')
 			{
-				data = "";
+				datx = 0;
 				state = S_text;
 			}
 			break;
@@ -412,7 +450,7 @@ SGML_t::parse(const char * in, int sz)
 			state = (c == '-') ? S_com : S_md;
 			if (c == '>')
 			{
-				data = "";
+				datx = 0;
 				state = S_text;
 			}
 			break;
@@ -429,7 +467,7 @@ SGML_t::parse(const char * in, int sz)
 		case S_com_2a:
 			if (c == '>')
 			{
-				data = "";
+				datx = 0;
 				state = S_text;
 			}
 			else if (c == '-')

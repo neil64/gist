@@ -113,6 +113,7 @@ class gist
 	void		set(long double v)	{ typ = GT_FLOAT; dval = v; }
 
 	void		clear()			{ typ = GT_NIL; }
+	void		strclear();
 
 	/********************************/
 	/*
@@ -145,6 +146,7 @@ class gist
 	gist &		operator [](long long);
 	gist &		operator [](unsigned long long);
 	gist &		operator [](const char *);
+	gist &		operator [](char *);
 	gist &		operator [](const gist &);
 
 	const gist &	operator [](int) const;
@@ -156,6 +158,7 @@ class gist
 	const gist &	operator [](long long) const;
 	const gist &	operator [](unsigned long long) const;
 	const gist &	operator [](const char *) const;
+	const gist &	operator [](char *) const;
 	const gist &	operator [](const gist &) const;
 
 	/********************************/
