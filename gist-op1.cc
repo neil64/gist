@@ -18,7 +18,7 @@ operator +(const gist & a, const gist & b)
 	else if (a.isInt() || b.isInt())
 		return gist(a.toInt() + b.toInt());
 	else if (a.isStr() && b.isStr())
-		return giStr::concat(a, b);
+		return *giStr::concat(&a, &b);
 	else
 		throw gist::typeError("operator +");
 }
@@ -73,7 +73,11 @@ gist::operator +=(const gist & b)
 
 
 gist &
-gist::operator +=(const char *)
+gist::operator +=(const char * s)
 {
+	gist r(s);
+
+	*this = *giStr::concat(this, &r);
+
 	return *this;
 }

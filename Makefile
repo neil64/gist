@@ -8,9 +8,9 @@ OBJS =		gist.o gist-store.o gist-index.o \
 		gist-op1.o gist-op2.o gist-op3.o gist-op4.o
 
 
-## CXXFLAGS =	-g -Wall
+CXXFLAGS =	-g -Wall
 ## CXXFLAGS =	-g -O3 -Wall
-CXXFLAGS =	-O3 -Wall
+## CXXFLAGS =	-O3 -Wall
 OPTIM =
 
 ################

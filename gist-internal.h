@@ -123,7 +123,6 @@ struct giStr : giBase
 		giStr() : giBase(gist::GT_STR) {}
 		giStr(gist::type_e t) : giBase(t) {}
 
-	unsigned	skip;
 	giIndex *	index;
 	union {
 		giStore *	str;
@@ -132,7 +131,8 @@ struct giStr : giBase
 		};
 	};
 
-	static gist	concat(const gist &, const gist &);
+	void		mkTmp(giStore &, const char *);
+	static gist *	concat(const gist *, const gist *);
 	void		flatten();
 	long		toInt(int sign);
 	double		toFloat();

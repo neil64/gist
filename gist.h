@@ -409,8 +409,8 @@ class gist
 		double		dval;		// Float type
 		struct
 		{
-			unsigned	cnt;	// String/Array type
-			unsigned	skip;
+		    unsigned	cnt;		// String/Array type
+		    unsigned	skip;
 		};
 		long		all[2];		// One entry to cover it all
 	};
@@ -427,6 +427,11 @@ class gist
 	 *	Private methods.
 	 */
 	char *		strCast(int) const;
+
+	/*
+	 *	Some internal structures that we call friends.
+	 */
+	friend class giStr;
 
 	/**************************************************************/
 	/**************************************************************/

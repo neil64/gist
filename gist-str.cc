@@ -5,15 +5,31 @@
  */
 
 #include	<string.h>
+#include	<memory.h>
 #include	"gist.h"
 #include	"gist-internal.h"
 
 
 /**********************************************************************/
 
-gist
-giStr::concat(const gist & a, const gist & b)
+void
+giStr::mkTmp(giStore & st, const char * s)
 {
+	st.data = (void *)s;
+	st.size = strlen(s);
+	index = 0;
+	str = &st;
+}
+
+
+gist *
+giStr::concat(const gist * a, const gist * b)
+{
+	if (b->cnt == 0)
+		return (gist *)a;
+	if (a->cnt == 0)
+		return (gist *)b;
+
 	throw gist::notYetError("giStr::concat");
 }
 
@@ -76,7 +92,10 @@ giStr::piece(int & idx, int & len)
 	}
 
 	if ((unsigned)i >= st->size)
+	{
+		len = 0;
 		return 0;
+	}
 	else
 	{
 		len = st->size - i;
@@ -89,16 +108,43 @@ giStr::piece(int & idx, int & len)
 int
 giStr::cmp(giStr * r)
 {
-	// trivial compare -- compare the giStr pointers.
+	if (this == r)
+		return 1;
 
-	// get a piece of the left, and the right
+	int ll = 0, rl = 0;
+	int li= 0, ri = 0;
+	const char * lp = 0, * rp = 0;
 
-	// find the common length
-	// compare
-	// if not equal, return the result.
-	// if equal, get the next bit.
+	for (;;)
+	{
+		if (ll == 0)
+			lp = piece(li, ll);
+		if (rl == 0)
+			rp = r->piece(ri, rl);
 
-	return 0;
+		if (!lp || !rp)
+			break;
+
+		int l = ll;
+		if (l > rl)
+			l = rl;
+
+		int x = memcmp(lp, rp, l);
+		if (x)
+			return x;
+
+		lp += l;
+		rp += l;
+		ll -= l;
+		rl -= l;
+	}
+
+	if (ll == rl)
+		return 0;
+	else if (ll < rl)
+		return -1;
+	else
+		return 1;
 }
 
 /**********************************************************************/
@@ -176,6 +222,10 @@ gist::cmp(const char * s) const
 	gist x;
 	gist * gp;
 
+	/*
+	 *	Grab the string pointer.  If the object is not a string
+	 *	try to make it into one.
+	 */
 	if (isStr())
 		gp = (gist *)this;
 	else
@@ -186,11 +236,16 @@ gist::cmp(const char * s) const
 
 	giStr * sp = (giStr *)gp->ptr;
 
-#warning "here"
-	// scan through the string doing the comparison
-	throw notYetError("cmp");
-}
+	/*
+	 *	Set up a temporary internal string structure for the right
+	 *	operand then do the compare.
+	 */
+	giStore st1;
+	giStr s1;
+	s1.mkTmp(st1, s);
 
+	return sp->cmp(&s1);
+}
 
 /**********************************************************************/
 /**********************************************************************/
