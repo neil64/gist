@@ -29,6 +29,13 @@
 #ifndef __GIST_H__
 #define __GIST_H__
 
+/****************/
+
+// #if __GNUC__
+// #define PACKED __attribute__ ((packed))
+// #else
+// #define PACKED
+// #endif
 
 /**********************************************************************/
 
@@ -50,8 +57,8 @@ class gist
 	gist(unsigned long v)	{ ptr = &Int; val = v; }
 	gist(float v)		{ ptr = &Float; dval = v; }
 	gist(double v)		{ ptr = &Float; dval = v; }
-	gist(const gist & g)	{ ptr = g.ptr; val = g.val; }
-	gist(const gist * g)	{ ptr = g->ptr; val = g->val; }
+	gist(const gist & g)	{ gistCopy(g); }
+	gist(const gist * g)	{ gistCopy(*g); }
 
 	gist(long long);
 	gist(unsigned long long);
@@ -74,13 +81,9 @@ class gist
 							return *this; }
 	gist &	operator =(double v)		{ ptr = &Float; dval = v;
 							return *this; }
-	gist &	operator =(const gist & g)	{ ptr = g.ptr;
-						  all[0] = g.all[0];
-						  all[1] = g.all[1];
+	gist &	operator =(const gist & g)	{ gistCopy(g);
 						  return *this; }
-	gist &	operator =(const gist * g)	{ ptr = g->ptr;
-						  all[0] = g->all[0];
-						  all[1] = g->all[1];
+	gist &	operator =(const gist * g)	{ gistCopy(*g);
 						  return *this; }
 	gist &		operator =(long long);
 	gist &		operator =(unsigned long long);
@@ -101,13 +104,9 @@ class gist
 							return *this; }
 	gist &		set(double v)		{ ptr = &Float; dval = v;
 							return *this; }
-	gist &		set(const gist & g)	{ ptr = g.ptr;
-						  all[0] = g.all[0];
-						  all[1] = g.all[1];
+	gist &		set(const gist & g)	{ gistCopy(g);
 						  return *this; }
-	gist &		set(const gist * g)	{ ptr = g->ptr;
-						  all[0] = g->all[0];
-						  all[1] = g->all[1];
+	gist &		set(const gist * g)	{ gistCopy(*g);
 						  return *this; }
 	gist &		set(long long);
 	gist &		set(unsigned long long);
@@ -414,6 +413,9 @@ class gist
 		};
 		long		all[2];		// One entry to cover it all
 	};
+	char		multiRef;		// Set if this object could
+						// contain data that is
+						// referenced elsewhere.
 
 	/*
 	 *	The NIL object and integer typing object.  All NIL objects,
@@ -427,6 +429,7 @@ class gist
 	 *	Private methods.
 	 */
 	char *		strCast(int) const;
+	void		gistCopy(const gist &);
 
 	/*
 	 *	Some internal structures that we call friends.

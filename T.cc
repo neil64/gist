@@ -68,6 +68,8 @@ report(const char * ty, gist::error & e)
 int
 main(int argc, char ** argv)
 {
+	printf ("Size of gist = %d\n", sizeof (gist));
+
 	try
 	{
 		test_int();

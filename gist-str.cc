@@ -11,6 +11,9 @@
 
 
 /**********************************************************************/
+/*
+ *	Internal gist member functions.
+ */
 
 void
 giStr::mkTmp(giStore & st, const char * s)
@@ -22,13 +25,38 @@ giStr::mkTmp(giStore & st, const char * s)
 }
 
 
-gist *
-giStr::concat(const gist * a, const gist * b)
+//gist *
+// giStr::concat(const gist * a, const gist * b)
+void
+giStr::concat(gist & a, const gist * b)
 {
+#if 0
 	if (b->cnt == 0)
 		return (gist *)a;
 	if (a->cnt == 0)
 		return (gist *)b;
+#endif
+
+/*
+	if a is a single string
+		if a's string is not a multi
+			if b's size is less than copy limit,
+			   and there is space available to copy it to a
+				copy b into a
+				done
+
+		else if a's size + b's size is less than the copy limit
+			allocate a new string and copy both to it.
+			done
+
+*/
+
+
+
+
+
+
+
 
 	throw gist::notYetError("giStr::concat");
 }
@@ -149,6 +177,10 @@ giStr::cmp(giStr * r)
 }
 
 /**********************************************************************/
+/**********************************************************************/
+/*
+ *	Private gist member functions.
+ */
 
 /*
  *	Convert a gist object to a null terminated string and return it.
@@ -178,6 +210,75 @@ gist::strCast(int multi) const
 	return (char *)sp->str->data;
 }
 
+/**********************************************************************/
+/**********************************************************************/
+/**********************************************************************/
+
+#if 0
+
+struct str
+{
+	-  multi-ref flag, set and never reset.
+	-  buffer
+	-  buffer size
+};
+
+
+set string:
+
+	-  allocate a str
+	-  set the multi-ref flag
+	-  set the reference to the passed string.
+
+
+
+
+string buffer management
+------------------------
+
+allocate a string:
+
+	-  round up the amount requested
+	-  allocate space for the buffer
+	-  allocate a str
+	-  set values
+
+concatenate (append) two strings (a += operation):
+
+	-  if the left is not multi-ref
+		-  if there is space to append the right onto the left,
+			copy the data
+	-  if the left is not already a multi-str,
+		-  allocate a multi-str
+		-  insert the left onto the string with zero offset
+	-  insert the right onto the multi-str, with correct offset.
+
+
+prepend (right is prepended onto the left):
+
+	-  similar to append
+
+
+index a value in the string:
+
+	-  find the str block
+	-  calculate the pointer
+	-  return the pointer and the number of bytes remaining from there.
+
+
+
+#endif // 0
+
+/**********************************************************************/
+/*
+ *	Public gist member functions.
+ */
+
+gist::gist(const char * s, int l)
+{
+	set(s, l);
+}
+
 
 gist &
 gist::set(const char * s, int l)
@@ -201,12 +302,6 @@ gist::set(const char * s, int l)
 	skip = 0;
 
 	return *this;
-}
-
-
-gist::gist(const char * s, int l)
-{
-	set(s, l);
 }
 
 
@@ -280,7 +375,9 @@ gist::strcat(gist & a, gist & b)
 		bp = &bx;
 	}
 
-	return *giStr::concat(ap, bp);
+	return ax;
+#warning "XXX"
+	// return *giStr::concat(ap, bp);
 }
 
 
@@ -298,7 +395,9 @@ gist::strcat(gist & a, const char * b)
 		ap = &ax;
 	}
 
-	return *giStr::concat(ap, &bx);
+	return ax;
+#warning "XXX"
+	// return *giStr::concat(ap, &bx);
 }
 
 
@@ -316,64 +415,7 @@ gist::strcat(const char * a, gist & b)
 		bp = &bx;
 	}
 
-	return *giStr::concat(&ax, bp);
+	return ax;
+#warning "XXX"
+	// return *giStr::concat(&ax, bp);
 }
-
-/**********************************************************************/
-/**********************************************************************/
-/**********************************************************************/
-
-#if 0
-
-struct str
-{
-	-  multi-ref flag, set and never reset.
-	-  buffer
-	-  buffer size
-};
-
-
-set string:
-
-	-  allocate a str
-	-  set the multi-ref flag
-	-  set the reference to the passed string.
-
-
-
-
-string buffer management
-------------------------
-
-allocate a string:
-
-	-  round up the amount requested
-	-  allocate space for the buffer
-	-  allocate a str
-	-  set values
-
-concatenate (append) two strings (a += operation):
-
-	-  if the left is not multi-ref
-		-  if there is space to append the right onto the left,
-			copy the data
-	-  if the left is not already a multi-str,
-		-  allocate a multi-str
-		-  insert the left onto the string with zero offset
-	-  insert the right onto the multi-str, with correct offset.
-
-
-prepend (right is prepended onto the left):
-
-	-  similar to append
-
-
-index a value in the string:
-
-	-  find the str block
-	-  calculate the pointer
-	-  return the pointer and the number of bytes remaining from there.
-
-
-
-#endif // 0

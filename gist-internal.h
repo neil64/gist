@@ -132,7 +132,7 @@ struct giStr : giBase
 	};
 
 	void		mkTmp(giStore &, const char *);
-	static gist *	concat(const gist *, const gist *);
+	static void	concat(gist &, const gist *);
 	void		flatten();
 	long		toInt(int sign);
 	double		toFloat();

@@ -17,8 +17,9 @@ operator +(const gist & a, const gist & b)
 		return gist(a.toFloat() + b.toFloat());
 	else if (a.isInt() || b.isInt())
 		return gist(a.toInt() + b.toInt());
-	else if (a.isStr() && b.isStr())
-		return *giStr::concat(&a, &b);
+	// else if (a.isStr() && b.isStr())
+		// return *giStr::concat(&a, &b);
+#warning "XXX"
 	else
 		throw gist::typeError("operator +");
 }
@@ -81,8 +82,9 @@ gist::operator +=(const char * s)
 		dval += r.toFloat();
 	else if (isInt())
 		val += r.toInt();
-	else
-		*this = *giStr::concat(this, &r);
+	// else
+		// giStr::concat(*this, &r);
+#warning "XXX"
 
 	return *this;
 }
