@@ -1,33 +1,8 @@
 /*
- *	Gist -- Scripting language like data structures.
- *
- *	Gist provides C++ with a loosly typed data object similar to
- *	that found in languages like Python, JavaScript, etc.  A gist
- *	object takes care of its own storage management, using the Boehm
- *	conservative garbage collector.  It should be possible to use
- *	gist objects with careless abandon with fear of clobbering
- *	memory, so long as you don't use C++ to look inside.  With gist
- *	you should be able to code almost as easily as you can in Python,
- *	etc, but with code that is 10 - 100 times faster.
- *
- *	The data types that a gist object can have:
- *
- *		Int	32-bit integer
- *		Str	A character string
- *		Float	A 64-bit IEEE-748 floating point number
- *		Array	Simply array, single index 0 .. n
- *		Table	Associative array
- *		Long	Arbitrary length integer
- *		Real	Arbitrary length floating point number
- *		Code	Executable pseudo code (compiled script)
- *
- *	The last `Code' type is not implemented yet, and may never be.
- *	If it is, it will likely be compiled JavaScript code.  The two
- *	variable length types are incomplete.
+ *	Gist -- integers.
  */
 
-#ifndef __GIST_H__
-#define __GIST_H__
+#include	"gist.h"
 
 
 /**********************************************************************/
@@ -39,15 +14,14 @@ class gist
 	/*
 	 *	Constructors.
 	 *
-	 *	Note that there is no destructor.  Objects are just
-	 *	abandoned and left to the garbage collector to find.
-	 *	There is no cleaning up to do with a gist object.
+	 *	Note that there is no destructor, since we are using
+	 *	garbage collection to reclaim space.
 	 */
-	gist()			{ ptr = &Nil; }
-	gist(int v)		{ ptr = &Int; val = v; }
-	gist(unsigned v)	{ ptr = &Int; val = v; }
-	gist(long v)		{ ptr = &Int; val = v; }
-	gist(unsigned long v)	{ ptr = &Int; val = v; }
+	gist()			{ ptr = &nil; }
+	gist(int v)		{ ptr = 0; val = v; }
+	gist(unsigned v)	{ ptr = 0; val = v; }
+	gist(long v)		{ ptr = 0; val = v; }
+	gist(unsigned long v)	{ ptr = 0; val = v; }
 	gist(const gist & g)	{ ptr = g.ptr; val = g.val; }
 	gist(const gist * g)	{ ptr = g->ptr; val = g->val; }
 
@@ -62,10 +36,10 @@ class gist
 	/*
 	 *	Assignment.
 	 */
-	gist &	operator =(int v)		{ ptr = &Int; val = v; }
-	gist &	operator =(unsigned v)		{ ptr = &Int; val = v; }
-	gist &	operator =(long v)		{ ptr = &Int; val = v; }
-	gist &	operator =(unsigned long v)	{ ptr = &Int; val = v; }
+	gist &	operator =(int v)		{ ptr = 0; val = v; }
+	gist &	operator =(unsigned v)		{ ptr = 0; val = v; }
+	gist &	operator =(long v)		{ ptr = 0; val = v; }
+	gist &	operator =(unsigned long v)	{ ptr = 0; val = v; }
 	gist &	operator =(const gist & g)	{ ptr = g.ptr; val = g.val; }
 	gist &	operator =(const gist * g)	{ ptr = g->ptr; val = g->val; }
 
@@ -85,9 +59,9 @@ class gist
 
 	/********************************/
 	/*
-	 *	Subscripting.  It always returns a reference to a gist
-	 *	object, which will usually be an element of a gist array.
-	 *	The object can be modified in place.
+	 *	Subscripting.  It always returns a reference to a gist object,
+	 *	which will usually be an element of a gist array.  The object
+	 *	can be modified in place.
 	 */
 	gist &		operator [](int);
 	gist &		operator [](const char *);
@@ -121,11 +95,11 @@ class gist
 			operator double() const;
 
 	/*
-	 *	Obtain a string representation of the gist object (by
-	 *	using toString() if necessary), then copy the string,
-	 *	terminated with a '\0', into a new chunk of memory and
-	 *	return it.  Multiple calls may or may not return the same
-	 *	(cached) chunk of memory.
+	 *	Obtain a string representation of the gist object (by using
+	 *	toString() if necessary), then
+	 *	copy the string, terminated with a '\0', into a new chunk
+	 *	of memory and return it.  Multiple calls may or may not return
+	 *	the same chunk of memory.
 	 */
 			operator char *() const;
 
@@ -243,48 +217,8 @@ class gist
 	 */
 	struct overlowError {};
 
-	/********************************/
-	/*
-	 *	Typing.
-	 */
-	enum type_e
-	{
-		GT_NIL = 0x00,
-		GT_STR = 0x02,
-		GT_STR32 = 0x03,
-		GT_ARRAY = 0x04,
-		GT_TABLE = 0x06,
-		GT_CODE = 0x08,
-		GT_INT = 0x0a,
-		GT_FLOAT = 0x0c,
-		GT_LONG = 0x0e,
-		GT_REAL = 0x10,
-	};
-	type_e		type()		{ return (type_e)(ptr->type & ~1); }
-
-	int		isNil()		{ return ptr == &Nil; }
-	int		isInt()		{ return ptr == &Int; }
-	int		isStr()		{ return type() == GT_STR; }
-	int		isFloat()	{ return type() == GT_FLOAT; }
-	int		isNumber()	{ return type() >= GT_INT; }
-	int		isArray()	{ return type() >= GT_ARRAY; }
-	int		isTable()	{ return type() >= GT_TABLE; }
-
 	/**************************************************************/
 	/**************************************************************/
-	/*
-	 *	Gist per object storage.
-	 */
-
-	/*
-	 *	The base type of the internal gist data structure.
-	 */
-    private:
-	struct gist_internal
-	{
-		type_e	type;
-	};
-
 	/*
 	 *	Gist per object storage.  We try very hard to make this
 	 *	no more than 8 bytes.  The `ptr' is usually a pointer to
@@ -293,23 +227,15 @@ class gist
 	 *	pointer is non-zero, the type is determined in other ways.
 	 *	For non-integer values, the use of `value' is varied.
 	 */
-	gist_internal *		ptr;
-	union
-	{
-		long		val;
-		struct
-		{
-			unsigned short	skip;
-			unsigned short	cnt;
-		};
-	};
+    private:
+	void *		ptr;
+	long		val;
 
 	/*
-	 *	The NIL object and integer typing object.  All NIL objects,
-	 *	and integer objects point here.
+	 *	The NIL object.  Any gist that points here is a NIL object.
+	 *	The object itself does not contain anything useful.
 	 */
-	static gist_internal	Nil;
-	static gist_internal	Int;
+	static gist	nil;
 };
 
 

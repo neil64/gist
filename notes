@@ -149,3 +149,8 @@ My scripting language and object library
    be able to append without a copy.  Prepend could work in a similar way.
 
 *  I've coded a lot of gist.h, and it all seems to be falling out ok.
+
+*  Strings are to be read-only be default (like Python, JS, etc...), but
+   there is a call that makes a string read-write.  Once r/w, it can be
+   the gist becomes a reference to it;  that is, a copied gist will see
+   changes made elsewhere.
