@@ -5,6 +5,7 @@
 #include	<stdio.h>
 #include	<assert.h>
 #include	<stdlib.h>
+#include	<unistd.h>
 
 #include	"gist.h"
 #include	"sgml.h"
@@ -540,6 +541,13 @@ test_misc()
 	printf("\tnot testing copy(gist)\n");
 	// .... ?.copy(const gist &);
 	// .... ?.copy(const gist *);
+
+	{
+		char * hw1 = "Hello world";
+		static char hw2[] = "Hello world";
+
+		printf("\t&hw1 = %lx, &hw2 = %x\n", hw1, hw2);
+	}
 }
 
 

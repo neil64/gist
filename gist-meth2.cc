@@ -58,11 +58,13 @@ gist::strtrim(int s, unsigned c)
 		_strzero();
 }
 
+/**********************************************************************/
 
 int
 atoi(const gist & g, int base)
 {
-	throw gist::notYetError("atoi");
+	g._strflatten();
+	return ((giStr *)g.intern)->toInt(true, base);
 }
 
 
@@ -89,16 +91,29 @@ strupper(const gist & g)
 	throw gist::notYetError("strupper");
 }
 
+/**********************************************************************/
+
+void
+gist::_strsplit(const gist & str, const char * sep, int seplen)
+{
+	throw gist::notYetError("strsplit");
+}
+
 
 gist
 strsplit(const gist & str, const char * sep)
 {
-	throw gist::notYetError("strsplit(gist,char *)");
+	gist r;
+	r._strsplit(str, sep, strlen(sep));
+	return r;
 }
 
 
 gist
 strsplit(const gist & str, const gist & sep)
 {
-	throw gist::notYetError("strsplit(gist,gist)");
+	gist r;
+	sep._strflatten();
+	r._strsplit(str, sep.CCS(), sep.strlen());
+	return r;
 }

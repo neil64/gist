@@ -17,12 +17,12 @@
  *	The maximum number of characters that we will copy when concatenating
  *	strings.  If greater than this, we create a "multi" string.
  */
-const unsigned	maxCopy = 32;
+static const unsigned	maxCopy = 32;
 
 /*
  *	String space is allocated in multiples of this value.
  */
-const unsigned	strChunk = 64;
+static const unsigned	strChunk = 64;
 
 /**********************************************************************/
 /*
@@ -243,28 +243,108 @@ gist::_strzero()
  *	Public gist member functions.
  */
 
+/*
+ *	gist::set() will be a very commonly used function, particularly
+ *	the first "C string" version.  It is coded fairly carefully.
+ *	In particular we could have a single version that took a default
+ *	length argument, but that would cause the compiler to provide the
+ *	default in application code for every call.  So, there are two
+ *	versions of set().
+ */
+void
+gist::set(const char * s)
+{
+	giStr * sp = new giStr;
+	unsigned l;
+
+	if (!s || !*s)
+	{
+		sp->data = "";
+		l = 0;
+		goto hop;
+	}
+
+	l = ::strlen(s);
+
+	if (gistInternal::isReadOnlyData(s))
+	{
+		/*
+		 *	If the C string is in read only memory, we can
+		 *	refer to it directly.  With compilers like GCC,
+		 *	strings constants are always in the .rodata
+		 *	section, so this should be a big win.  In the
+		 *	following assignment, we deliberately cast away
+		 *	the const, but since `unique' is set to false
+		 *	below, we will never attempt to modify the data.
+		 */
+		sp->data = (char *)s;
+	}
+	else
+	{
+		sp->data = (char *)gistInternal::alloc(l+1);
+		memcpy(sp->data, s, l);
+		sp->data[l] = '\0';
+	}
+
+  hop:
+	// sp->index = 0;
+	sp->size = l;
+	sp->hasNull = true;
+
+	typ = GT_STR;
+	unique = false;		// 'cause the caller may use it for other
+	intern = sp;		// things, and 'cause it could be in read-
+	cnt = l;		// only memory, and other reasons.
+	skip = 0;
+}
+
+/******************************/
+
 void
 gist::set(const char * s, int l)
 {
-	giStr * sp = new giStr;
-
-#warning "broken for non-const strings, such as a local array of chars"
-		// do a non-portable test to see if the string is in
-		// the read only data section, and if so, use it;
-		// otherwise copy it.  Also, check for "" strings and
-		// just adjust the pointers.
-
-		// Also, it would be better to have a set(char *) function,
-		// so that calls didn't have to pass a -1 all the time,
-		// since the use of the length will be rare.
-
-	sp->index = 0;
-	sp->data = (char *)s;		// Drop const, but unique is false.
 	if (l < 0)
 	{
-		sp->hasNull = true;
-		l = ::strlen(s);
+		set(s);
+		return;
 	}
+
+	giStr * sp = new giStr;
+
+	if (!s || l == 0)
+	{
+		/*
+		 *	If we were not given any data, just be nice.
+		 */
+		sp->data = "";
+		sp->hasNull = true;
+		l = 0;
+		goto hop;
+	}
+
+	if (gistInternal::isReadOnlyData(s))
+	{
+		/*
+		 *	If the C string is in read only memory, we can
+		 *	refer to it directly.  With compilers like GCC,
+		 *	strings constants are always in the .rodata
+		 *	section, so this should be a big win.  In the
+		 *	following assignment, we deliberately cast away
+		 *	the const, but since `unique' is set to false
+		 *	below, we will never attempt to modify the data.
+		 */
+		sp->data = (char *)s;
+	}
+	else
+	{
+		sp->data = (char *)gistInternal::alloc(l+1);
+		memcpy(sp->data, s, l);
+		sp->data[l] = '\0';
+		sp->hasNull = true;
+	}
+
+  hop:
+	// sp->index = 0;
 	sp->size = l;
 
 	typ = GT_STR;

@@ -205,16 +205,25 @@ class giIndexGist
 /*
  *	`gistInternal' is a class that is mentioned in the main `gist'
  *	class as a generic name for internal data.  We don't store anything
- *	there;  we jsut use it as a handy place to put a few methods.
+ *	there;	we just use it as a handy place to put a few methods.
  *	Note that some callers of alloc expect the memory to be zeroed
  *	(the Boehm GC allocator does this).
  */
 struct gistInternal
 {
+	/*
+	 *	GC allocator stuff.
+	 */
 	void *		operator new(unsigned);
 	void		operator delete(void *) {}
 	static void *	alloc(unsigned);
 	static void	free(void *);
+
+	/*
+	 *	OS dependent stuff.
+	 */
+	static bool	isReadOnlyData(const void * ptr);
+	static void	readOnlyDataTestInit();
 };
 
 

@@ -33,6 +33,16 @@ gcInit()
 			GC_init();
 		}
 
+		/*
+		 *	Try to find the address bounds of the read only
+		 *	data section.  This is used to optimise setting
+		 *	of strings to constant values from C strings.
+		 */
+		gistInternal::readOnlyDataTestInit();
+
+		/*
+		 *	Don't try this again.
+		 */
 		gcInitialized = 1;
 	}
 }
@@ -48,6 +58,8 @@ gist::operator new(unsigned sz)
 	 *	The allocation size here should almost always be 8 (or
 	 *	is it 12?), the size of a gist.	 The only time it will be
 	 *	different is if someone derives from gist.
+	 *
+	 *	Much of gist assumes that the new memory is cleared.
 	 */
 	void * ptr = GC_malloc(sz);
 	if (!ptr)
@@ -61,6 +73,9 @@ gistInternal::operator new(unsigned sz)
 {
 	gcInit();
 
+	/*
+	 *	Much of gist assumes that the new memory is cleared.
+	 */
 	void * ptr = GC_malloc(sz);
 	if (!ptr)
 		throw std::bad_alloc();
@@ -71,6 +86,9 @@ gistInternal::operator new(unsigned sz)
 void *
 gistInternal::alloc(unsigned sz)
 {
+	/*
+	 *	Much of gist assumes that the new memory is cleared.
+	 */
 	void * ptr = GC_malloc(sz);
 	if (!ptr)
 		throw std::bad_alloc();

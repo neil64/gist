@@ -105,7 +105,8 @@ class gist
 						  all = g.all; }
 	void		set(const gist * g)	{ ((gist *)g)->unique = 0;
 						  all = g->all; }
-	void		set(const char *, int = -1);
+	void		set(const char *);
+	void		set(const char *, int);
 	void		set(long long v)	{ typ = GT_INT; val = v; }
 	void		set(unsigned long long v) { typ = GT_INT; val = v; }
 	void		set(long double v)	{ typ = GT_FLOAT; dval = v; }
@@ -172,14 +173,15 @@ class gist
 	 *	only supported by the numeric types and the string type.
 	 *	Overflow and value errors can result.
 	 *
-	 *	If converting a string to an integer with `toInt()', the C
-	 *	library `strtol' function is used, allowing conversions using
-	 *	base 2 to 36, and the default "base 0" which accepts the
-	 *	prefix "0x" for hexadecimal and "0" for octal.	When casting
-	 *	a string to an integer, only base 10 is accepted.  If the
-	 *	conversion causes an overflow, `toInt()' and `toFloat()'
-	 *	both throw and `overflowError' exception.  Overflow from one
-	 *	of the casts returns an undefined result.
+	 *	If converting a string to an integer with `toInt()', the
+	 *	the conversion is like the C library function `strtol',
+	 *	allowing conversions using base 2 to 36, and the default
+	 *	"base 0" which accepts the prefix "0x" for hexadecimal and
+	 *	"0" for octal.	When casting a string to an integer, only
+	 *	base 10 is accepted.  If the conversion causes an overflow,
+	 *	`toInt()' and `toFloat()' both throw and `overflowError'
+	 *	exception.  Overflow from one of the casts returns an
+	 *	undefined result.
 	 */
 	long		toInt(unsigned base = 0) const;
 			operator int() const;
@@ -542,6 +544,7 @@ class gist
 	unsigned	_strpiece(int & index, const char *& ptr) const;
 	void		_strflatten() const;
 	void		_strzero();
+	void		_strsplit(const gist &, const char *, int);
 
 	gist &		_arrayindex(long);
 	gist &		_tableindex(long, bool);
