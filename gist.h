@@ -620,9 +620,11 @@ class gist
 
 	int		strncmp(const char *, int = -1) const;
 	int		strncmp(const gist &, int = -1) const;
-	friend int	strncmp(const gist &, const char *, int = -1);
+	friend int	strncmp(const gist & l, const char * r, int z = -1)
+				{ return l.strncmp(r, z); }
 	friend int	strncmp(const char *, const gist &, int = -1);
-	friend int	strncmp(const gist &, const gist &, int = -1);
+	friend int	strncmp(const gist & l, const gist & r, int z = -1)
+				{ return l.strncmp(r, z); }
 
 	int		strcasecmp(const char *) const;
 	int		strcasecmp(const gist &) const;

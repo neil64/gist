@@ -172,6 +172,41 @@ isdigit(const gist & l)
 
 /**********************************************************************/
 
+#warning "these could improve"
+
+
+int
+gist::strncmp(const char * r, int z) const
+{
+	const char * ll = CCS();
+	if (z < 0)
+		z = ::strlen(r);
+	return ::strncmp(ll, r, (unsigned)z);
+}
+
+
+int
+gist::strncmp(const gist & r, int z) const
+{
+	const char * ll = CCS();
+	const char * rr = r.CCS();
+	if (z < 0)
+		z = r.len();
+	return ::strncmp(ll, rr, (unsigned)z);
+}
+
+
+int
+strncmp(const char * l, const gist & r, int z)
+{
+	const char * rr = r.CCS();
+	if (z < 0)
+		z = r.len();
+	return ::strncmp(l, rr, (unsigned)z);
+}
+
+/**********************************************************************/
+
 int
 strncasecmp(const gist & l, const char * rp, int rl)
 {
