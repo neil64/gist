@@ -11,13 +11,19 @@
  *	Indexing.
  */
 
-class giChunk;				// Forward reference
+class giChunk;				// Forward references
+class giSChunk;				// Forward references
+class giAChunk;
 
 
 struct intKey
 {
 	int		key;
-	giChunk *	data;
+	union {
+		giChunk * chunk;
+		giSChunk * schunk;
+		giAChunk * achunk;
+	};
 	intKey	*	fwd[0];
 };
 
@@ -171,25 +177,11 @@ class giIndexStr
 /******************************/
 
 /*
- *	A string chunk.  Used to store pieces of strings in the skip list.
- *	`data' is the string data, `len' is the string length;  `data0'
- *	points to the start of the string storage chunk.  It is not used
- *	other than to create a reference for the garbage collector, since
- *	we promise the GC that we would not have internal references.
- */
-struct giChunk
-{
-	char *		data;
-	unsigned	len;
-	char *		data0;
-};
-
-/******************************/
-
-/*
  *	`gistInternal' is a class that is mentioned in the main `gist'
  *	class as a generic name for internal data.  We don't store anything
  *	there;  we jsut use it as a handy place to put a few methods.
+ *	Note that some callers of alloc expect the memory to be zeroed
+ *	(the Boehm GC allocator does this).
  */
 struct gistInternal
 {
@@ -251,8 +243,7 @@ struct giStr : gistInternal
 	char *		data;
 	unsigned	size;
 	union {
-		// unsigned	len;
-		giChunk *	chunk;
+		giSChunk *	chunk;
 		bool		hasNull;
 	};
 
@@ -262,6 +253,50 @@ struct giStr : gistInternal
 	long		toInt(bool sign, unsigned base);
 	double		toFloat();
 };
+
+/******************************/
+
+struct giArray : gistInternal
+{
+	giIndexInt *	index;
+	giAChunk *	cache;
+	unsigned	ci;
+};
+
+/******************************/
+
+/*
+ *	A base class for chunks, to help the skip list code.
+ */
+struct giChunk
+{
+};
+
+/*
+ *	A string chunk.  Used to store pieces of strings in the skip list.
+ *	`data' is the string data, `len' is the string length;  `data0'
+ *	points to the start of the string storage chunk.  It is not used
+ *	other than to create a reference for the garbage collector, since
+ *	we promise the GC that we would not have internal references.
+ */
+struct giSChunk : giChunk
+{
+	char *		data;
+	unsigned	len;
+	char *		data0;
+};
+
+/*
+ *	An array chunk.  Storage for a small number of array elements.
+ */
+struct giAChunk : giChunk
+{
+	enum {
+		items = 16
+	};
+	gist		g[items];
+};
+
 
 /**********************************************************************/
 

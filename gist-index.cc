@@ -29,8 +29,8 @@ giIndexInt::giIndexInt()
 {
 	// unsigned		i;
 
-	for (unsigned i = 0; i < maxLevel; i++)
-		head[i] = 0;
+	//for (unsigned i = 0; i < maxLevel; i++)
+	//	head[i] = 0;
 	levels = 1;
 }
 
@@ -224,7 +224,7 @@ giIndexInt::insert(int key, giChunk * data)
 	i = sizeof (intKey) + sizeof (intKey *) * level;
 	p = (intKey *)gistInternal::alloc(i);
 	p->key = key;
-	p->data = data;
+	p->chunk = data;
 
 	if (level > levels)
 	{

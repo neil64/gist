@@ -522,7 +522,7 @@ gist::_strpiece(int & ix, const char *& pt) const
 		throw gist::internalError("bogus index in gist::strpiece");
 
 	i1 -= kp->key;
-	giChunk * cp = kp->data;
+	giSChunk * cp = kp->schunk;
 	pt = &((const char *)cp->data)[i1];
 
 	i1 = cp->len - i1;
@@ -559,7 +559,7 @@ strpiece(const gist & g, int & ix, const char *& pt)
 void
 giStr::makeMulti(unsigned len)
 {
-	giChunk * cp = (giChunk *)gistInternal::alloc(sizeof (giChunk));
+	giSChunk * cp = (giSChunk *)gistInternal::alloc(sizeof (giSChunk));
 	cp->data = data;
 	cp->data0 = data;
 	cp->len = len;
@@ -677,7 +677,8 @@ gist::strcat(const gist & r)
 		if (!ls->index)
 			ls->makeMulti(skip + cnt);
 
-		giChunk * cp = (giChunk *)gistInternal::alloc(sizeof (giChunk));
+		giSChunk * cp =
+			(giSChunk *)gistInternal::alloc(sizeof (giSChunk));
 		cp->data = (char *)gistInternal::alloc(strChunk);
 		cp->data0 = cp->data;
 		cp->len = rp->cnt;
@@ -725,9 +726,10 @@ gist::strcat(const gist & r)
 	{
 		/*
 		 *	The right is a (big) single.  Create a reference
-		 *	(giChunk) to it and store it in our index.
+		 *	(giSChunk) to it and store it in our index.
 		 */
-		giChunk * cp = (giChunk *)gistInternal::alloc(sizeof (giChunk));
+		giSChunk * cp =
+			(giSChunk *)gistInternal::alloc(sizeof (giSChunk));
 		cp->data0 = rs->data;
 		cp->data = rs->data + rp->skip;
 		cp->len = rp->cnt;
@@ -748,8 +750,8 @@ gist::strcat(const gist & r)
 		     kp;
 		     kp = rs->index->next(kp->key))
 		{
-			ls->index->insert(i, kp->data);
-			i += kp->data->len;
+			ls->index->insert(i, kp->chunk);
+			i += kp->schunk->len;
 		}
 
 		ls->index->max = i;
@@ -805,7 +807,7 @@ strncat(char * l, const gist & r, unsigned c)
 /************************************************************/
 
 unsigned
-gist::strcpy(char * dest, const gist & src, unsigned start, unsigned count)
+strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 {
 	int ix = start;
 	unsigned l;

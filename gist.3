@@ -210,6 +210,33 @@ As soon as the original object is used or changed, the
 pointer should be considered to refer to read-only data;
 changing the string data though the pointer after the object
 has been used or modified can have unpredictable results.
+.SH ARRAYS
+.IP \(bu .3i
+Arrays are created by first setting a
+.B gist
+object to NIL and then subscripting it, or by calling the
+.BR array ()
+method.
+A
+.B gist
+object's default value is NIL, so simply creating a
+.B gist
+object is good enough.
+When the NIL object is first subscripted, it will be converted to an array.
+.IP \(bu
+Indexing an array will return a reference to the array element.
+The array will be expanded to include the element if necessary.
+Note that just reading an element is enough to extend the array, since the
+.B gist
+library has no way of knowing if a particular subscript will be used or
+assigned to.
+.SH TABLES
+.IP \(bu .3i
+Tables are created by calling the
+.BR table ()
+method on a
+.B gist object.
+Once created, the table can be subscripted as usual.
 .SH EXCEPTIONS
 .B Gist
 uses the C++ exception handling mechanism to handle situations it

@@ -511,6 +511,7 @@ class gist
 	void		_strflatten() const;
 
 	gist &		_arrayindex(long);
+	gist &		_makearray(long);
 	gist &		_tableindex(long);
 	gist &		_tableindex(double);
 	gist &		_tableindex(const char *);
@@ -565,7 +566,7 @@ class gist
 	void		strcopyins(const char *);
 	void		strins(const gist &);
 
-	static unsigned	strcpy(char * dest, const gist & src,
+	friend unsigned	strcpy(char * dest, const gist & src,
 				unsigned start = 0, unsigned count = (~0U>>1));
 
 	/*
@@ -575,6 +576,8 @@ class gist
 	void		insert(const gist &);
 	gist &		pop();
 	gist &		shift();
+	unsigned	len() const;		// Works on strings also.
+	friend unsigned	len(const gist &);
 
 	/*
 	 *	Formatting.

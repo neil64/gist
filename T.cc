@@ -21,6 +21,54 @@ const char *	ascii = " !\"#$%&'()*+,-./0123456789:;<=>?"
 
 
 void
+print_gist(gist & g)
+{
+	switch (g.type())
+	{
+	case gist::GT_NIL:
+		printf("nil");
+		break;
+
+	case gist::GT_STR:
+		printf("str = %s", (const char *)g);
+		break;
+
+	case gist::GT_ARRAY:
+		printf("array");
+		break;
+
+	case gist::GT_TABLE:
+		printf("table");
+		break;
+
+	case gist::GT_CODE:
+		printf("code");
+		break;
+
+	case gist::GT_INT:
+		printf("int = %ld", (long)g);
+		break;
+
+	case gist::GT_FLOAT:
+		printf("float = %g", (double)g);
+		break;
+
+	case gist::GT_LONG:
+		printf("long");
+		break;
+
+	case gist::GT_REAL:
+		printf("real");
+		break;
+
+	default:
+		printf("huh?");
+		break;
+	}
+}
+
+
+void
 test_init()
 {
 	unsigned i;
@@ -30,45 +78,7 @@ test_init()
 	for (i = 0; i < sizeof ga / sizeof ga[0]; i++)
 	{
 		printf("\t0: ");
-		switch (ga[i].type())
-		{
-		case gist::GT_NIL:
-			printf("nil");
-			break;
-
-		case gist::GT_STR:
-			printf("str = %s", (const char *)ga[i]);
-			break;
-
-		case gist::GT_ARRAY:
-			printf("array");
-			break;
-
-		case gist::GT_TABLE:
-			printf("table");
-			break;
-
-		case gist::GT_CODE:
-			printf("code");
-			break;
-
-		case gist::GT_INT:
-			printf("int = %ld", (long)ga[i]);
-			break;
-
-		case gist::GT_FLOAT:
-			printf("float = %g", (double)ga[i]);
-			break;
-
-		case gist::GT_LONG:
-			printf("long");
-			break;
-
-		case gist::GT_REAL:
-			printf("real");
-			break;
-		}
-
+		print_gist(ga[i]);
 		printf("\n");
 	}
 }
@@ -431,12 +441,33 @@ test_string()
 
 
 void
-test_subscript()
+test_array()
 {
-	gist a = 123;
-	gist b = a[1.0f];
+	printf("array1:\n");
 
-	printf("\tb = %d\n", (int)b);
+	gist a;
+
+	a[10] = 10;
+	a[5] = "5";
+	a[0] = 0;
+	a[1] = "one";
+	a[2][3] = "2/3";
+
+	printf("\tarray length = %d (%d)\n", a.len(), len(a));
+
+	for (unsigned i = 0; i < a.len(); i++)
+	{
+		printf("\t%2d: ", i);
+		print_gist(a[i]);
+		printf("\n");
+	}
+}
+
+
+void
+test_table()
+{
+	printf("table1:\n");
 }
 
 
@@ -479,7 +510,8 @@ main(int argc, char ** argv)
 		test_assign();
 		test_float();
 		test_string();
-		// test_subscript();
+		test_array();
+		test_table();
 		test_misc();
 	}
 	catch (gist::valueError e)
