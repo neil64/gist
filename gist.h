@@ -7,6 +7,112 @@
 
 /**********************************************************************/
 
+class GistObject
+{
+	friend class Str;
+	friend class Long;
+
+    private:
+	void incref() { ref++; }
+	void decref() { ref--; }
+
+	int	ref;
+};
+
+namespace Gist
+{
+	// class GistObject;
+
+	class Gist
+	{
+	    public:
+		Gist()		{}
+		~Gist()		{}
+
+	    protected:
+		GistObject * obj;
+
+		void	incref();
+		void	decref();
+	};
+}
+
+
+// class Int : Gist
+// {
+// };
+
+
+class Long : Gist::Gist
+{
+};
+
+
+class Real : Gist::Gist
+{
+};
+
+
+class Str // : Gist::Gist
+{
+    public:
+	Str()			{ obj = 0; }
+	Str(const char *);
+	Str(const Str & s)	{ obj = s.obj; obj->incref(); }
+	~Str()			{}
+
+	Str &	operator =(const char *);
+	Str &	operator =(const Str &);
+
+	Str &	set(const char *, unsigned len = (~0U>>1));
+	Str &	set(const Str &);
+
+    private:
+	GistObject *	obj;
+};
+
+
+// class Float : Gist
+// {
+// };
+
+
+class Array : Gist::Gist
+{
+};
+
+
+class Table : Gist::Gist
+{
+    public:
+	Gist &	operator [](int);
+	Gist &	operator [](const char *);
+	Gist &	operator [](const Gist &);
+};
+
+
+class Code : Gist::Gist
+{
+};
+
+
+
+
+// using namespace Gist::Gist;
+// using namespace Gist::Int;
+// using namespace Gist::Long;
+// using namespace Gist::Real;
+// using namespace Gist::Str;
+// using namespace Gist::Float;
+// using namespace Gist::Array;
+// using namespace Gist::Table;
+// using namespace Gist::Code;
+
+
+#if 0
+
+/**********************************************************************/
+
 /*
  *	This is *the* external interface for Gist.  Instances of this class
  *	are a single Gist value/object.  Member functions provide access to
@@ -98,6 +204,8 @@ class Gist_t
 	 */
 	class Pair_t *	data;
 };
+
+#endif // 0
 
 /**********************************************************************/
 
