@@ -5,7 +5,8 @@
 
 OBJS =		gist.o gist-index.o gist-array.o gist-table.o \
 		gist-int.o gist-float.o gist-str.o gist-long.o gist-bool.o \
-		gist-op1.o gist-op2.o gist-op3.o gist-op4.o gist-op5.o
+		gist-op1.o gist-op2.o gist-op3.o gist-op4.o gist-op5.o \
+		gist-meth1.o gist-meth2.o
 
 
 CXXFLAGS =	-g -Wall

@@ -35,14 +35,14 @@ gist::array(unsigned l)
 		{
 			unsigned i;
 			unsigned pi = l / giAChunk::items;
-			unsigned px = i % giAChunk::items;
+			unsigned px = l % giAChunk::items;
 
 			intKey * kp = ap->index->search(pi);
 
 			if (kp)
 			{
 				giAChunk * pp = kp->achunk;
-				for (i = px; px < giAChunk::items; i++)
+				for (i = px; i < giAChunk::items; i++)
 					pp->g[i].clear();
 			}
 
@@ -51,6 +51,9 @@ gist::array(unsigned l)
 			for (; i < pi; i++)
 				ap->index->remove(i);
 		}
+
+		ap->len = l;
+		ap->cache = 0;
 	}
 
 	return *this;
@@ -95,25 +98,22 @@ gist::_arrayindex(long i)
 }
 
 
-unsigned
-gist::len() const
+void
+gist::push(const gist & v)
 {
-	if (typ == GT_ARRAY)
-		return ((giArray *)ptr)->len;
-	else if (typ == GT_STR)
-		return strlen();
-	else
-		return 0;
+	if (typ != GT_ARRAY)
+		throw typeError("push expects an array");
+	array(((giArray *)ptr)->len + 1);
+	(*this)[-1] = v;
 }
 
 
-unsigned
-len(const gist & g)
+gist &
+gist::pop()
 {
-	if (g.typ == gist::GT_ARRAY)
-		return ((giArray *)g.ptr)->len;
-	else if (g.typ == gist::GT_STR)
-		return g.strlen();
-	else
-		return 0;
+	if (typ != GT_ARRAY)
+		throw typeError("pop expects an array");
+	gist * r = new gist((*this)[-1]);
+	array(((giArray *)ptr)->len - 1);
+	return *r;
 }

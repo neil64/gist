@@ -509,6 +509,7 @@ class gist
 	char *		_strcast(bool rw) const;
 	unsigned	_strpiece(int & index, const char *& ptr) const;
 	void		_strflatten() const;
+	void		_strzero();
 
 	gist &		_arrayindex(long);
 	gist &		_tableindex(long);
@@ -546,23 +547,34 @@ class gist
 	friend unsigned	strpiece(const gist &, int & index, const char *& ptr);
 
 	void		strcat(int);
-	void		strcat(const char *);
-	void		strcopycat(const char *);
+	void		strcat(const char *, int count = (~0U>>1));
+	void		strcopycat(const char *, int count = (~0U>>1));
 	void		strcat(const gist &);
 	friend void	strcat(gist &, int);
-	friend void	strcat(gist &, const char *);
-	friend void	strcopycat(gist &, const char *);
+	friend void	strcat(gist &, const char *, int count = (~0U>>1));
+	friend void	strcopycat(gist &, const char *, int count = (~0U>>1));
 	friend void	strcat(gist &, const gist &);
 	friend void	strcat(char *, const gist &);
-	friend void	strncat(char *, const gist &, unsigned);
+	friend void	strncat(char *, const gist &, unsigned count);
 
 	void		strins(int);
-	void		strins(const char *);
-	void		strcopyins(const char *);
+	void		strins(const char *, int count = (~0U>>1));
+	void		strcopyins(const char *, int count = (~0U>>1));
 	void		strins(const gist &);
 
 	friend unsigned	strcpy(char * dest, const gist & src,
 				unsigned start = 0, unsigned count = (~0U>>1));
+	friend unsigned	strncpy(char * dest, const gist & src, unsigned count)
+				{ return strcpy(dest, src, 0, count); }
+
+	gist		substr(int start, unsigned count = (~0U>>1)) const;
+	friend gist	substr(const gist & src, int start,
+						unsigned count = (~0U>>1))
+				{ return src.substr(start, count); }
+	void		strtrim(int start, unsigned count = (~0U>>1));
+	friend void	strtrim(gist & str, int start,
+						unsigned count = (~0U>>1))
+				{ return str.strtrim(start, count); }
 
 	/*
 	 *	Array's.
@@ -572,7 +584,11 @@ class gist
 	gist &		pop();
 	void		unshift(const gist &);
 	gist &		shift();
-	unsigned	len() const;		// Works on strings also.
+
+	/*
+	 *	Generic methods.
+	 */
+	unsigned	len() const;
 	friend unsigned	len(const gist &);
 
 	/*

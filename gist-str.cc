@@ -215,6 +215,27 @@ gist::_strflatten() const
 	sp->hasNull = true;
 }
 
+
+void
+gist::_strzero()
+{
+	if (!isStr())		// (should never happen)
+		return;
+
+	giStr * sp = (giStr *)ptr;
+
+	sp->index = 0;
+	sp->data = 0;
+	sp->hasNull = false;
+	sp->size = 0;
+
+	cnt = 0;
+	skip = 0;
+
+	unique = false;		// (doesn't matter, but false makes strcat()
+				//  slightly more efficient)
+}
+
 /**********************************************************************/
 /**********************************************************************/
 /**********************************************************************/
@@ -587,6 +608,17 @@ gist::strcat(const gist & r)
 	else
 		rp = new gist(r.toString());
 
+	/*
+	 *	Check for the degenerate cases.
+	 */
+	if (rp->cnt == 0)
+		return;
+	if (cnt == 0)
+	{
+		*this = *rp;
+		return;
+	}
+
 	giStr * ls = (giStr *)ptr;
 	giStr * rs = (giStr *)rp->ptr;
 
@@ -769,9 +801,13 @@ gist::strcat(int c)
 
 
 void
-gist::strcat(const char * r)
+gist::strcat(const char * r, int count)
 {
+	if (count == 0)
+		return;
 	gist rx(r);
+	if (count > 0)
+		rx.strtrim(0, count);
 	strcat(rx);
 }
 
@@ -786,9 +822,13 @@ strcat(gist & g, int c)
 
 
 void
-strcat(gist & g, const char * r)
+strcat(gist & g, const char * r, int count)
 {
+	if (count == 0)
+		return;
 	gist rx(r);
+	if (count > 0)
+		rx.strtrim(0, count);
 	g.strcat(rx);
 }
 
@@ -796,12 +836,14 @@ strcat(gist & g, const char * r)
 void
 strcat(char * l, const gist & r)
 {
+	throw gist::notYetError("strcat");
 }
 
 
 void
 strncat(char * l, const gist & r, unsigned c)
 {
+	throw gist::notYetError("strncat");
 }
 
 /************************************************************/

@@ -21,7 +21,7 @@ const char *	ascii = " !\"#$%&'()*+,-./0123456789:;<=>?"
 
 
 void
-print_gist(gist & g)
+printGist(gist & g)
 {
 	switch (g.type())
 	{
@@ -78,7 +78,7 @@ test_init()
 	for (i = 0; i < sizeof ga / sizeof ga[0]; i++)
 	{
 		printf("\t0: ");
-		print_gist(ga[i]);
+		printGist(ga[i]);
 		printf("\n");
 	}
 }
@@ -466,9 +466,20 @@ test_array()
 	for (unsigned i = 0; i < a.len(); i++)
 	{
 		printf("\t%2d: ", i);
-		print_gist(a[i]);
+		printGist(a[i]);
 		printf("\n");
 	}
+
+	a.array(16);
+	a[15] = "fifteen";
+	gist s = a.pop();
+	printf("\ta[15] = %s\n", s.CCS());
+	printf("\ta.len = %d\n", a.len());
+
+	a.array(16);
+	printf("\tnew element 16 = ");
+	printGist(a[15]);
+	printf("\n");
 }
 
 
@@ -477,6 +488,24 @@ test_table()
 {
 	printf("table1:\n");
 }
+
+
+#if 0
+void
+test_pickle()
+{
+	printf("pickle1:\n");
+
+	gist::pickle pik;
+	gist hw = "Hello world!";
+	gist str;
+
+	pik.set(hw);
+	pik.out(str);
+
+	printf("\tpickled hello world = '%s'\n", str.CCS());
+}
+#endif
 
 
 void
@@ -520,6 +549,7 @@ main(int argc, char ** argv)
 		test_string();
 		test_array();
 		test_table();
+		// test_pickle();
 		test_misc();
 	}
 	catch (gist::valueError e)
