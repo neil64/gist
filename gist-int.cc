@@ -28,8 +28,7 @@ gist::operator long() const
 		{
 			try
 			{
-				_strflatten();
-				return ((giStr *)intern)->toInt(true, 10);
+				return _toInt(true, 10);
 			}
 			catch (valueError)	{}
 			catch (overflowError)	{}
@@ -70,8 +69,7 @@ gist::operator unsigned long() const
 		{
 			try
 			{
-				_strflatten();
-				return ((giStr *)intern)->toInt(false, 10);
+				return _toInt(false, 10);
 			}
 			catch (valueError)	{}
 			catch (overflowError)	{}
@@ -110,8 +108,7 @@ gist::toInt(unsigned base) const
 		throw valueError("toInt");
 
 	case GT_STR:
-		_strflatten();
-		return ((giStr *)intern)->toInt(true, base);
+		return _toInt(true, base);
 
 	case GT_INT:
 		return val;
@@ -119,4 +116,91 @@ gist::toInt(unsigned base) const
 	case GT_FLOAT:
 		return (long)dval;
 	}
+}
+
+
+long
+gist::_toInt(bool sign, unsigned base) const
+{
+	unsigned long n = 0;
+	bool neg = false;
+	bool seen = false;
+	int c;
+
+	_strflatten();
+	char * str = &((giStr *)intern)->data[skip];
+
+	if (base == 1 || base > 36)
+		throw gist::valueError("bad base in toInt");
+
+	while (*str == ' ' || *str == '\t')
+		str++;
+
+	if (sign && *str == '-')
+	{
+		neg = true;
+		str++;
+	}
+	else if (base == 0 && *str == '0')
+	{
+		c = str[1];
+		if (c == 'x' || c == 'X')
+		{
+			base = 16;
+			str += 2;
+		}
+		else
+		{
+			base = 8;
+			str++;
+			seen = true;
+		}
+	}
+
+	while ((c = *str))
+	{
+		if (c >= '0' && c <= '9')
+			c -= '0';
+		else if (c >= 'A' && c <= 'Z')
+			c -= 'A' - 10;
+		else if (c >= 'a' && c <= 'z')
+			c -= 'a' - 10;
+		else
+			break;
+		str++;
+
+		if (c >= (signed)base)
+			goto value;
+
+		seen = true;
+
+		unsigned long n1 = n * base;
+		if (n1 < n)
+			goto overflow;
+		n = n1 + c;
+	}
+
+	while (c == ' ' || c == '\t' || c == '\n')
+		c = *str++;
+	if (*str != '\0')
+		goto value;
+
+	if (sign)
+	{
+		if (neg && n == (~0U>>1) + 1)
+			return n;
+		if (n > (~0U>>1))
+			goto overflow;
+		if (neg)
+			return -(long)n;
+		else
+			return n;
+	}
+	else
+		return n;
+
+  value:
+	throw gist::valueError("bad digit in toInt");
+  overflow:
+	throw gist::overflowError("toInt");
 }

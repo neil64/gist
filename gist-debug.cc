@@ -90,14 +90,18 @@ gistPrint(gist * gp, const char * label, int level)
 			giStr * sp = (giStr *)gp->intern;
 			giIndexInt * ip = sp->index;
 			giSChunk * cp = sp->chunk;
-			fprintf(stderr, "STR  intern=0x%08x, index=0x%08x, "
-					"skip=%d, cnt=%d,\n",
-				(int)sp, (int)ip,
-				gp->skip, gp->cnt);
+
+			fprintf(stderr, "STR  unique=%s, skip=%d, cnt=%d, "
+					"intern=0x%08x, \n",
+				gp->unique ? "true" : "false",
+				gp->skip, gp->cnt, (int)sp);
 			indent("    ", level);
 			fprintf(stderr, "     "
-					"data=0x%08x, size=%d, chunk=0x%08x\n",
+					"index=0x%08x, data=0x%08x, "
+					"size=%d, chunk=0x%08x\n",
+				(int)ip,
 				(int)sp->data, sp->size, (int)cp);
+
 			if (!ip)
 			{
 				indent("data", level+1);
@@ -132,8 +136,9 @@ gistPrint(gist * gp, const char * label, int level)
 	case gist::GT_FILE:
 		{
 			giFile * fp = (giFile *)gp->intern;
-			fprintf(stderr, "FILE  intern=0x%08x, "
+			fprintf(stderr, "FILE  unique=%s, intern=0x%08x, "
 					"%c%c%c%c, fd=%d\n",
+				gp->unique ? "true" : "false",
 				(int)fp,
 				fp->open ? 'o' : '-',
 				fp->readable ? 'r' : '-',

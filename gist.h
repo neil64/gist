@@ -583,6 +583,7 @@ class gist
 	// void		_strzero();
 	void		_strsplit(const gist &);
 	void		_strsplit(const gist &, const char *, int);
+	long		_toInt(bool sign, unsigned base) const;
 
 	gist &		_arrayindex(long);
 	gist &		_tableindex(long, bool);

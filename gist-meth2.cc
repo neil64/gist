@@ -68,8 +68,7 @@ gist::strtrim(int s, unsigned c)
 int
 atoi(const gist & g, int base)
 {
-	g._strflatten();
-	return ((giStr *)g.intern)->toInt(true, base);
+	return g._toInt(true, base);
 }
 
 

@@ -5,131 +5,9 @@
  */
 
 #include	<stdio.h>
-#include	<string.h>
 #include	<memory.h>
-#include	<stdlib.h>
-#include	<errno.h>
 #include	"gist.h"
 #include	"gist-internal.h"
-
-
-/**********************************************************************/
-/*
- *	Internal gist member functions.
- */
-
-
-long
-giStr::toInt(bool sign, unsigned base)
-{
-	const char * cp = data;
-	unsigned long n = 0;
-	bool neg = false;
-	bool seen = false;
-	int c;
-
-	if (base == 1 || base > 36)
-		throw gist::valueError("bad base in toInt");
-
-	while (*cp == ' ' || *cp == '\t')
-		cp++;
-
-	if (sign && *cp == '-')
-	{
-		neg = true;
-		cp++;
-	}
-	else if (base == 0 && *cp == '0')
-	{
-		c = cp[1];
-		if (c == 'x' || c == 'X')
-		{
-			base = 16;
-			cp += 2;
-		}
-		else
-		{
-			base = 8;
-			cp++;
-			seen = true;
-		}
-	}
-
-	while ((c = *cp++))
-	{
-		if (c >= '0' && c <= '9')
-			c -= '0';
-		else if (c >= 'A' && c <= 'Z')
-			c -= 'A' - 10;
-		else if (c >= 'a' && c <= 'z')
-			c -= 'a' - 10;
-		else
-			break;
-
-		if (c >= (signed)base)
-			goto value;
-
-		seen = true;
-
-		unsigned long n1 = n * base;
-		if (n1 < n)
-			goto overflow;
-		n = n1 + c;
-	}
-
-	while (c == ' ' || c == '\t' || c == '\n')
-		c = *cp++;
-	if (*cp != '\0')
-		goto value;
-
-	if (sign)
-	{
-		if (neg && n == (~0U>>1) + 1)
-			return n;
-		if (n > (~0U>>1))
-			goto overflow;
-		if (neg)
-			return -(long)n;
-		else
-			return n;
-	}
-	else
-		return n;
-
-  value:
-	throw gist::valueError("bad digit in toInt");
-  overflow:
-	throw gist::overflowError("toInt");
-}
-
-
-double
-giStr::toFloat()
-{
-	int err = errno;
-	errno = 0;
-	char * ep;
-
-	double n = strtod(data, &ep);
-
-	int e = errno;
-	errno = err;
-
-	if (e == ERANGE)
-		throw gist::overflowError("toFloat");
-
-	if (ep == data)
-		goto value;
-	while (*ep == ' ' || *ep == '\t' || *ep == '\n')
-		ep++;
-	if (*ep != '\0')
-		goto value;
-
-	return n;
-
-  value:
-	throw gist::valueError("toFloat");
-}
 
 
 /**********************************************************************/
@@ -196,7 +74,7 @@ gist::_strflatten() const
 	giStr * sp = (giStr *)gp->intern;
 	unsigned l = gp->cnt;
 
-	if (!sp->index && gp->unique)
+	if (!sp->index)
 	{
 		char * dp = sp->data;
 		unsigned sk = gp->skip;
@@ -204,7 +82,7 @@ gist::_strflatten() const
 		if (dp[sk+l] == '\0')
 			return;
 
-		if (l < sp->size)
+		if (gp->unique && l < sp->size)
 		{
 			if (sk + l >= sp->size)
 			{
@@ -306,7 +184,7 @@ gist::set(const char * s)
 		sp->data[l] = '\0';
 	}
 
-  hop:
+  // hop:
 	// sp->index = 0;
 	sp->size = l + 1;	// Size includes the '\0' to help _strflatten()
 

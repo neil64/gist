@@ -4,6 +4,9 @@
  *	Contains:	cons(double) (double)
  */
 
+#include	<stdlib.h>
+#include	<errno.h>
+
 #include	"gist.h"
 #include	"gist-internal.h"
 
@@ -26,8 +29,35 @@ gist::toFloat() const
 		throw valueError("toFloat");
 
 	case GT_STR:
-		_strflatten();
-		return ((giStr *)intern)->toFloat();
+		{
+			_strflatten();
+
+			int err = errno;
+			errno = 0;
+			char * sp = &((giStr *)intern)->data[skip];
+			char * ep;
+
+			double n = strtod(sp, &ep);
+
+			int e = errno;
+			errno = err;
+
+			if (e == ERANGE)
+				throw gist::overflowError("toFloat");
+
+			if (ep == sp)
+				goto value;
+			while (*ep == ' ' || *ep == '\t' || *ep == '\n')
+				ep++;
+			if (*ep != '\0')
+				goto value;
+
+			return n;
+
+  value:
+			throw gist::valueError("toFloat");
+		}
+
 
 	case GT_INT:
 		return (double)val;

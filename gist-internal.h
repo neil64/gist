@@ -290,8 +290,6 @@ struct giStr : gistInternal
 	/********/
 
 	void		makeMulti(unsigned len);
-	long		toInt(bool sign, unsigned base);
-	double		toFloat();
 
 	/********/
 
