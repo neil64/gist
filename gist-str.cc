@@ -704,6 +704,58 @@ strpiece(const gist & g, int & ix, const char *& pt)
 	return l;
 }
 
+/******************************/
+
+int
+gist::_stridx(long idx) const
+{
+	if (idx < 0 || (unsigned)idx >= cnt)
+		throw indexError("string index out of range");
+
+	giStr * sp = (giStr *)intern;
+
+	/*
+	 *	If the string is single, it's easy.
+	 */
+	if (!sp->index)
+		return sp->data[idx + skip];
+
+	/*
+	 *	The string is multi.  Search for the string chunk that
+	 *	contains the required index.  We search for index + 1 because
+	 *	giIndexInt::previous() is a "less-than" operation and we want
+	 *	"less-or-equal".
+	 */
+	int i1 = idx + skip + sp->index->min;
+	intKey * kp = sp->index->previous(i1 + 1);
+	if (!kp || kp->key > i1)
+		throw gist::internalError("bogus index in gist::_strindex");
+
+	i1 -= kp->key;
+	giSChunk * cp = kp->schunk;
+	return cp->data[i1];
+}
+
+
+int
+gist::stridx(long idx) const
+{
+	if (!isStr())
+		throw typeError("stridx expects a string");
+
+	return _stridx(idx);
+}
+
+
+int
+stridx(const gist & g, long idx)
+{
+	if (!g.isStr())
+		throw gist::typeError("stridx expects a string");
+
+	return g._stridx(idx);
+}
+
 /************************************************************/
 /*
  *	String concatenation.

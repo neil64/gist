@@ -573,6 +573,7 @@ class gist
 	 */
 	char *		_strcast(bool rw) const;
 	unsigned	_strpiece(int & index, const char *& ptr) const;
+	int		_stridx(long) const;
 	void		_strflatten() const;
 	// void		_strzero();
 	void		_strsplit(const gist &);
@@ -630,6 +631,9 @@ class gist
 
 	unsigned	strpiece(int & index, const char *& ptr) const;
 	friend unsigned	strpiece(const gist &, int & index, const char *& ptr);
+
+	int		stridx(long) const;
+	friend int	stridx(const gist &, long);
 
 	void		strcat(int);
 	void		strcat(const char *, int count = -1);
@@ -737,6 +741,12 @@ class gist
 	 *	Formatting.
 	 */
 	char *		fmt(const char *, ...);
+
+	/*
+	 *	A NIL gist, for convenience, such as when wanting to
+	 *	return NIL when a gist reference is required.
+	 */
+	static gist	nil;
 };
 
 /**********************************************************************/

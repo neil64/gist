@@ -12,6 +12,8 @@
 #include	"gist-internal.h"
 
 
+gist		gist::nil;		// The NIL gist.
+
 /**********************************************************************/
 /*
  *	Memory allocation.

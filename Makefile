@@ -32,6 +32,7 @@ libgist.a:	$(OBJS)
 
 install:	libgist.a
 	cp gist.h $(INSDIR)/include
+	cp sgml.h $(INSDIR)/include/gist
 	cp libgist.a $(INSDIR)/lib
 
 
