@@ -340,6 +340,7 @@ class gist
 		GT_PTR,
 		GT_CODE,
 		GT_FILE,
+		GT_REGEX,
 		GT_INT,
 		GT_FLOAT,
 		GT_LONG,
@@ -356,6 +357,7 @@ class gist
 	bool		isTable() const		{ return typ == GT_TABLE; }
 	bool		isPtr() const		{ return typ == GT_PTR; }
 	bool		isFile() const		{ return typ == GT_FILE; }
+	bool		isRegex() const		{ return typ == GT_REGEX; }
 
 	/********************************/
 	/*
@@ -589,6 +591,7 @@ class gist
 	 *	Some internal structures that we call friends.
 	 */
 	friend class giStr;
+	friend class giRegex;
 
 	/**************************************************************/
 	/**************************************************************/
@@ -687,8 +690,12 @@ class gist
 
 	friend bool	strtrue(const gist &);
 
-	void		strfill(unsigned size, const char * pattern = 0);
-	void		strfill(unsigned size, const gist & pattern);
+	friend void	strfill(gist &, unsigned size,
+						const char * pattern = 0);
+	friend void	strfill(gist &, unsigned size, const gist & pattern);
+
+	friend void	strstrip(gist &);
+	friend void	strcapwords(gist &);
 
 	/*
 	 *	Arrays.
@@ -730,6 +737,14 @@ class gist
 	void		write(gist & data);
 	void		flush();
 	void		close();
+
+	/*
+	 *	Regular expressions.
+	 */
+	bool		match(gist & str);
+	bool		match(const char * str);
+	bool		match(gist & str, gist & result);
+	bool		match(const char * str, gist & result);
 
 	/*
 	 *	Generic methods.

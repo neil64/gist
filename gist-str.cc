@@ -652,9 +652,9 @@ gist::_strpiece(int & ix, const char *& pt) const
 	 */
 	if (!sp->index)
 	{
-		pt = &((const char *)sp->data)[i + skip];
+		pt = &((const char *)sp->data)[skip];
 		ix = cnt;
-		return cnt - i;
+		return cnt;
 	}
 
 	/*
@@ -670,12 +670,12 @@ gist::_strpiece(int & ix, const char *& pt) const
 
 	i1 -= kp->key;
 	giSChunk * cp = kp->schunk;
-	pt = &((const char *)cp->data)[i1];
+	pt = (const char *)cp->data;
 
 	i1 = cp->len - i1;
 	ix = i + i1;
 
-	return i1;
+	return cp->len;
 }
 
 
@@ -1034,9 +1034,15 @@ strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 	int ix = start;
 	unsigned l;
 	const char * p;
-	unsigned c = 0;
+	unsigned c;
 
-	while (count > 0 && (l = src._strpiece(ix, p)) > 0)
+	l = src._strpiece(ix, p);
+	c = start - (ix - l);
+	p += c;
+	l -= c;
+	c = 0;
+
+	while (count > 0 && l > 0)
 	{
 		if (l > count)
 			l = count;
@@ -1046,6 +1052,8 @@ strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 		dest += l;
 		c += l;
 		count -= l;
+
+		l = src._strpiece(ix, p);
 	}
 
 	if (c > 0)

@@ -321,6 +321,11 @@ struct giFile : gistInternal
 
 /******************************/
 
+struct giRegex;
+	/* Defined in gist-regex.C */
+
+/******************************/
+
 /*
  *	A base class for chunks, to help the skip list code.
  */

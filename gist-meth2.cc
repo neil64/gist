@@ -349,11 +349,11 @@ strtrue(const gist & g)
 /**********************************************************************/
 
 void
-gist::strfill(unsigned size, const char * pattern)
+strfill(gist & g, unsigned size, const char * pattern)
 {
 	if (size == 0)
 	{
-		set("");
+		g.set("");
 		return;
 	}
 
@@ -375,16 +375,24 @@ gist::strfill(unsigned size, const char * pattern)
 
 	// sp->index = 0;
 
-	typ = GT_STR;
-	unique = true;
-	intern = sp;
-	cnt = size;
-	skip = 0;
+	g.typ = gist::GT_STR;
+	g.unique = true;
+	g.intern = sp;
+	g.cnt = size;
+	g.skip = 0;
 }
 
 
 void
-gist::strfill(unsigned size, const gist & pattern)
+strfill(gist & g, unsigned size, const gist & pattern)
 {
-	strfill(size, pattern.CCS());
+	strfill(g, size, pattern.CCS());
+}
+
+/**********************************************************************/
+
+void
+strstrip(gist & g)
+{
+	throw gist::notYetError("strstrip");
 }

@@ -181,7 +181,7 @@ gist::read(unsigned amount)
 			/*
 			 *	Read some more from the file.
 			 */
-			fp->buffer.strfill(giFile::readBufferSize);
+			strfill(fp->buffer, giFile::readBufferSize);
 			char * buf = ((giStr *)fp->buffer.intern)->data;
 
 			int x = ::read(fp->fd, buf, giFile::readBufferSize);
