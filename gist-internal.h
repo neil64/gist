@@ -248,12 +248,13 @@ struct giStr : gistInternal
 	};
 #endif
 
-	void		mkTmp(giStore &, const char *);
+	void		mkTmp(const char *);
 	static void	concat(gist &, const gist *);
-	void		flatten();
+	void		flatten(bool null);
 	long		toInt(int sign);
 	double		toFloat();
 	const char *	piece(int & idx, int & len);
+	static void	copy(char * to, const gist * from);
 	int		cmp(giStr *);
 };
 

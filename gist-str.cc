@@ -27,13 +27,12 @@ const unsigned	strChunk = 64;
  */
 
 void
-giStr::mkTmp(giStore & st, const char * s)
+giStr::mkTmp(const char * s)
 {
-#warning "fix this"
-	// st.data = (void *)s;
-	// st.size = strlen(s);
-	// index = 0;
-	// str = &st;
+	index = 0;
+	data = (char *)s;
+	size = strlen(s);
+	hasNull = true;
 }
 
 
@@ -75,7 +74,7 @@ giStr::concat(gist & a, const gist * b)
 
 
 void
-giStr::flatten()
+giStr::flatten(bool null)
 {
 	// if (!index && str->hasNull && str->data)
 		// return;
@@ -113,7 +112,10 @@ giStr::piece(int & idx, int & len)
 	int i = idx;
 
 	if (!index)
+	{
+#warning "this needs to be a gist::piece"  // so it can get access to skip,cnt
 		; // st = str;
+	}
 	else
 	{
 		/*
@@ -156,6 +158,30 @@ giStr::piece(int & idx, int & len)
 }
 
 
+
+void
+giStr::copy(char * to, const gist * from)
+{
+	giStr * sp = (giStr *)from->ptr;
+
+	if (!sp->index)
+		memcpy(to, &sp->data[from->skip], from->cnt);
+	else
+	{
+		int idx = 0;
+		int len;
+		const char * pp;
+
+		while ((pp = sp->piece(idx, len)))
+		{
+			memcpy(to, pp, len);
+			to += len;
+		}
+	}
+}
+
+#if 0
+
 int
 giStr::cmp(giStr * r)
 {
@@ -163,7 +189,7 @@ giStr::cmp(giStr * r)
 		return 1;
 
 	int ll = 0, rl = 0;
-	int li= 0, ri = 0;
+	int li = 0, ri = 0;
 	const char * lp = 0, * rp = 0;
 
 	for (;;)
@@ -198,6 +224,8 @@ giStr::cmp(giStr * r)
 		return 1;
 }
 
+#endif
+
 /**********************************************************************/
 /**********************************************************************/
 /*
@@ -212,7 +240,7 @@ giStr::cmp(giStr * r)
  *	but the value will remain the same).
  */
 char *
-gist::strCast(int multi) const
+gist::_strcast(bool rw) const
 {
 	gist x;
 	gist * gp;
@@ -227,10 +255,10 @@ gist::strCast(int multi) const
 
 	giStr * sp = (giStr *)gp->ptr;
 
-	sp->flatten();
+	if (sp->index || !sp->hasNull || (!unique && rw))
+		sp->flatten(true);
 
-	// return (char *)sp->str->data;
-#warning "wrong here"
+	return sp->data;
 }
 
 /**********************************************************************/
@@ -306,19 +334,16 @@ gist::gist(const char * s, int l)
 void
 gist::set(const char * s, int l)
 {
-	giStore * st = giStore::alloc(0);
-	st->data = (char *)s;		// Drop const, but unique is false.
+	giStr * sp = new giStr;
+
+	sp->index = 0;
+	sp->data = (char *)s;		// Drop const, but unique is false.
 	if (l < 0)
 	{
-		st->hasNull = true;
+		sp->hasNull = true;
 		l = strlen(s);
 	}
-	st->size = l;
-
-	giStr * sp = new giStr;
-#warning "wrong here"
-	//sp->str = st;
-	sp->index = 0;
+	sp->size = l;
 
 	typ = GT_STR;
 	unique = false;		// 'cause the caller may use it for other
@@ -402,34 +427,83 @@ gist::toString() const
 
 
 int
-gist::cmp(const char * s) const
+gist::_strcmp(const gist & r) const
 {
-	gist x;
-	gist * gp;
+	if (this == &r)
+		return 0;
+
+	giStr * ls = (giStr *)ptr;
+	giStr * rs = (giStr *)r.ptr;
+	unsigned lc = cnt;
+	unsigned rc = r.cnt;
+
+	if (ls == rs && skip == r.skip)
+	{
+		if (lc == rc)
+			return 0;
+		else if (lc < rc)
+			return -1;
+		else
+			return 1;
+	}
+
+	int ll = 0, rl = 0;
+	int li = skip, ri = r.skip;
+	const char * lp = 0, * rp = 0;
+
+	for (;;)
+	{
+		if (ll == 0)
+			lp = ls->piece(li, ll);
+		if (rl == 0)
+			rp = rs->piece(ri, rl);
+
+		if (!lp || !rp)
+			break;
+
+		int l = ll;
+		if (l > rl)
+			l = rl;
+
+		int x = memcmp(lp, rp, l);
+		if (x)
+			return x;
+
+		lp += l;
+		rp += l;
+		ll -= l;
+		rl -= l;
+	}
+
+	if (lc == rc)
+		return 0;
+	else if (lc < rc)
+		return -1;
+	else
+		return 1;
+}
+
+
+int
+gist::strcmp(const char * s) const
+{
+	gist l;
+	gist * lp;
+	gist r(s);
 
 	/*
 	 *	Grab the string pointer.  If the object is not a string
 	 *	try to make it into one.
 	 */
 	if (isStr())
-		gp = (gist *)this;
+		lp = (gist *)this;
 	else
 	{
-		x = toString();
-		gp = &x;
+		l = toString();
+		lp = &l;
 	}
 
-	giStr * sp = (giStr *)gp->ptr;
-
-	/*
-	 *	Set up a temporary internal string structure for the right
-	 *	operand then do the compare.
-	 */
-	giStore st1;
-	giStr s1;
-	s1.mkTmp(st1, s);
-
-	return sp->cmp(&s1);
+	return lp->_strcmp(r);
 }
 
 
@@ -492,24 +566,23 @@ gist::strcat(const gist & r)
 			 *	the right directly into the left, if there
 			 *	is enough space available.
 			 */
-			unsigned l;
+			unsigned o;
 			if (!ls->index)
-				l = ls->size - skip - cnt;
+				o = skip + cnt;
 			else if (!ls->data)
 				break;
 			else
-				l = ls->size - ls->len;
+				o = ls->len;
 
-			if (rp->cnt > l)
+			unsigned l = rp->cnt;
+			if (l > (ls->size - o))
 				break;
-			l = rp->cnt;
 
 			/*
 			 *	We are allowed to write to the left directly,
 			 *	and there is space available.  Go for it.
 			 */
-			// memcpy(data + len, ...
-#warning "copy from right"
+			giStr::copy(&ls->data[o], rp);
 			cnt += l;
 			ls->len += l;
 			if (!ls->index)
@@ -529,13 +602,22 @@ gist::strcat(const gist & r)
 			 *	Create a new chunk and copy both the left
 			 *	and right strings to it.
 			 */
-			char * np = (char *)gistInternal::alloc(strChunk);
+			giStr * nls = (giStr *)gistInternal::alloc(
+							sizeof (giStr));
+			nls->data = (char *)gistInternal::alloc(strChunk);
+			nls->size = strChunk;
+			nls->hasNull = false;
+			nls->index = 0;
 
-			// giStrCopy(np, this);
-			// giStrCopy(np + cnt, rp);
+			giStr::copy(&nls->data[0], this);
+			giStr::copy(&nls->data[cnt], rp);
+
+			unique = true;
+			ptr = nls;
+			skip = 0;
 			cnt += rp->cnt;
-			if (!ls->index)
-				ls->hasNull = false;
+
+			return;
 		}
 
 		/*
@@ -558,6 +640,8 @@ gist::strcat(const gist & r)
 		return;
 
 	}
+
+	throw gist::notYetError("giStr::concat");
 
 	/*
 	 *	Append the right onto the left.  If the right is a single

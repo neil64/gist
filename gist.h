@@ -174,12 +174,12 @@ class gist
 	 */
 	operator const char *() const
 	{
-		return (const char *)strCast(0);
+		return (const char *)_strcast(false);
 	}
 
 	operator char *() const
 	{
-		return strCast(1);
+		return _strcast(true);
 	}
 
 	/********************************/
@@ -452,20 +452,29 @@ class gist
 	    };
 
 	    /*
-	     *	A structure to cover the whole object, to make it easy
-	     *	to copy.  Copying a gist object using something like
-	     *	"a.all = b.all" gives compilers a chance to generate more
-	     *	efficient code for the copy.
+	     *	A structure to cover the whole object, to make it easy to
+	     *	copy.  Copying a gist object using something like "a.all =
+	     *	b.all" gives compilers a chance to generate more efficient
+	     *	code for the copy.  We include a copy of most of the above
+	     *	declarations so that we can get gdb to behave.
 	     */
 	    struct {
-		long	x[4];
+		type_e typ:8;
+		bool unique;
+		struct gistInternal * ptr;
+		union {
+		    long val;
+		    double dval;
+		    struct { unsigned cnt; unsigned skip; } s;
+		};
 	    } all;
 	};
 
 	/*
 	 *	Private methods.
 	 */
-	char *		strCast(int) const;
+	char *		_strcast(bool rw) const;
+	int		_strcmp(const gist &) const;
 
 	/*
 	 *	Some internal structures that we call friends.
@@ -482,8 +491,8 @@ class gist
 	/*
 	 *	Strings.
 	 */
-	int		cmp(const char *) const;
-	int		cmp(const gist &) const;
+	int		strcmp(const char *) const;
+	int		strcmp(const gist &) const;
 	const char *	strpiece(int & index, int & len);
 
 	void		strcat(int);
