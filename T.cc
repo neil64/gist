@@ -29,9 +29,17 @@ void
 test_float()
 {
 	gist a(123.0);
-	gist pi(3.142);
+	double pi0 = 3.1415926535897932384626433832795029L;
+	gist pi1(3.142);
+	gist pi(3.1415926535897932384626433832795029L);
+	gist s = "0x1.921fb54442d18p+1";
 
-	assert((double)(a + pi) == 126.142);
+	assert((double)(a + pi1) == 126.142);
+	printf("\"exact\" pi  = %la\n", pi0);
+	printf("constant pi = %.30g\n", pi0);
+	printf("gist pi     = %.30g\n", (double)s);
+	assert((double)pi == (double)s);
+	assert(pi == s);
 }
 
 

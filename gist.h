@@ -53,10 +53,14 @@ class gist
 	gist(const gist & g)	{ ((gist &)g).unique = 0; all = g.all; }
 	gist(const gist * g)	{ ((gist *)g)->unique = 0; all = g->all; }
 
-	gist(long long);
-	gist(unsigned long long);
-
 	gist(const char *, int len = -1);
+
+	/*
+	 *	These should make Long's or Real's, but for now ...
+	 */
+	gist(long long v)			{ typ = GT_INT; val = v; }
+	gist(unsigned long long v)	{ typ = GT_INT; val = v; }
+	gist(long double v)		{ typ = GT_FLOAT; dval = v; }
 
 	/********************************/
 	/*
@@ -80,10 +84,16 @@ class gist
 	gist &	operator =(const gist * g)	{ ((gist *)g)->unique = 0;
 						  all = g->all;
 						  return *this; }
-	gist &		operator =(long long);
-	gist &		operator =(unsigned long long);
 	gist &		operator =(const char *);
 
+	gist &		operator =(long long v)	{ typ = GT_INT; val = v;
+						  return *this; }
+	gist &		operator =(unsigned long long v)
+						{ typ = GT_INT; val = v;
+						  return *this; }
+	gist &		operator =(long double v)
+						{ typ = GT_FLOAT; dval = v;
+						  return *this; }
 
 	void		set()			{ typ = GT_NIL; }
 	void		set(int v)		{ typ = GT_INT; val = v; }
@@ -96,9 +106,11 @@ class gist
 						  all = g.all; }
 	void		set(const gist * g)	{ ((gist *)g)->unique = 0;
 						  all = g->all; }
-	void		set(long long);
-	void		set(unsigned long long);
 	void		set(const char *, int = -1);
+
+	void		set(long long v)	{ typ = GT_INT; val = v; }
+	void		set(unsigned long long v) { typ = GT_INT; val = v; }
+	void		set(long double v)	{ typ = GT_FLOAT; dval = v; }
 
 	void		clear()			{ typ = GT_NIL; }
 
@@ -150,8 +162,17 @@ class gist
 	 *	Try to convert a type to an integer or double.	This is
 	 *	only supported by the numeric types and the string type.
 	 *	Overflow and value errors can result.
+	 *
+	 *	If converting a string to an integer with `toInt()', the C
+	 *	library `strtol' function is used, allowing conversions using
+	 *	base 2 to 36, and the default "base 0" which accepts the
+	 *	prefix "0x" for hexadecimal and "0" for octal.	When casting
+	 *	a string to an integer, only base 10 is accepted.  If the
+	 *	conversion causes an overflow, `toInt()' and `toFloat()'
+	 *	both throw and `overflowError' exception.  Overflow from one
+	 *	of the casts returns an undefined result.
 	 */
-	long		toInt() const;
+	long		toInt(unsigned base = 0) const;
 			operator int() const;
 			operator unsigned() const;
 			operator long() const;

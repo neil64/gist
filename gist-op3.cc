@@ -11,11 +11,18 @@
 /**********************************************************************/
 
 int
-operator ==(const gist & g, const char * s)
+operator ==(const gist & l, const gist & r)
+{
+	throw gist::notYetError("==(gist, gist)");
+}
+
+
+int
+operator ==(const gist & l, const char * r)
 {
 	try
 	{
-		return g.strcmp(s) == 0;
+		return l.strcmp(r) == 0;
 	}
 	catch (gist::valueError)
 	{
@@ -25,11 +32,11 @@ operator ==(const gist & g, const char * s)
 
 
 int
-operator ==(const char * s, const gist & g)
+operator ==(const char * l, const gist & r)
 {
 	try
 	{
-		return g.strcmp(s) == 0;
+		return r.strcmp(l) == 0;
 	}
 	catch (gist::valueError)
 	{
@@ -39,11 +46,11 @@ operator ==(const char * s, const gist & g)
 
 
 int
-operator !=(const gist & g, const char * s)
+operator !=(const gist & l, const char * r)
 {
 	try
 	{
-		return g.strcmp(s) != 0;
+		return l.strcmp(r) != 0;
 	}
 	catch (gist::valueError)
 	{
@@ -53,11 +60,11 @@ operator !=(const gist & g, const char * s)
 
 
 int
-operator !=(const char * s, const gist & g)
+operator !=(const char * l, const gist & r)
 {
 	try
 	{
-		return g.strcmp(s) != 0;
+		return r.strcmp(l) != 0;
 	}
 	catch (gist::valueError)
 	{
@@ -67,11 +74,11 @@ operator !=(const char * s, const gist & g)
 
 
 int
-operator <(const gist & g, const char * s)
+operator <(const gist & l, const char * r)
 {
 	try
 	{
-		return g.strcmp(s) < 0;
+		return l.strcmp(r) < 0;
 	}
 	catch (gist::valueError)
 	{
@@ -81,11 +88,11 @@ operator <(const gist & g, const char * s)
 
 
 int
-operator <(const char * s, const gist & g)
+operator <(const char * l, const gist & r)
 {
 	try
 	{
-		return g.strcmp(s) > 0;
+		return r.strcmp(l) > 0;
 	}
 	catch (gist::valueError)
 	{
@@ -95,11 +102,11 @@ operator <(const char * s, const gist & g)
 
 
 int
-operator >(const gist & g, const char * s)
+operator >(const gist & l, const char * r)
 {
 	try
 	{
-		return g.strcmp(s) > 0;
+		return l.strcmp(r) > 0;
 	}
 	catch (gist::valueError)
 	{
@@ -109,11 +116,11 @@ operator >(const gist & g, const char * s)
 
 
 int
-operator >(const char * s, const gist & g)
+operator >(const char * l, const gist & r)
 {
 	try
 	{
-		return g.strcmp(s) < 0;
+		return r.strcmp(l) < 0;
 	}
 	catch (gist::valueError)
 	{
@@ -123,11 +130,11 @@ operator >(const char * s, const gist & g)
 
 
 int
-operator <=(const gist & g, const char * s)
+operator <=(const gist & l, const char * r)
 {
 	try
 	{
-		return g.strcmp(s) <= 0;
+		return l.strcmp(r) <= 0;
 	}
 	catch (gist::valueError)
 	{
@@ -137,11 +144,11 @@ operator <=(const gist & g, const char * s)
 
 
 int
-operator <=(const char * s, const gist & g)
+operator <=(const char * l, const gist & r)
 {
 	try
 	{
-		return g.strcmp(s) >= 0;
+		return r.strcmp(l) >= 0;
 	}
 	catch (gist::valueError)
 	{
@@ -151,11 +158,11 @@ operator <=(const char * s, const gist & g)
 
 
 int
-operator >=(const gist & g, const char * s)
+operator >=(const gist & l, const char * r)
 {
 	try
 	{
-		return g.strcmp(s) >= 0;
+		return l.strcmp(r) >= 0;
 	}
 	catch (gist::valueError)
 	{
@@ -165,11 +172,11 @@ operator >=(const gist & g, const char * s)
 
 
 int
-operator >=(const char * s, const gist & g)
+operator >=(const char * l, const gist & r)
 {
 	try
 	{
-		return g.strcmp(s) <= 0;
+		return r.strcmp(l) <= 0;
 	}
 	catch (gist::valueError)
 	{

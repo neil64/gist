@@ -25,18 +25,15 @@ gist::operator long() const
 
 	case GT_STR:
 		{
-			long n;
-
 			try
 			{
-				n = ((giStr *)ptr)->toInt(1);
+				_strflatten();
+				return ((giStr *)ptr)->toInt(true, 10);
 			}
-			catch (valueError)
-			{
-				n = 1;
-			}
+			catch (valueError)	{}
+			catch (overflowError)	{}
 
-			return n;
+			return cnt > 0;
 		}
 
 	case GT_INT:
@@ -69,18 +66,15 @@ gist::operator unsigned long() const
 
 	case GT_STR:
 		{
-			unsigned long n;
-
 			try
 			{
-				n = ((giStr *)ptr)->toInt(0);
+				_strflatten();
+				return ((giStr *)ptr)->toInt(false, 10);
 			}
-			catch (valueError)
-			{
-				n = 1;
-			}
+			catch (valueError)	{}
+			catch (overflowError)	{}
 
-			return n;
+			return cnt > 0;
 		}
 
 	case GT_INT:
@@ -99,7 +93,7 @@ gist::operator unsigned() const
 
 
 long
-gist::toInt() const
+gist::toInt(unsigned base) const
 {
 	switch (typ)
 	{
@@ -113,7 +107,8 @@ gist::toInt() const
 		throw valueError("toInt");
 
 	case GT_STR:
-		return ((giStr *)ptr)->toInt(1);
+		_strflatten();
+		return ((giStr *)ptr)->toInt(true, base);
 
 	case GT_INT:
 		return val;

@@ -215,7 +215,7 @@ struct giStr : gistInternal
 
 	/********/
 
-	long		toInt(int sign);
+	long		toInt(bool sign, unsigned base);
 	double		toFloat();
 };
 

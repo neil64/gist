@@ -10,6 +10,8 @@
 
 /**********************************************************************/
 
+#if 0
+
 gist::gist(long long l)
 {
 	throw notYetError("long long constructor");
@@ -60,3 +62,5 @@ gist::operator unsigned long long() const
 {
 	throw notYetError("unsigned long long cast");
 }
+
+#endif // 0
