@@ -149,35 +149,6 @@ class giIndexStr
 
 /******************************/
 
-struct giStore
-{
-	/*
-	 *	The string buffer and its size.  If the size is zero, then
-	 *	the pointer must be ignored (could be zero, or just bogus).
-	 */
-	void *		data;
-	unsigned	size;
-
-	/*
-	 *	`hasNull' is set if we know that there is a '\0' after
-	 *	the last byte of the string.  `flag' covers all of the
-	 *	other flags, just for convenience.
-	 */
-	union
-	{
-		struct {
-			bool	hasNull;
-		};
-		int	flags;
-	};
-
-	static giStore * alloc(unsigned sz);
-	static void	mkKey(char *, int idx);
-	static int	gtKey(const char *);
-};
-
-/******************************/
-
 struct gistInternal
 {
 	void *		operator new(unsigned);
@@ -242,44 +213,16 @@ struct giStr : gistInternal
 		bool		hasNull;
 	};
 
+	/********/
 
-#if 0
-	union {
-		giStore *	str;
-		struct {
-			int min, max;
-		};
-	};
-#endif
-
-	void		mkTmp(const char *);
-	static void	concat(gist &, const gist *);
-	void		flatten(bool null);
 	long		toInt(int sign);
 	double		toFloat();
-	unsigned	piece(int & idx, const char *& len);
-	static void	copy(char * to, const gist * from);
-	int		cmp(giStr *);
 };
 
 struct giChunk
 {
 	char *		data;
 	unsigned	len;
-};
-
-struct giStr0 : gistInternal
-{
-	char *		data;
-	unsigned	size;
-	bool		big;
-	bool		hasNull;
-};
-
-struct giStr1 : giStr
-{
-	giIndexInt *	index;
-	// int		min, max;
 };
 
 /**********************************************************************/

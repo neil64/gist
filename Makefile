@@ -3,7 +3,7 @@
 #
 ################
 
-OBJS =		gist.o gist-store.o gist-index.o \
+OBJS =		gist.o gist-index.o \
 		gist-int.o gist-float.o gist-str.o gist-long.o \
 		gist-op1.o gist-op2.o gist-op3.o gist-op4.o
 

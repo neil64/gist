@@ -26,74 +26,6 @@ const unsigned	strChunk = 64;
  *	Internal gist member functions.
  */
 
-void
-giStr::mkTmp(const char * s)
-{
-	index = 0;
-	data = (char *)s;
-	size = strlen(s);
-	hasNull = true;
-}
-
-
-//gist *
-// giStr::concat(const gist * a, const gist * b)
-void
-giStr::concat(gist & a, const gist * b)
-{
-#if 0
-	if (b->cnt == 0)
-		return (gist *)a;
-	if (a->cnt == 0)
-		return (gist *)b;
-#endif
-
-/*
-	if a is a single string
-		if a's string is not a multi
-			if b's size is less than copy limit,
-			   and there is space available to copy it to a
-				copy b into a
-				done
-
-		else if a's size + b's size is less than the copy limit
-			allocate a new string and copy both to it.
-			done
-
-*/
-
-
-
-
-
-
-
-
-	throw gist::notYetError("giStr::concat");
-}
-
-
-#if 0
-
-void
-giStr::flatten(bool null)
-{
-	// if (!index && str->hasNull && str->data)
-		// return;
-
-	throw gist::notYetError("giStr::flatten");
-
-	// always add a '\0'
-	// set multiRef and hasNull
-	// may need to move a non-index string if there is no '\0'.
-	// don't copy if already single and there is space for the '\0'
-
-	// some calls change this gist ((char *)),
-	//	others need a new copy (copy())
-}
-
-#endif
-
 
 long
 giStr::toInt(int sign)
@@ -108,139 +40,6 @@ giStr::toFloat()
 	throw gist::notYetError("giStr::toFloat");
 }
 
-
-#if 0
-
-unsigned
-giStr::piece(int idx, const char *& ptr)
-{
-	// giStore * st;
-
-	if (!index)
-	{
-		if (idx < 0 || idx >= size)
-			return 0;
-		else
-		{
-			ptr = &((const char *)data)[idx];
-			return size - idx;
-		}
-	}
-	else
-	{
-		/*
-		 *	Make a key out of the index + 1.  We add one because
-		 *	giIndex::previous() is a "less-than" operation and
-		 *	we want "less-or-equal".
-		 */
-#warning "wrong here also"
-		// i += min;
-		// char k[sizeof (int)];
-		// giStore::mkKey(k, i+1);
-		// const char * kp = &k[0];
-		// unsigned l = sizeof k;
-
-#warning "check this"
-		// {
-			// intKey * kp = index->previous(i + 1);
-			// st = key.str;
-			// st = 0;
-		// }
-		// st = (giStore *)index->previous(kp, l);
-		// int start = giStore::gtKey(kp);
-		// if (!st || l != sizeof (k) || start > i)
-		    // throw gist::internalError("bogus index in giStr::piece");
-
-		// i -= start;
-	}
-
-	if ((unsigned)i >= st->size)
-	{
-		// len = 0;
-		return 0;
-	}
-	else
-	{
-		// len = st->size - i;
-		// idx += len;
-		return 0;
-		//return &((const char *)st->data)[i];
-	}
-}
-
-#endif
-
-
-void
-giStr::copy(char * to, const gist * from)
-{
-
-#warning "wrong here"
-#if 0
-	giStr * sp = (giStr *)from->ptr;
-
-	if (!sp->index)
-		memcpy(to, &sp->data[from->skip], from->cnt);
-	else
-	{
-		int idx = 0;
-		int len;
-		const char * pp;
-
-		while ((pp = sp->piece(idx, len)))
-		{
-			memcpy(to, pp, len);
-			to += len;
-		}
-	}
-#endif
-}
-
-#if 0
-
-int
-giStr::cmp(giStr * r)
-{
-	if (this == r)
-		return 1;
-
-	int ll = 0, rl = 0;
-	int li = 0, ri = 0;
-	const char * lp = 0, * rp = 0;
-
-	for (;;)
-	{
-		if (ll == 0)
-			lp = piece(li, ll);
-		if (rl == 0)
-			rp = r->piece(ri, rl);
-
-		if (!lp || !rp)
-			break;
-
-		int l = ll;
-		if (l > rl)
-			l = rl;
-
-		int x = memcmp(lp, rp, l);
-		if (x)
-			return x;
-
-		lp += l;
-		rp += l;
-		ll -= l;
-		rl -= l;
-	}
-
-	if (ll == rl)
-		return 0;
-	else if (ll < rl)
-		return -1;
-	else
-		return 1;
-}
-
-#endif
 
 /**********************************************************************/
 /**********************************************************************/
@@ -316,63 +115,6 @@ gist::_strflatten() const
 /**********************************************************************/
 /**********************************************************************/
 /**********************************************************************/
-
-#if 0
-
-struct str
-{
-	-  multi-ref flag, set and never reset.
-	-  buffer
-	-  buffer size
-};
-
-
-set string:
-
-	-  allocate a str
-	-  set the multi-ref flag
-	-  set the reference to the passed string.
-
-
-
-
-string buffer management
-------------------------
-
-allocate a string:
-
-	-  round up the amount requested
-	-  allocate space for the buffer
-	-  allocate a str
-	-  set values
-
-concatenate (append) two strings (a += operation):
-
-	-  if the left is not multi-ref
-		-  if there is space to append the right onto the left,
-			copy the data
-	-  if the left is not already a multi-str,
-		-  allocate a multi-str
-		-  insert the left onto the string with zero offset
-	-  insert the right onto the multi-str, with correct offset.
-
-
-prepend (right is prepended onto the left):
-
-	-  similar to append
-
-
-index a value in the string:
-
-	-  find the str block
-	-  calculate the pointer
-	-  return the pointer and the number of bytes remaining from there.
-
-
-
-#endif // 0
-
-/**********************************************************************/
 /*
  *	Public gist member functions.
  */
@@ -408,16 +150,14 @@ gist::set(const char * s, int l)
 void
 gist::copy(const char * s, int l)
 {
+	giStr * sp = new giStr;
+	sp->index = 0;
 	if (l < 0)
 		l = strlen(s);
-	giStore * st = giStore::alloc(l+1);
-	memcpy(st->data, s, l);
-	((char *)st->data)[l] = '\0';
-
-	giStr * sp = new giStr;
-#warning "wrong here"
-	// sp->str = st;
-	sp->index = 0;
+	sp->data = (char *)gistInternal::alloc(l+1);
+	memcpy(sp->data, s, l);
+	sp->data[l] = '\0';
+	sp->hasNull = true;
 
 	typ = GT_STR;
 	unique = true;
@@ -501,9 +241,9 @@ gist::strcmp(const gist & r) const
 	for (;;)
 	{
 		if (ll == 0)
-			ll = strpiece(li, lp);
+			ll = _strpiece(li, lp);
 		if (rl == 0)
-			rl = r.strpiece(ri, rp);
+			rl = r._strpiece(ri, rp);
 
 		if (ll == 0 || rl == 0)
 			break;
@@ -531,75 +271,6 @@ gist::strcmp(const gist & r) const
 }
 
 
-#if 0
-
-int
-gist::_strcmp(const gist & r) const
-{
-	if (this == &r)
-		return 0;
-
-	giStr * ls = (giStr *)ptr;
-	giStr * rs = (giStr *)r.ptr;
-	unsigned lc = cnt;
-	unsigned rc = r.cnt;
-
-	if (ls == rs && skip == r.skip)
-	{
-		if (lc == rc)
-			return 0;
-		else if (lc < rc)
-			return -1;
-		else
-			return 1;
-	}
-
-	unsigned ll = 0, rl = 0;
-	int li = skip, ri = r.skip;
-	const char * lp = 0, * rp = 0;
-
-	for (;;)
-	{
-		if (ll == 0 && lc > 0)
-		{
-			lp = ls->piece(li, ll);
-			if (ll > lc)
-				ll = lc;
-		}
-		if (rl == 0 && rc > 0)
-		{
-			rp = rs->piece(ri, rl);
-			if (rl > rc)
-				rl = rc;
-		}
-
-		if (!lp || !rp)
-			break;
-
-		int l = ll;
-		if (l > rl)
-			l = rl;
-
-		int x = memcmp(lp, rp, l);
-		if (x)
-			return x;
-
-		lp += l;
-		rp += l;
-		ll -= l;
-		rl -= l;
-	}
-
-	if (lc == rc)
-		return 0;
-	else if (lc < rc)
-		return -1;
-	else
-		return 1;
-}
-
-#endif
-
 int
 gist::strcmp(const char * s) const
 {
@@ -624,7 +295,7 @@ gist::strcmp(const char * s) const
 
 
 unsigned
-gist::strpiece(int & ix, const char *& pt) const
+gist::_strpiece(int & ix, const char *& pt) const
 {
 	int i = ix;
 	if (i < 0 || (unsigned)i >= cnt)
@@ -637,11 +308,12 @@ gist::strpiece(int & ix, const char *& pt) const
 	 */
 	if (!sp->index)
 	{
-		((gist *)this)->unique = false;
 		pt = &((const char *)sp->data)[i + skip];
 		ix = cnt;
 		return cnt - i;
 	}
+
+	throw gist::notYetError("gist::_strpiece");
 
 	/*
 	 *	The string is multi.  Search for the string chunk that
@@ -660,7 +332,6 @@ gist::strpiece(int & ix, const char *& pt) const
 	// const char * kp = &k[0];
 	// unsigned l = sizeof k;
 
-#warning "check this"
 	// {
 		// intKey * kp = index->previous(i + 1);
 		// st = key.str;
@@ -705,14 +376,12 @@ gist::strpiece(int & ix, const char *& pt) const
 		 *	giIndex::previous() is a "less-than" operation and
 		 *	we want "less-or-equal".
 		 */
-#warning "wrong here also"
 		// i += min;
 		// char k[sizeof (int)];
 		// giStore::mkKey(k, i+1);
 		// const char * kp = &k[0];
 		// unsigned l = sizeof k;
 
-#warning "check this"
 		// {
 			// intKey * kp = index->previous(i + 1);
 			// st = key.str;
@@ -741,6 +410,16 @@ gist::strpiece(int & ix, const char *& pt) const
 
 #endif
 
+}
+
+
+unsigned
+gist::strpiece(int & ix, const char *& pt) const
+{
+	unsigned l = _strpiece(ix, pt);
+	if (l > 0)
+		((gist *)this)->unique = false;
+	return l;
 }
 
 /************************************************************/
@@ -869,6 +548,8 @@ gist::strcat(const gist & r)
 
 	}
 
+	(void)rs->index->search(0);	// just to quiet the compiler.
+
 	throw gist::notYetError("giStr::concat");
 
 	/*
@@ -977,7 +658,7 @@ gist::strcopy(char * dest, const gist & src, unsigned start, unsigned count)
 	const char * p;
 	unsigned c = 0;
 
-	while (count > 0 && (l = src.strpiece(ix, p)) > 0)
+	while (count > 0 && (l = src._strpiece(ix, p)) > 0)
 	{
 		if (l > count)
 			l = count;
@@ -988,6 +669,9 @@ gist::strcopy(char * dest, const gist & src, unsigned start, unsigned count)
 		c += l;
 		count -= l;
 	}
+
+	if (c > 0)
+		((gist &)src).unique = false;
 
 	if (count > 0)
 	{

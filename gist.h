@@ -474,6 +474,7 @@ class gist
 	 *	Private methods.
 	 */
 	char *		_strcast(bool rw) const;
+	unsigned	_strpiece(int & index, const char *& ptr) const;
 	void		_strflatten() const;
 
 	/*
