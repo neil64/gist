@@ -345,3 +345,46 @@ strtrue(const gist & g)
 	else
 		return false;
 }
+
+/**********************************************************************/
+
+void
+gist::strfill(unsigned size, const char * pattern)
+{
+	if (size == 0)
+	{
+		set("");
+		return;
+	}
+
+	giStr * sp = new giStr;
+	sp->size = size;
+	sp->data = (char *)gistInternal::alloc(size);
+
+	if (pattern)
+	{
+		char * ep = &sp->data[size];
+		const char * pp = pattern;
+		for (char * cp = sp->data; cp < ep; )
+		{
+			if (!*pp)
+				pp = pattern;
+			*cp++ = *pp++;
+		}
+	}
+
+	// sp->index = 0;
+
+	typ = GT_STR;
+	unique = true;
+	intern = sp;
+	cnt = size;
+	skip = 0;
+}
+
+
+void
+gist::strfill(unsigned size, const gist & pattern)
+{
+	strfill(size, pattern.CCS());
+}

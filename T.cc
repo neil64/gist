@@ -632,6 +632,18 @@ test_sgml()
 
 
 void
+test_file()
+{
+	gist g;
+
+	g.file();
+
+		// Only here so that it gets linked into T, so I can
+		// look at the compiler results.
+}
+
+
+void
 test_misc()
 {
 	printf("misc1:\n");

@@ -235,3 +235,10 @@ My scripting language and object library
    non-GC memory for references to GC data, and many gist objects would
    be incorrectly collected.  I abandoned gist, because I needed to get
    that program working quickly.
+
+
+========
+
+050208
+
+*  Take advantage of the GC_malloc_atomic for string data.

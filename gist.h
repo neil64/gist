@@ -339,6 +339,7 @@ class gist
 		GT_TABLE,
 		GT_PTR,
 		GT_CODE,
+		GT_FILE,
 		GT_INT,
 		GT_FLOAT,
 		GT_LONG,
@@ -354,6 +355,7 @@ class gist
 	bool		isArray() const		{ return typ == GT_ARRAY; }
 	bool		isTable() const		{ return typ == GT_TABLE; }
 	bool		isPtr() const		{ return typ == GT_PTR; }
+	bool		isFile() const		{ return typ == GT_FILE; }
 
 	/********************************/
 	/*
@@ -404,6 +406,33 @@ class gist
 	 *	on a non-pointer object, a `ptrError' is thrown.
 	 */
 	GIST_ERROR(ptrError)
+
+	/*
+	 *	If an attempt is made to open a file that does not exist,
+	 *	a `noSuchFileError' is thrown.
+	 */
+	GIST_ERROR(noSuchFileError)
+
+	/*
+	 *	An attempt to access a file that is not open, does not
+	 *	permit access, or some other illegal state, a `fileError'
+	 *	is thrown.
+	 */
+	GIST_ERROR(fileError);
+
+	/*
+	 *	If an attempt is made to read a file that has reached
+	 *	end-of-file, an `eofError' is thrown.  This is not
+	 *	necessarily an error, depending on your point of view.
+	 */
+	GIST_ERROR(eofError);
+
+	/*
+	 *	If an attempt is made to open or perform I/O on a file
+	 *	that causes an error, a `ioError' is thrown, and the
+	 *	system `errno' will be set appropriately.
+	 */
+	GIST_ERROR(ioError)
 
 	/*
 	 *	A part of Gist that is not implemented yet.
@@ -654,6 +683,9 @@ class gist
 
 	friend bool	strtrue(const gist &);
 
+	void		strfill(unsigned size, const char * pattern = 0);
+	void		strfill(unsigned size, const gist & pattern);
+
 	/*
 	 *	Arrays.
 	 */
@@ -680,6 +712,20 @@ class gist
 	 */
 	void		ptrset(void * p)	{ typ = GT_PTR; ptr = p; }
 	void *		ptrget() const;
+
+	/*
+	 *	Files.
+	 */
+	void		file(const char * fn = 0, const char * mode = 0);
+	void		file(const gist & fn, const char * mode = 0);
+	void		file(const char * fn, const gist & mode);
+	void		file(const gist & fn, const gist & mode);
+	void		file(int fd);
+	gist		read(unsigned amount);
+	gist		readline();
+	void		write(gist & data);
+	void		flush();
+	void		close();
 
 	/*
 	 *	Generic methods.

@@ -307,6 +307,20 @@ struct giTable : gistInternal
 
 /******************************/
 
+struct giFile : gistInternal
+{
+	bool		open;
+	bool		readable;
+	bool		writable;
+	bool		eof;
+	int		fd;
+	gist		buffer;
+
+	enum { readBufferSize = 512 };
+};
+
+/******************************/
+
 /*
  *	A base class for chunks, to help the skip list code.
  */
