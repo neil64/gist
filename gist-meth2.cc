@@ -88,3 +88,17 @@ strupper(const gist & g)
 
 	throw gist::notYetError("strupper");
 }
+
+
+gist
+strsplit(const gist & str, const char * sep)
+{
+	throw gist::notYetError("strsplit(gist,char *)");
+}
+
+
+gist
+strsplit(const gist & str, const gist & sep)
+{
+	throw gist::notYetError("strsplit(gist,gist)");
+}

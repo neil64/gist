@@ -204,3 +204,21 @@ My scripting language and object library
 	-  assigning from gist::array, which is an empty	(hmmm...)
 	   array object.	(won't work, since array's are by reference)
 
+
+
+========
+
+041228
+
+*  To implement a file interface using gist.
+	-  Buffering can be done by allocating a string of, say, 512 bytes
+	   and reading.
+	-  The read buffering function is actually called with the amount
+	   required, and a string of that amount returned.  The string is
+	   made by doing multiple 512 reads until enough data exists, and
+	   concatenating each new piece with the return string.  Small reads
+	   would return after a single interation.
+	-  Data should be able to be put back into the input stream, just
+	   by prepending the put back data to the stream string.
+	-  The advantage of all this is that there is minimal (if any)
+	   data copying.

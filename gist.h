@@ -358,15 +358,16 @@ class gist
 	 */
 	struct error
 	{
+		const char * typ;
 		const char * msg;
-		error() : msg(0) {}
-		error(const char * m) : msg(m) {}
+		error() : typ(0), msg(0) {}
+		error(const char * t, const char * m) : typ(t), msg(m) {}
 	};
 #define GIST_ERROR(t)					\
 	struct t : error				\
 	{						\
 		t() {}					\
-		t(const char * m) : error(m) {}		\
+		t(const char * m) : error(#t, m) {}	\
 	};
 
 	/*
@@ -606,9 +607,13 @@ class gist
 	friend void	strtrim(gist & str, int start,
 						unsigned count = (~0U>>1))
 				{ return str.strtrim(start, count); }
+
 	friend int	atoi(const gist &, int base = 0);
 	friend gist	strlower(const gist &);
 	friend gist	strupper(const gist &);
+
+	friend gist	strsplit(const gist & str, const char * sep = 0);
+	friend gist	strsplit(const gist & str, const gist & sep);
 
 	/*
 	 *	Arrays.
