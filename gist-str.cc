@@ -13,17 +13,6 @@
 #include	"gist-internal.h"
 
 
-/*
- *	The maximum number of characters that we will copy when concatenating
- *	strings.  If greater than this, we create a "multi" string.
- */
-static const unsigned	maxCopy = 32;
-
-/*
- *	String space is allocated in multiples of this value.
- */
-static const unsigned	strChunk = 64;
-
 /**********************************************************************/
 /*
  *	Internal gist member functions.
@@ -228,7 +217,7 @@ gist::_strflatten() const
 	}
 
 	l++;
-	char * cp = (char *)gistInternal::alloc(l);
+	char * cp = (char *)gistInternal::strAlloc(l);
 	(void)strcpy(cp, *gp);
 
 	if (gp->unique)
@@ -244,33 +233,6 @@ gist::_strflatten() const
 	sp->size = l;
 	gp->skip = 0;
 }
-
-
-#if 0
-	// This is a bad idea, I think.
-
-void
-gist::_strzero()
-{
-	if (!isStr())		// (should never happen)
-		return;
-
-	if (unique)
-	{
-		giStr * sp = (giStr *)intern;
-		sp->index = 0;
-		sp->data = 0;
-		sp->size = 0;
-	}
-
-	cnt = 0;
-	skip = 0;
-
-	unique = false;		// (doesn't matter, but false makes strcat()
-				//  slightly more efficient)
-}
-
-#endif // 0
 
 /**********************************************************************/
 /**********************************************************************/
@@ -317,7 +279,7 @@ gist::set(const char * s)
 	}
 	else
 	{
-		sp->data = (char *)gistInternal::alloc(l+1);
+		sp->data = (char *)gistInternal::strAlloc(l+1);
 		memcpy(sp->data, s, l);
 		sp->data[l] = '\0';
 	}
@@ -371,7 +333,7 @@ gist::set(const char * s, int l)
 	}
 	else
 	{
-		sp->data = (char *)gistInternal::alloc(l+1);
+		sp->data = (char *)gistInternal::strAlloc(l+1);
 		memcpy(sp->data, s, l);
 		sp->data[l] = '\0';
 	}
@@ -392,22 +354,11 @@ gist::set(const char * s, int l)
 void
 gist::copy(const char * s, int l)
 {
-	giStr * sp = new giStr;
-	sp->index = 0;
 	if (l < 0)
 		l = ::strlen(s);
-#warning "should allocate minimum of strChunk in size"
-		// could also split this function to allocate space
-		// for functions like strlower()
-	sp->data = (char *)gistInternal::alloc(l+1);
-	memcpy(sp->data, s, l);
-	sp->data[l] = '\0';
-
-	typ = GT_STR;
-	unique = true;
-	intern = sp;
-	cnt = l;
-	skip = 0;
+	char * cp = strbuf(l + 1);			// space for a '\0'.
+	memcpy(cp, s, l);
+	cp[l] = '\0';
 }
 
 /******************************/
@@ -756,6 +707,31 @@ stridx(const gist & g, long idx)
 	return g._stridx(idx);
 }
 
+/******************************/
+
+char *
+gist::strbuf(unsigned size)
+{
+	if (size == 0)
+	{
+		set("");
+		return 0;
+	}
+
+	giStr * sp = new giStr;
+	sp->size = size;
+	sp->data = (char *)gistInternal::strAlloc(size);
+	// sp->index = 0;
+
+	typ = GT_STR;
+	unique = true;
+	intern = sp;
+	cnt = size;
+	skip = 0;
+
+	return sp->data;
+}
+
 /************************************************************/
 /*
  *	String concatenation.
@@ -810,7 +786,7 @@ gist::strcat(const gist & r)
 	 *	If the right side length is less than the copy limit,
 	 *	try for various optimizations.
 	 */
-	if (rp->cnt <= maxCopy)
+	if (rp->cnt <= giStr::maxCopy)
 	{
 		/*
 		 *	NOTE:	There is code that expects strcat to do a
@@ -859,7 +835,7 @@ gist::strcat(const gist & r)
 		 *	Try for a total length that might be less than the
 		 *	copy limit.
 		 */
-		if (cnt + rp->cnt <= maxCopy)
+		if (cnt + rp->cnt <= giStr::maxCopy)
 		{
 			/*
 			 *	Create a new chunk and copy both the left
@@ -867,8 +843,9 @@ gist::strcat(const gist & r)
 			 */
 			giStr * nls = (giStr *)gistInternal::alloc(
 							sizeof (giStr));
-			nls->data = (char *)gistInternal::alloc(strChunk);
-			nls->size = strChunk;
+			nls->data = (char *)gistInternal::strAlloc(
+							giStr::strChunk);
+			nls->size = giStr::strChunk;
 			nls->index = 0;
 
 			strcpy(&nls->data[0], *this);
@@ -892,7 +869,7 @@ gist::strcat(const gist & r)
 
 		giSChunk * cp =
 			(giSChunk *)gistInternal::alloc(sizeof (giSChunk));
-		cp->data = (char *)gistInternal::alloc(strChunk);
+		cp->data = (char *)gistInternal::strAlloc(giStr::strChunk);
 		cp->data0 = cp->data;
 		cp->len = rp->cnt;
 		strcpy(cp->data, *rp);
@@ -903,7 +880,7 @@ gist::strcat(const gist & r)
 		ls->data = cp->data;
 		// ls->len = rp->cnt;
 		ls->chunk = cp;
-		ls->size = strChunk;
+		ls->size = giStr::strChunk;
 
 		cnt += rp->cnt;
 

@@ -638,6 +638,10 @@ class gist
 	int		stridx(long) const;
 	friend int	stridx(const gist &, long);
 
+	char *		strbuf(unsigned size);
+	friend char *	strbuf(gist & g, unsigned size)
+				{ return g.strbuf(size); }
+
 	void		strcat(int);
 	void		strcat(const char *, int count = -1);
 	void		strcopycat(const char *, int count = -1);
@@ -690,8 +694,7 @@ class gist
 
 	friend bool	strtrue(const gist &);
 
-	friend void	strfill(gist &, unsigned size,
-						const char * pattern = 0);
+	friend void	strfill(gist &, unsigned size, const char * pattern);
 	friend void	strfill(gist &, unsigned size, const gist & pattern);
 
 	friend void	strstrip(gist &);

@@ -79,9 +79,31 @@ strlower(const gist & g)
 	if (!g.isStr())
 		throw gist::typeError("strlower expects a string");
 
-	// look at gist-str.cc:copy() for space allocation
+	gist r;
+	char * rp = r.strbuf(g.cnt);
 
-	throw gist::notYetError("strlower");
+	unsigned gl = 0;
+	int gi = 0;
+	const char * gp = 0;
+
+	for (;;)
+	{
+		if (gl == 0)
+			gl = g._strpiece(gi, gp);
+		if (gl == 0)
+			break;
+
+		while (gl-- > 0)
+		{
+			int c = *gp++;
+			if (c >= 'A' && c <= 'Z')
+				*rp++ = c + ('a' - 'A');
+			else
+				*rp++ = c;
+		}
+	}
+
+	return r;
 }
 
 
@@ -91,9 +113,31 @@ strupper(const gist & g)
 	if (!g.isStr())
 		throw gist::typeError("strupper expects a string");
 
-	// look at gist-str.cc:copy() for space allocation
+	gist r;
+	char * rp = r.strbuf(g.cnt);
 
-	throw gist::notYetError("strupper");
+	unsigned gl = 0;
+	int gi = 0;
+	const char * gp = 0;
+
+	for (;;)
+	{
+		if (gl == 0)
+			gl = g._strpiece(gi, gp);
+		if (gl == 0)
+			break;
+
+		while (gl-- > 0)
+		{
+			int c = *gp++;
+			if (c >= 'a' && c <= 'z')
+				*rp++ = c + ('A' - 'a');
+			else
+				*rp++ = c;
+		}
+	}
+
+	return r;
 }
 
 /**********************************************************************/
@@ -351,35 +395,19 @@ strtrue(const gist & g)
 void
 strfill(gist & g, unsigned size, const char * pattern)
 {
-	if (size == 0)
-	{
-		g.set("");
-		return;
-	}
+	char * cp = g.strbuf(size);
 
-	giStr * sp = new giStr;
-	sp->size = size;
-	sp->data = (char *)gistInternal::alloc(size);
-
-	if (pattern)
+	if (size > 0 && pattern)
 	{
-		char * ep = &sp->data[size];
+		char * ep = &cp[size];
 		const char * pp = pattern;
-		for (char * cp = sp->data; cp < ep; )
+		while (cp < ep)
 		{
 			if (!*pp)
 				pp = pattern;
 			*cp++ = *pp++;
 		}
 	}
-
-	// sp->index = 0;
-
-	g.typ = gist::GT_STR;
-	g.unique = true;
-	g.intern = sp;
-	g.cnt = size;
-	g.skip = 0;
 }
 
 

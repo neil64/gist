@@ -216,7 +216,10 @@ struct gistInternal
 	 */
 	void *		operator new(unsigned);
 	void		operator delete(void *) {}
+
 	static void *	alloc(unsigned);
+	static void *	allocAtomic(unsigned);
+	static void *	strAlloc(unsigned);
 	static void	free(void *);
 
 	/*
@@ -284,6 +287,24 @@ struct giStr : gistInternal
 	void		makeMulti(unsigned len);
 	long		toInt(bool sign, unsigned base);
 	double		toFloat();
+
+	/********/
+
+	enum
+	{
+		/*
+		 *	The maximum number of characters that we will copy
+		 *	when concatenating strings.  If greater than this,
+		 *	we create a "multi" string.
+		 */
+		maxCopy = 32,
+
+		/*
+		 *	String space is allocated in multiples of this value.
+		 *	This must be a power of two.
+		 */      
+		strChunk = 64,
+	};
 };
 
 /******************************/

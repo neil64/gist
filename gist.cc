@@ -111,6 +111,34 @@ gistInternal::alloc(unsigned sz)
 }
 
 
+void *
+gistInternal::allocAtomic(unsigned sz)
+{
+	/*
+	 *	Allocate space for an object containing no pointers, and
+	 *	pointers to it will be near its start.  It is not cleared.
+	 */
+	void * ptr = GC_malloc_atomic_ignore_off_page(sz);
+	if (!ptr)
+		throw std::bad_alloc();
+	return ptr;
+}
+
+
+void *
+gistInternal::strAlloc(unsigned sz)
+{
+	/*
+	 *	Like `allocAtomic()' but will round the size up to a
+	 *	multiple of `strChunk'.
+	 */
+	sz += giStr::strChunk - 1;
+	sz &= giStr::strChunk - 1;
+
+	return allocAtomic(sz);
+}
+
+
 void
 gistInternal::free(void * p)
 {
