@@ -445,7 +445,11 @@ class gist
 	 */
 	int		cmp(const char *) const;
 	int		cmp(const gist &) const;
-	int		strpiece(int & index, const char *& p, unsigned & len);
+	const char *	strpiece(int & index, int & len);
+
+	gist		strcat(gist &, gist &);
+	gist		strcat(gist &, const char *);
+	gist		strcat(const char *, gist &);
 
 	/*
 	 *	Formatting.

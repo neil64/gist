@@ -98,6 +98,7 @@ giStr::piece(int & idx, int & len)
 	}
 	else
 	{
+		st->multiRef = 1;
 		len = st->size - i;
 		idx += len;
 		return &((const char *)st->data)[i];
@@ -245,6 +246,77 @@ gist::cmp(const char * s) const
 	s1.mkTmp(st1, s);
 
 	return sp->cmp(&s1);
+}
+
+
+const char *
+gist::strpiece(int & index, int & len)
+{
+	if (!isStr())
+		throw typeError("strpiece");
+	return ((giStr *)ptr)->piece(index, len);
+}
+
+
+gist
+gist::strcat(gist & a, gist & b)
+{
+	gist ax, *ap;
+	gist bx, *bp;
+
+	if (a.isStr())
+		ap = &a;
+	else
+	{
+		ax = a.toString();
+		ap = &ax;
+	}
+
+	if (b.isStr())
+		bp = &b;
+	else
+	{
+		bx = b.toString();
+		bp = &bx;
+	}
+
+	return *giStr::concat(ap, bp);
+}
+
+
+gist
+gist::strcat(gist & a, const char * b)
+{
+	gist ax, *ap;
+	gist bx(b);
+
+	if (a.isStr())
+		ap = &a;
+	else
+	{
+		ax = a.toString();
+		ap = &ax;
+	}
+
+	return *giStr::concat(ap, &bx);
+}
+
+
+gist
+gist::strcat(const char * a, gist & b)
+{
+	gist ax(a);
+	gist bx, *bp;
+
+	if (b.isStr())
+		bp = &b;
+	else
+	{
+		bx = b.toString();
+		bp = &bx;
+	}
+
+	return *giStr::concat(&ax, bp);
 }
 
 /**********************************************************************/

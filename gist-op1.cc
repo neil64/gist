@@ -77,7 +77,12 @@ gist::operator +=(const char * s)
 {
 	gist r(s);
 
-	*this = *giStr::concat(this, &r);
+	if (isFloat())
+		dval += r.toFloat();
+	else if (isInt())
+		val += r.toInt();
+	else
+		*this = *giStr::concat(this, &r);
 
 	return *this;
 }
