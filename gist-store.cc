@@ -23,6 +23,42 @@ giStore::alloc(unsigned sz)
 }
 
 
+/*
+ *	Make a key from an `int' that the skip list code can use
+ *	(must be big-endian, and unsigned).
+ */
+void
+giStore::mkKey(char * key, int idx)
+{
+	unsigned i = idx + ((~0U >> 1) + 1);
+
+	key[3] = i & 0xff;
+	i >>= 8;
+	key[2] = i & 0xff;
+	i >>= 8;
+	key[1] = i & 0xff;
+	i >>= 8;
+	key[0] = i & 0xff;
+}
+
+
+int
+giStore::gtKey(const char * key)
+{
+	unsigned i;
+
+	i = key[0];
+	i <<= 8;
+	i |= key[1];
+	i <<= 8;
+	i |= key[2];
+	i <<= 8;
+	i |= key[3];
+
+	return (int)(i - ((~0U >> 1) + 1));
+}
+
+
 #if 0
 
 struct str

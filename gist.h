@@ -138,6 +138,13 @@ class gist
 	 *	The object can be modified in place.
 	 */
 	gist &		operator [](int);
+	gist &		operator [](unsigned);
+	gist &		operator [](long);
+	gist &		operator [](unsigned long);
+	gist &		operator [](float);
+	gist &		operator [](double);
+	gist &		operator [](long long);
+	gist &		operator [](unsigned long long);
 	gist &		operator [](const char *);
 	gist &		operator [](const gist &);
 
@@ -432,6 +439,8 @@ class gist
 	 *	Strings.
 	 */
 	int		cmp(const char *) const;
+	int		cmp(const gist &) const;
+	int		strpiece(int & index, const char *& p, unsigned & len);
 
 	/*
 	 *	Formatting.

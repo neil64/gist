@@ -101,6 +101,8 @@ struct giStore
 	};
 
 	static giStore * alloc(unsigned sz);
+	static void	mkKey(char *, int idx);
+	static int	gtKey(const char *);
 };
 
 /******************************/
@@ -126,7 +128,7 @@ struct giStr : giBase
 	union {
 		giStore *	str;
 		struct {
-			unsigned min, max;
+			int min, max;
 		};
 	};
 
@@ -134,6 +136,8 @@ struct giStr : giBase
 	void		flatten();
 	long		toInt(int sign);
 	double		toFloat();
+	const char *	piece(int & idx, int & len);
+	int		cmp(giStr *);
 };
 
 /**********************************************************************/

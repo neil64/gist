@@ -45,6 +45,62 @@ giStr::toFloat()
 	throw gist::notYetError("giStr::toFloat");
 }
 
+
+const char *
+giStr::piece(int & idx, int & len)
+{
+	giStore * st;
+	int i = idx;
+
+	if (!index)
+		st = str;
+	else
+	{
+		/*
+		 *	Make a key out of the index + 1.  We add one because
+		 *	giIndex::previous() is a "less-than" operation and
+		 *	we want "less-or-equal".
+		 */
+		i += min;
+		char k[sizeof (int)];
+		giStore::mkKey(k, i+1);
+		const char * kp = &k[0];
+		unsigned l = sizeof k;
+
+		st = (giStore *)index->previous(kp, l);
+		int start = giStore::gtKey(kp);
+		if (!st || l != sizeof (k) || start > i)
+		    throw gist::internalError("bogus index in giStr::piece");
+
+		i -= start;
+	}
+
+	if ((unsigned)i >= st->size)
+		return 0;
+	else
+	{
+		len = st->size - i;
+		idx += len;
+		return &((const char *)st->data)[i];
+	}
+}
+
+
+int
+giStr::cmp(giStr * r)
+{
+	// trivial compare -- compare the giStr pointers.
+
+	// get a piece of the left, and the right
+
+	// find the common length
+	// compare
+	// if not equal, return the result.
+	// if equal, get the next bit.
+
+	return 0;
+}
+
 /**********************************************************************/
 
 /*

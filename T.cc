@@ -45,6 +45,16 @@ test_string()
 
 
 void
+test_subscript()
+{
+	gist a = 123;
+	gist b = a[1.0f];
+
+	printf("b = %d\n", (int)b);
+}
+
+
+void
 report(const char * ty, gist::error & e)
 {
 	printf("gist %s error", ty);
