@@ -15,8 +15,12 @@ gist g1, g2;
 void
 test_int()
 {
+	printf("int1:\n");
+
 	gist a(123);
 	gist b = 456;
+
+	printf("int1:\n");
 
 	assert((int)a == 123);
 	assert((int)b == 456);
@@ -28,16 +32,20 @@ test_int()
 void
 test_float()
 {
+	printf("float1:\n");
+
 	gist a(123.0);
 	double pi0 = 3.1415926535897932384626433832795029L;
 	gist pi1(3.142);
 	gist pi(3.1415926535897932384626433832795029L);
 	gist s = "0x1.921fb54442d18p+1";
 
+	printf("float2:\n");
+
 	assert((double)(a + pi1) == 126.142);
-	printf("\"exact\" pi  = %la\n", pi0);
-	printf("constant pi = %.30g\n", pi0);
-	printf("gist pi     = %.30g\n", (double)s);
+	printf("\t\"exact\" pi  = %la\n", pi0);
+	printf("\tconstant pi = %.30g\n", pi0);
+	printf("\tgist pi     = %.30g\n", (double)s);
 	assert((double)pi == (double)s);
 	assert(pi == s);
 }
@@ -46,12 +54,19 @@ test_float()
 void
 test_string()
 {
-	gist s = "abc";
+	printf("string1:\n");
 
+	gist s = "abc";
 	s += "def";
 	assert(s == "abcdef");
+	printf("\tabcdef = %s\n", (const char *)s);
 
-	printf("abcdef = %s\n", (const char *)s);
+	printf("string2:\n");
+
+	s = "01234567890123456789";
+	gist t("abcdefghijklmnopqrstuvwxyz");
+	s += t;
+	printf("\ts+t = %s\n", (const char *)s);
 }
 
 
@@ -68,7 +83,7 @@ test_subscript()
 void
 report(const char * ty, gist::error & e)
 {
-	printf("gist %s error", ty);
+	printf("\n\tgist %s error", ty);
 	if (e.msg)
 		printf(": %s", e.msg);
 	printf("\n");
@@ -79,7 +94,8 @@ report(const char * ty, gist::error & e)
 int
 main(int argc, char ** argv)
 {
-	printf ("Size of gist = %d\n", sizeof (gist));
+	printf("Test gist\n\n");
+	printf("\tSize of gist = %d\n", sizeof (gist));
 
 	g1 = g2;
 

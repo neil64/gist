@@ -86,3 +86,71 @@ gistInternal::free(void * p)
 
 /******************************/
 
+/*
+ *	Coerce the types of the operands into suitable types for one of
+ *	the operators +, -, *, /, %, ==, !=, <, >, <=, >=.
+ */
+void
+gist::_coerce1(const gist & l, const gist *& lp,
+		const gist & r, const gist *& rp,
+		gist & x, const char * op)
+{
+	if (l.isFloat())
+	{
+		lp = &l;
+		if (r.isFloat())
+		{
+			rp = &r;
+			return;
+		}
+		else if (r.isInt() || r.isStr())
+		{
+			x = r.toFloat();
+			rp = &x;
+			return;
+		}
+	}
+	else if (r.isFloat())
+	{
+		rp = &r;
+		if (l.isInt() || l.isStr())
+		{
+			x = l.toFloat();
+			lp = &x;
+			return;
+		}
+	}
+	else if (l.isInt())
+	{
+		lp = &l;
+		if (r.isInt())
+		{
+			rp = &r;
+			return;
+		}
+		else if (r.isStr())
+		{
+			x = r.toInt();
+			rp = &x;
+			return;
+		}
+	}
+	else if (l.isStr())
+	{
+		if (r.isInt())
+		{
+			rp = &r;
+			x = l.toInt();
+			lp = &x;
+			return;
+		}
+		if (r.isStr())
+		{
+			lp = &l;
+			rp = &r;
+			return;
+		}
+	}
+
+	throw typeError(op);
+}

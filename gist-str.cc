@@ -221,12 +221,6 @@ gist::_strflatten() const
  *	Public gist member functions.
  */
 
-gist::gist(const char * s, int l)
-{
-	set(s, l);
-}
-
-
 void
 gist::set(const char * s, int l)
 {
@@ -584,6 +578,8 @@ gist::strcat(const gist & r)
 		ls->len = rp->cnt;
 		ls->size = strChunk;
 
+		cnt += rp->cnt;
+
 		/*
 		 *	Setting `unique' here is subtle -- unique on a multi
 		 *	string really means that only the last chunk is
@@ -607,6 +603,7 @@ gist::strcat(const gist & r)
 	if (!ls->index)
 		ls->makeMulti(skip + cnt);
 
+	ls->data = 0;
 	((gist *)this)->unique = false;
 	((gist *)rp)->unique = false;
 

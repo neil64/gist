@@ -70,6 +70,39 @@ gist::operator +=(const gist & b)
 			val += b.val;
 			return *this;
 		}
+		if (b.isFloat())
+		{
+			val += (long)b.dval;
+			return *this;
+		}
+		if (b.isStr())
+		{
+			val += b.toInt();
+			return *this;
+		}
+	}
+	else if (isFloat())
+	{
+		if (b.isInt())
+		{
+			dval += b.val;
+			return *this;
+		}
+		if (b.isFloat())
+		{
+			dval += b.dval;
+			return *this;
+		}
+		if (b.isStr())
+		{
+			dval += b.toFloat();
+			return *this;
+		}
+	}
+	else if (isStr())
+	{
+		strcat(b);
+		return *this;
 	}
 
 	throw gist::typeError("operator +=");

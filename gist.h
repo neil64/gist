@@ -52,8 +52,7 @@ class gist
 	gist(double v)		{ typ = GT_FLOAT; dval = v; }
 	gist(const gist & g)	{ ((gist &)g).unique = 0; all = g.all; }
 	gist(const gist * g)	{ ((gist *)g)->unique = 0; all = g->all; }
-
-	gist(const char *, int len = -1);
+	gist(const char * s, int len = -1)	{ set(s, len); }
 
 	/*
 	 *	These should make Long's or Real's, but for now ...
@@ -84,14 +83,14 @@ class gist
 	gist &	operator =(const gist * g)	{ ((gist *)g)->unique = 0;
 						  all = g->all;
 						  return *this; }
-	gist &		operator =(const char *);
-
-	gist &		operator =(long long v)	{ typ = GT_INT; val = v;
+	gist &	operator =(const char * s)	{ set(s);
 						  return *this; }
-	gist &		operator =(unsigned long long v)
+	gist &	operator =(long long v)		{ typ = GT_INT; val = v;
+						  return *this; }
+	gist &	operator =(unsigned long long v)
 						{ typ = GT_INT; val = v;
 						  return *this; }
-	gist &		operator =(long double v)
+	gist &	operator =(long double v)
 						{ typ = GT_FLOAT; dval = v;
 						  return *this; }
 
@@ -107,7 +106,6 @@ class gist
 	void		set(const gist * g)	{ ((gist *)g)->unique = 0;
 						  all = g->all; }
 	void		set(const char *, int = -1);
-
 	void		set(long long v)	{ typ = GT_INT; val = v; }
 	void		set(unsigned long long v) { typ = GT_INT; val = v; }
 	void		set(long double v)	{ typ = GT_FLOAT; dval = v; }
@@ -260,12 +258,12 @@ class gist
 	GIST_OPS2(gist, *)
 	GIST_OPS2(gist, /)
 	GIST_OPS2(gist, %)
-	GIST_OPS2a(int, ==)
-	GIST_OPS2a(int, !=)
-	GIST_OPS2a(int, <)
-	GIST_OPS2a(int, >)
-	GIST_OPS2a(int, <=)
-	GIST_OPS2a(int, >=)
+	GIST_OPS2a(bool, ==)
+	GIST_OPS2a(bool, !=)
+	GIST_OPS2a(bool, <)
+	GIST_OPS2a(bool, >)
+	GIST_OPS2a(bool, <=)
+	GIST_OPS2a(bool, >=)
 
 	GIST_OPS1(gist, ^)
 	GIST_OPS1(gist, &)
@@ -504,6 +502,9 @@ class gist
 	char *		_strcast(bool rw) const;
 	unsigned	_strpiece(int & index, const char *& ptr) const;
 	void		_strflatten() const;
+	static void	_coerce1(const gist & l, const gist *& lp,
+				const gist & r, const gist *& rp,
+				gist & x, const char * op);
 
 	/*
 	 *	Some internal structures that we call friends.

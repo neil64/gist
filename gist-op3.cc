@@ -10,14 +10,25 @@
 
 /**********************************************************************/
 
-int
+bool
 operator ==(const gist & l, const gist & r)
 {
-	throw gist::notYetError("==(gist, gist)");
+	gist x;
+	const gist * lp;
+	const gist * rp;
+
+	gist::_coerce1(l, lp, r, rp, x, "==");
+
+	if (lp->isInt())
+		return lp->val == rp->val;
+	else if (lp->isFloat())
+		return lp->dval == rp->dval;
+	else // if (lp->isStr())
+		return lp->strcmp(*rp) == 0;
 }
 
 
-int
+bool
 operator ==(const gist & l, const char * r)
 {
 	try
@@ -31,7 +42,7 @@ operator ==(const gist & l, const char * r)
 }
 
 
-int
+bool
 operator ==(const char * l, const gist & r)
 {
 	try
@@ -45,7 +56,7 @@ operator ==(const char * l, const gist & r)
 }
 
 
-int
+bool
 operator !=(const gist & l, const char * r)
 {
 	try
@@ -59,7 +70,7 @@ operator !=(const gist & l, const char * r)
 }
 
 
-int
+bool
 operator !=(const char * l, const gist & r)
 {
 	try
@@ -73,7 +84,7 @@ operator !=(const char * l, const gist & r)
 }
 
 
-int
+bool
 operator <(const gist & l, const char * r)
 {
 	try
@@ -87,7 +98,7 @@ operator <(const gist & l, const char * r)
 }
 
 
-int
+bool
 operator <(const char * l, const gist & r)
 {
 	try
@@ -101,7 +112,7 @@ operator <(const char * l, const gist & r)
 }
 
 
-int
+bool
 operator >(const gist & l, const char * r)
 {
 	try
@@ -115,7 +126,7 @@ operator >(const gist & l, const char * r)
 }
 
 
-int
+bool
 operator >(const char * l, const gist & r)
 {
 	try
@@ -129,7 +140,7 @@ operator >(const char * l, const gist & r)
 }
 
 
-int
+bool
 operator <=(const gist & l, const char * r)
 {
 	try
@@ -143,7 +154,7 @@ operator <=(const gist & l, const char * r)
 }
 
 
-int
+bool
 operator <=(const char * l, const gist & r)
 {
 	try
@@ -157,7 +168,7 @@ operator <=(const char * l, const gist & r)
 }
 
 
-int
+bool
 operator >=(const gist & l, const char * r)
 {
 	try
@@ -171,7 +182,7 @@ operator >=(const gist & l, const char * r)
 }
 
 
-int
+bool
 operator >=(const char * l, const gist & r)
 {
 	try
