@@ -257,6 +257,11 @@ class gist
 	friend r	operator o(const gist &, const char *);		\
 	friend r	operator o(const char *, const gist &);
 
+#define GIST_OPS2b(r, o)						\
+	GIST_OPS2a(r, o)						\
+	friend r	operator o(const gist &, const void *);		\
+	friend r	operator o(const void *, const gist &);
+
 #define GIST_OPS3(o)							\
 	gist &		operator o(const gist &);			\
 	gist &		operator o(int);				\
@@ -276,8 +281,8 @@ class gist
 	GIST_OPS2(gist, *)
 	GIST_OPS2(gist, /)
 	GIST_OPS1(gist, %)
-	GIST_OPS2a(bool, ==)
-	GIST_OPS2a(bool, !=)
+	GIST_OPS2b(bool, ==)
+	GIST_OPS2b(bool, !=)
 	GIST_OPS2a(bool, <)
 	GIST_OPS2a(bool, >)
 	GIST_OPS2a(bool, <=)
@@ -621,6 +626,7 @@ class gist
 	void		tblset(gist & key, gist & val);
 	void		tbladd(gist & key, gist & val);
 	void		tbldel(gist & key);
+	bool		tblisset(gist & key);
 
 	/*
 	 *	Pointers.

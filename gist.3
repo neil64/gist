@@ -240,6 +240,33 @@ Once created, the table can be subscripted as usual.
 .IP \(bu
 Table subscripts always create a new element, even when used as an r-value.
 This is because of a C++ limitation.
+.IP \(bu
+.BR tblset ()
+sets a table element, replacing it if it already exists.
+.IP \(bu
+.BR tbladd ()
+adds a new table element, even if an element already exists with the
+same key (non-unique keys).
+Such duplicate elements cannot be accessed with subscripts.
+A subscript will return the first of the elements added to the table
+with the same key.
+.BR tbldel ()
+deletes from the table all elements that match the given key.
+.BR tblisset ()
+returns true if an element exists with the given key.
+Not the same as just testing the subscript, since the element could
+be "false".
+.SH POINTERS
+.IP \(bu .3i
+Pointers can store a C++
+.B "void *"
+value in an object.
+Can be compared for equality with other pointers.
+Can be used as an index to a table.
+Can only be accessed via the functions
+.BR ptrget ()
+and
+.BR ptrset ().
 .SH EXCEPTIONS
 .B Gist
 uses the C++ exception handling mechanism to handle situations it

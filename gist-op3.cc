@@ -21,6 +21,19 @@
 		throw gist::typeError("operator " #op);
 
 
+#define OP0e(l, r, op)						\
+	if (l.isFloat() || r.isFloat())				\
+		return l.toFloat() op r.toFloat();		\
+	else if (l.isInt() || r.isInt())			\
+		return l.toInt() op r.toInt();			\
+	else if (l.isStr() && r.isStr())			\
+		return l.strcmp(r) op 0;			\
+	else if (l.isPtr() && r.isPtr())			\
+		return l.ptr op r.ptr;				\
+	else							\
+		throw gist::typeError("operator " #op);
+
+
 #define OP1(l, r, op)						\
 	if (l.isFloat())					\
 		return l.toFloat() op (double)r;		\
@@ -58,9 +71,16 @@
 		return 0;					\
 	}
 
+#define OP3(l, r, op)						\
+	if (l.isPtr())						\
+		return l.ptr op r;				\
+	else							\
+		throw gist::typeError("operator " #op);
+	
+
 /**********************************************************************/
 
-bool operator ==(const gist & l, const gist & r)	{ OP0(l, r, ==) }
+bool operator ==(const gist & l, const gist & r)	{ OP0e(l, r, ==) }
 bool operator ==(const gist & l, int r)			{ OP1(l, r, ==) }
 bool operator ==(const gist & l, unsigned r)		{ OP1u(l, r, ==) }
 bool operator ==(const gist & l, long r)		{ OP1(l, r, ==) }
@@ -75,8 +95,10 @@ bool operator ==(float l, const gist & r)		{ OP1f(r, l, ==) }
 bool operator ==(double l, const gist & r)		{ OP1f(r, l, ==) }
 bool operator ==(const gist & l, const char * r)	{ OP2(l, r, ==) }
 bool operator ==(const char * l, const gist & r)	{ OP2(r, l, ==) }
+bool operator ==(const gist & l, const void * r)	{ OP3(l, r, ==) }
+bool operator ==(const void * l, const gist & r)	{ OP3(r, l, ==) }
 
-bool operator !=(const gist & l, const gist & r)	{ OP0(l, r, !=) }
+bool operator !=(const gist & l, const gist & r)	{ OP0e(l, r, !=) }
 bool operator !=(const gist & l, int r)			{ OP1(l, r, !=) }
 bool operator !=(const gist & l, unsigned r)		{ OP1u(l, r, !=) }
 bool operator !=(const gist & l, long r)		{ OP1(l, r, !=) }
@@ -91,6 +113,8 @@ bool operator !=(float l, const gist & r)		{ OP1f(r, l, !=) }
 bool operator !=(double l, const gist & r)		{ OP1f(r, l, !=) }
 bool operator !=(const gist & l, const char * r)	{ OP2(l, r, !=) }
 bool operator !=(const char * l, const gist & r)	{ OP2(r, l, !=) }
+bool operator !=(const gist & l, const void * r)	{ OP3(l, r, !=) }
+bool operator !=(const void * l, const gist & r)	{ OP3(r, l, !=) }
 
 bool operator <(const gist & l, const gist & r)		{ OP0(l, r, <) }
 bool operator <(const gist & l, int r)			{ OP1(l, r, <) }

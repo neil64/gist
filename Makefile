@@ -15,6 +15,8 @@ CXXFLAGS =	-g -Wall
 ## CXXFLAGS =	-O3 -Wall
 OPTIM =
 
+INSDIR =	/usr/local
+
 ################
 
 all:		T libgist.a
@@ -26,6 +28,11 @@ T:		T.o libgist.a
 
 libgist.a:	$(OBJS)
 	ar rv libgist.a $?
+
+
+install:	libgist.a
+	cp gist.h $(INSDIR)/include
+	cp libgist.a $(INSDIR)/lib
 
 
 clean:
