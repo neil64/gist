@@ -237,6 +237,9 @@ Tables are created by calling the
 method on a
 .B gist object.
 Once created, the table can be subscripted as usual.
+.IP \(bu
+Table subscripts always create a new element, even when used as an r-value.
+This is because of a C++ limitation.
 .SH EXCEPTIONS
 .B Gist
 uses the C++ exception handling mechanism to handle situations it
