@@ -242,3 +242,46 @@ My scripting language and object library
 050208
 
 *  Take advantage of the GC_malloc_atomic for string data.
+
+========
+
+050220
+
+*  String performance is much worse than I expected.  It seems that keeping
+   a old C style string is quicker, probably because memory allocation is
+   needed often for gist.
+
+*  I have several ideas to fix this:
+
+	-  Introduce another string type (subtype?), that has 12 bytes of
+	   the string in the gist structure itself.
+	-  The second string type would have the data pointer and 16-bit
+	   skip and count in the gist structure, and the only other allocated
+	   data would be the string itself (which could be shared).
+	-  The third is a linked list of strings, which is only maintained
+	   to make concatenation easy.
+
+*  Most operations would flatten the string.
+
+*  Also, for array and table objects, the gist can point to the index
+   structure itself.
+
+*  In fact, the gistInternal structure should be able to be deleted entirely.
+
+*  Worth noting:
+
+	-  I currently do not encourage accessing a string a character
+	   at a time (at least using operator[]), so the list of strings
+	   makes sense, and it should be a fair amount more efficient.
+
+	-  Most C or C++ programs use C strings fairly effectively.
+	   Use gist to build on this, rather than trying to replace
+	   what C++ already has.  That is, allow gist to maintain string
+	   storage and do some operations that are difficult with C strings,
+	   but allow gist strings to be used as C strings fairly easily.
+	   That would mean that many gist string operations must first
+	   flatten the string (as is the case now anyhow).  I think that
+	   in most cases, this would not be all that much slower than
+	   what gist is now, and faster than, say, python.  But, if the
+	   user is careful in using strings, they should be almost as fast
+	   as the same code using C strings only.
