@@ -11,7 +11,6 @@
 #include	"sgml.h"
 
 
-gist g1, g2;
 gist ga[10] =
 {
 	1, 2, 3, "abc", 4.5
@@ -535,6 +534,26 @@ test_array()
 	printf("\tnew element 16 = ");
 	printGist(a[15]);
 	printf("\n");
+
+	printf("array2:\n");
+
+	a.array(0);
+	int i, x = 500000;
+	printf("\t%d random pushed array entries... ", x);
+	fflush(stdout);
+	srandom(0);
+	for (i = 0; i < x; i++)
+	{
+		long r = random();
+		a.push(r);
+	}
+	srandom(0);
+	for (i = 0; i < x; i++)
+	{
+		long r = random();
+		assert(a[i] == r);
+	}
+	printf("done.\n");
 }
 
 
@@ -544,13 +563,36 @@ test_table()
 	printf("table1:\n");
 
 	int i = 0;
-	// int x = 1;
 	gist g, h;
 	g.table();
 
 	h = g[i];
 	// h = ((const gist)g)[i];
 	g[i] = 1234;
+
+	printf("table2:\n");
+
+	g.table(true);
+	int x = 50000;
+	printf("\t%d random table entries... ", x);
+	fflush(stdout);
+	srandom(0);
+	for (i = 0; i < x; i++)
+	{
+		gist r = random();
+		gist k = r.toString();
+
+		g[k] = r;
+	}
+	srandom(0);
+	for (i = 0; i < x; i++)
+	{
+		gist r = random();
+		gist k = r.toString();
+
+		assert(g[k] == r);
+	}
+	printf("done.\n");
 }
 
 
@@ -618,21 +660,31 @@ main(int argc, char ** argv)
 	printf("Test gist\n\n");
 	printf("\tSize of gist = %d\n", sizeof (gist));
 
-	g1 = g2;
+	char * t = "Inib=fsatm";
+	if (argc >= 2)
+		t = argv[1];
 
 	try
 	{
-		test_init();
-		test_nil();
-		test_int();
-		test_bool();
-		test_assign();
-		test_float();
-		test_string();
-		test_array();
-		test_table();
-		// test_pickle();
-		test_misc();
+		while (*t)
+		{
+			switch (*t)
+			{
+			case 'I':	test_init();		break;
+			case 'n':	test_nil();		break;
+			case 'i':	test_int();		break;
+			case 'b':	test_bool();		break;
+			case '=':	test_assign();		break;
+			case 'f':	test_float();		break;
+			case 's':	test_string();		break;
+			case 'a':	test_array();		break;
+			case 't':	test_table();		break;
+			// case 'p':	test_pickle();		break;
+			case 'm':	test_misc();		break;
+			}
+
+			t++;
+		}
 	}
 	catch (gist::valueError e)
 	{
