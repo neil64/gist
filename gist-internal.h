@@ -28,6 +28,9 @@ class giIndexInt
 	giIndexInt();
 	~giIndexInt();
 
+	void *		operator new(unsigned sz, int levels);
+	void		operator delete(void *)		{}
+
     public:
 	/*
 	 *	Search will locate and return the entry that matches the
@@ -65,19 +68,37 @@ class giIndexInt
 	bool		remove(int);
 
     private:
-	enum
-	{
-		MaxLevel = 16,
-		P = (((unsigned)-1) / 2)
-	};
-
-	intKey *	head[MaxLevel];
-	unsigned	levels;
+	unsigned char	levels;
+	unsigned char	maxLevel;
 
 	intKey *	cache;
 
     public:
 	int		min, max;
+
+	/*
+	 *	This skip list implementation sets the maximum number of
+	 *	levels at the creation of the skip list, rather than having
+	 *	a fixed maximum.  This allows strings to have a maximum of
+	 *	eight levels and arrays to have a maximum of sixteen.  With
+	 *	a P of 1/2 (hard coded in insert()), a depth of n is ideal
+	 *	for a node count of 2^n.  For strings, a maximum of 8 performs
+	 *	well for up to 256 chunks (for 64 byte chunks, that's a length
+	 *	of 16k).  For arrays, a maximum depth of 16 allows for 64k
+	 *	chunks (for 16 entry chunks, that's 1024k entries).  We want
+	 *	to reduce the maximum depth to reduce the size of the skip
+	 *	list header, since in the case of strings there could be a
+	 *	lot of them.
+	 */
+	enum
+	{
+		StrLevels = 8,
+		ArrayLevels = 16,
+		MaxLevel = 16
+	};
+
+    private:
+	intKey *	head[0];
 };
 
 /******************************/

@@ -27,9 +27,9 @@
  */
 giIndexInt::giIndexInt()
 {
-	int		i;
+	// unsigned		i;
 
-	for (i = 0; i < MaxLevel; i++)
+	for (unsigned i = 0; i < maxLevel; i++)
 		head[i] = 0;
 	levels = 1;
 }
@@ -48,6 +48,17 @@ giIndexInt::~giIndexInt()
 		b = a->fwd[0];
 		gistInternal::free(a);
 	}
+}
+
+
+void *
+giIndexInt::operator new(unsigned sz, int lvl)
+{
+	sz += lvl * sizeof (intKey *);
+	giIndexInt * ip = (giIndexInt *)gistInternal::alloc(sz);
+	ip->maxLevel = lvl;
+
+	return (void *)ip;
 }
 
 
@@ -176,7 +187,7 @@ giIndexInt::insert(int key, giChunk * data)
 	 *	Decide on the height of the new entry.
 	 */
 	unsigned level = 1;
-	while (level < MaxLevel && level <= levels)
+	while (level < maxLevel && level <= levels)
 	{
 		unsigned	rand;
 
@@ -204,7 +215,7 @@ giIndexInt::insert(int key, giChunk * data)
 			rand = (mwc ^ jcong) + jsr;
 		} 
 
-		if (rand & 0x80000000)
+		if (rand & 0x80000000)		// P = 1/2
 			break;
 
 		level++;

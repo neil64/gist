@@ -551,18 +551,21 @@ class gist
 
 	void		strcat(int);
 	void		strcat(const char *);
+	void		strcopycat(const char *);
 	void		strcat(const gist &);
 	friend void	strcat(gist &, int);
 	friend void	strcat(gist &, const char *);
+	friend void	strcopycat(gist &, const char *);
 	friend void	strcat(gist &, const gist &);
 	friend void	strcat(char *, const gist &);
 	friend void	strncat(char *, const gist &, unsigned);
 
 	void		strins(int);
 	void		strins(const char *);
+	void		strcopyins(const char *);
 	void		strins(const gist &);
 
-	static unsigned	strcopy(char * dest, const gist & src,
+	static unsigned	strcpy(char * dest, const gist & src,
 				unsigned start = 0, unsigned count = (~0U>>1));
 
 	/*

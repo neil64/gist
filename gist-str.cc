@@ -206,7 +206,7 @@ gist::_strflatten() const
 	l++;
 	char * cp = (char *)gistInternal::alloc(l);
 
-	(void)strcopy(cp, *gp);
+	(void)strcpy(cp, *gp);
 
 	gp->unique = true;
 	sp->index = 0;
@@ -564,7 +564,7 @@ giStr::makeMulti(unsigned len)
 	cp->data0 = data;
 	cp->len = len;
 
-	index = new giIndexInt;
+	index = new (giIndexInt::StrLevels) giIndexInt;
 	index->insert(0, cp);
 	index->min = 0;
 	index->max = len;
@@ -630,7 +630,7 @@ gist::strcat(const gist & r)
 			 *	We are allowed to write to the left directly,
 			 *	and there is space available.  Go for it.
 			 */
-			strcopy(&ls->data[o], *rp);
+			strcpy(&ls->data[o], *rp);
 			cnt += l;
 			if (!ls->index)
 				ls->hasNull = false;
@@ -658,8 +658,8 @@ gist::strcat(const gist & r)
 			nls->hasNull = false;
 			nls->index = 0;
 
-			strcopy(&nls->data[0], *this);
-			strcopy(&nls->data[cnt], *rp);
+			strcpy(&nls->data[0], *this);
+			strcpy(&nls->data[cnt], *rp);
 
 			unique = true;
 			ptr = nls;
@@ -681,7 +681,7 @@ gist::strcat(const gist & r)
 		cp->data = (char *)gistInternal::alloc(strChunk);
 		cp->data0 = cp->data;
 		cp->len = rp->cnt;
-		strcopy(cp->data, *rp);
+		strcpy(cp->data, *rp);
 
 		ls->index->insert(ls->index->max, cp);
 		ls->index->max += rp->cnt;
@@ -790,10 +790,22 @@ strcat(gist & g, const char * r)
 	g.strcat(rx);
 }
 
+
+void
+strcat(char * l, const gist & r)
+{
+}
+
+
+void
+strncat(char * l, const gist & r, unsigned c)
+{
+}
+
 /************************************************************/
 
 unsigned
-gist::strcopy(char * dest, const gist & src, unsigned start, unsigned count)
+gist::strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 {
 	int ix = start;
 	unsigned l;
