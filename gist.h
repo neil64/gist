@@ -50,7 +50,7 @@ class gist
 	gist(unsigned long v)	{ typ = GT_INT; val = v; }
 	gist(float v)		{ typ = GT_FLOAT; dval = v; }
 	gist(double v)		{ typ = GT_FLOAT; dval = v; }
-	gist(const gist & g)	{ ((gist)g).unique = 0; all = g.all; }
+	gist(const gist & g)	{ ((gist &)g).unique = 0; all = g.all; }
 	gist(const gist * g)	{ ((gist *)g)->unique = 0; all = g->all; }
 
 	gist(long long);
@@ -74,7 +74,7 @@ class gist
 							return *this; }
 	gist &	operator =(double v)		{ typ = GT_FLOAT; dval = v;
 							return *this; }
-	gist &	operator =(const gist & g)	{ ((gist)g).unique = 0;
+	gist &	operator =(const gist & g)	{ ((gist &)g).unique = 0;
 						  all = g.all;
 						  return *this; }
 	gist &	operator =(const gist * g)	{ ((gist *)g)->unique = 0;
@@ -99,7 +99,7 @@ class gist
 							return *this; }
 	gist &		set(double v)		{ typ = GT_FLOAT; dval = v;
 							return *this; }
-	gist &		set(const gist & g)	{ ((gist)g).unique = 0;
+	gist &		set(const gist & g)	{ ((gist &)g).unique = 0;
 						  all = g.all;
 						  return *this; }
 	gist &		set(const gist * g)	{ ((gist *)g)->unique = 0;

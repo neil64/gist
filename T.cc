@@ -9,6 +9,9 @@
 #include	"gist.h"
 
 
+gist g1, g2;
+
+
 void
 test_int()
 {
@@ -69,6 +72,8 @@ int
 main(int argc, char ** argv)
 {
 	printf ("Size of gist = %d\n", sizeof (gist));
+
+	g1 = g2;
 
 	try
 	{
