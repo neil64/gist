@@ -11,11 +11,13 @@
  *	Indexing.
  */
 
+class giChunk;				// Forward reference
+
 
 struct intKey
 {
 	int		key;
-	giStr *		str;
+	giChunk *	data;
 	intKey	*	fwd[0];
 };
 
@@ -53,7 +55,7 @@ class giIndexInt
 	 *	Insert the given `ref' at the given `key' and return true.
 	 *	If an entry already exists, false is returned.
 	 */
-	bool		insert(int, giStr *);
+	bool		insert(int, giChunk *);
 
 	/*
 	 *	Remove the entry matching the given `key', if it exists.
@@ -73,6 +75,8 @@ class giIndexInt
 	unsigned	levels;
 
 	intKey *	cache;
+
+    public:
 	int		min, max;
 };
 
@@ -253,7 +257,7 @@ struct giStr : gistInternal
 	void		flatten(bool null);
 	long		toInt(int sign);
 	double		toFloat();
-	const char *	piece(int & idx, int & len);
+	unsigned	piece(int & idx, const char *& len);
 	static void	copy(char * to, const gist * from);
 	int		cmp(giStr *);
 };

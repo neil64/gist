@@ -155,7 +155,7 @@ giIndexInt::previous(int key)
  *	The entry is added after any all entries with matching keys.
  */
 bool
-giIndexInt::insert(int key, giStr * data)
+giIndexInt::insert(int key, giChunk * data)
 {
 	intKey ** update[MaxLevel];
 	intKey * p;
@@ -213,7 +213,7 @@ giIndexInt::insert(int key, giStr * data)
 	i = sizeof (intKey) + sizeof (intKey *) * level;
 	p = (intKey *)gistInternal::alloc(i);
 	p->key = key;
-	p->str = data;
+	p->data = data;
 
 	if (level > levels)
 	{

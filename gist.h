@@ -474,7 +474,7 @@ class gist
 	 *	Private methods.
 	 */
 	char *		_strcast(bool rw) const;
-	int		_strcmp(const gist &) const;
+	void		_strflatten() const;
 
 	/*
 	 *	Some internal structures that we call friends.
@@ -493,7 +493,7 @@ class gist
 	 */
 	int		strcmp(const char *) const;
 	int		strcmp(const gist &) const;
-	const char *	strpiece(int & index, int & len);
+	unsigned	strpiece(int & index, const char *& ptr) const;
 
 	void		strcat(int);
 	void		strcat(const char *);
@@ -501,6 +501,9 @@ class gist
 	void		strins(int);
 	void		strins(const char *);
 	void		strins(const gist &);
+
+	static unsigned	strcopy(char * dest, const gist & src,
+				unsigned start = 0, unsigned count = (~0U>>1));
 
 	/*
 	 *	Array's.

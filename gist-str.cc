@@ -73,6 +73,8 @@ giStr::concat(gist & a, const gist * b)
 }
 
 
+#if 0
+
 void
 giStr::flatten(bool null)
 {
@@ -90,6 +92,8 @@ giStr::flatten(bool null)
 	//	others need a new copy (copy())
 }
 
+#endif
+
 
 long
 giStr::toInt(int sign)
@@ -105,16 +109,22 @@ giStr::toFloat()
 }
 
 
-const char *
-giStr::piece(int & idx, int & len)
+#if 0
+
+unsigned
+giStr::piece(int idx, const char *& ptr)
 {
-	giStore * st;
-	int i = idx;
+	// giStore * st;
 
 	if (!index)
 	{
-#warning "this needs to be a gist::piece"  // so it can get access to skip,cnt
-		; // st = str;
+		if (idx < 0 || idx >= size)
+			return 0;
+		else
+		{
+			ptr = &((const char *)data)[idx];
+			return size - idx;
+		}
 	}
 	else
 	{
@@ -125,17 +135,17 @@ giStr::piece(int & idx, int & len)
 		 */
 #warning "wrong here also"
 		// i += min;
-		char k[sizeof (int)];
-		giStore::mkKey(k, i+1);
-		const char * kp = &k[0];
-		unsigned l = sizeof k;
+		// char k[sizeof (int)];
+		// giStore::mkKey(k, i+1);
+		// const char * kp = &k[0];
+		// unsigned l = sizeof k;
 
 #warning "check this"
-		{
-			intKey * kp = index->previous(i + 1);
+		// {
+			// intKey * kp = index->previous(i + 1);
 			// st = key.str;
-			st = 0;
-		}
+			// st = 0;
+		// }
 		// st = (giStore *)index->previous(kp, l);
 		// int start = giStore::gtKey(kp);
 		// if (!st || l != sizeof (k) || start > i)
@@ -146,22 +156,27 @@ giStr::piece(int & idx, int & len)
 
 	if ((unsigned)i >= st->size)
 	{
-		len = 0;
+		// len = 0;
 		return 0;
 	}
 	else
 	{
-		len = st->size - i;
-		idx += len;
-		return &((const char *)st->data)[i];
+		// len = st->size - i;
+		// idx += len;
+		return 0;
+		//return &((const char *)st->data)[i];
 	}
 }
 
+#endif
 
 
 void
 giStr::copy(char * to, const gist * from)
 {
+
+#warning "wrong here"
+#if 0
 	giStr * sp = (giStr *)from->ptr;
 
 	if (!sp->index)
@@ -178,6 +193,7 @@ giStr::copy(char * to, const gist * from)
 			to += len;
 		}
 	}
+#endif
 }
 
 #if 0
@@ -256,9 +272,45 @@ gist::_strcast(bool rw) const
 	giStr * sp = (giStr *)gp->ptr;
 
 	if (sp->index || !sp->hasNull || (!unique && rw))
-		sp->flatten(true);
+		_strflatten();
 
 	return sp->data;
+}
+
+
+void
+gist::_strflatten() const
+{
+	/*
+	 *	We will change this gist, but the resulting value will be
+	 *	the same (const in principal).
+	 */
+	gist * gp = (gist *)this;
+	giStr * sp = (giStr *)gp->ptr;
+	unsigned l = gp->cnt;
+
+	if (!sp->index && gp->unique)
+	{
+		if (sp->hasNull)
+			return;
+		if (gp->skip + l < sp->size)
+		{
+			sp->data[gp->skip + l] = '\0';
+			sp->hasNull = true;
+			return;
+		}
+	}
+
+	l++;
+	char * cp = (char *)gistInternal::alloc(l);
+
+	(void)strcopy(cp, *gp);
+
+	gp->unique = true;
+	sp->index = 0;
+	sp->data = cp;
+	sp->size = l;
+	sp->hasNull = true;
 }
 
 /**********************************************************************/
@@ -427,6 +479,61 @@ gist::toString() const
 
 
 int
+gist::strcmp(const gist & r) const
+{
+	if (this == &r)
+		return 0;
+
+	if (ptr == r.ptr && skip == r.skip)
+	{
+		if (cnt == r.cnt)
+			return 0;
+		else if (cnt < r.cnt)
+			return -1;
+		else
+			return 1;
+	}
+
+	unsigned ll = 0, rl = 0;
+	int li = 0, ri = 0;
+	const char * lp = 0, * rp = 0;
+
+	for (;;)
+	{
+		if (ll == 0)
+			ll = strpiece(li, lp);
+		if (rl == 0)
+			rl = r.strpiece(ri, rp);
+
+		if (ll == 0 || rl == 0)
+			break;
+
+		unsigned l = ll;
+		if (l > rl)
+			l = rl;
+
+		int x = memcmp(lp, rp, l);
+		if (x)
+			return x;
+
+		lp += l;
+		rp += l;
+		ll -= l;
+		rl -= l;
+	}
+
+	if (ll == rl)
+		return 0;
+	else if (ll < rl)
+		return -1;
+	else
+		return 1;
+}
+
+
+#if 0
+
+int
 gist::_strcmp(const gist & r) const
 {
 	if (this == &r)
@@ -447,16 +554,24 @@ gist::_strcmp(const gist & r) const
 			return 1;
 	}
 
-	int ll = 0, rl = 0;
+	unsigned ll = 0, rl = 0;
 	int li = skip, ri = r.skip;
 	const char * lp = 0, * rp = 0;
 
 	for (;;)
 	{
-		if (ll == 0)
+		if (ll == 0 && lc > 0)
+		{
 			lp = ls->piece(li, ll);
-		if (rl == 0)
+			if (ll > lc)
+				ll = lc;
+		}
+		if (rl == 0 && rc > 0)
+		{
 			rp = rs->piece(ri, rl);
+			if (rl > rc)
+				rl = rc;
+		}
 
 		if (!lp || !rp)
 			break;
@@ -483,6 +598,7 @@ gist::_strcmp(const gist & r) const
 		return 1;
 }
 
+#endif
 
 int
 gist::strcmp(const char * s) const
@@ -503,22 +619,131 @@ gist::strcmp(const char * s) const
 		lp = &l;
 	}
 
-	return lp->_strcmp(r);
+	return lp->strcmp(r);
 }
 
 
-const char *
-gist::strpiece(int & index, int & len)
+unsigned
+gist::strpiece(int & ix, const char *& pt) const
 {
+	int i = ix;
+	if (i < 0 || (unsigned)i >= cnt)
+		return 0;
+
+	giStr * sp = (giStr *)ptr;
+
+	/*
+	 *	If the string is single, it's easy.
+	 */
+	if (!sp->index)
+	{
+		((gist *)this)->unique = false;
+		pt = &((const char *)sp->data)[i + skip];
+		ix = cnt;
+		return cnt - i;
+	}
+
+	/*
+	 *	The string is multi.  Search for the string chunk that
+	 *	contains the required index.  We search for index + 1 because
+	 *	giIndexInt::previous() is a "less-than" operation and we want
+	 *	"less-or-equal".
+	 */
+	i = i + skip + sp->index->min;
+	intKey * kp = sp->index->previous(i + 1);
+	if (!kp || kp->key > i)
+		throw gist::internalError("bogus index in gist::strpiece");
+
+	// i += min;
+	// char k[sizeof (int)];
+	// giStore::mkKey(k, i+1);
+	// const char * kp = &k[0];
+	// unsigned l = sizeof k;
+
+#warning "check this"
+	// {
+		// intKey * kp = index->previous(i + 1);
+		// st = key.str;
+		// st = 0;
+	// }
+	// st = (giStore *)index->previous(kp, l);
+	// int start = giStore::gtKey(kp);
+	// if (!st || l != sizeof (k) || start > i)
+	    // throw gist::internalError("bogus index in giStr::piece");
+
+	// i -= start;
+
+
+
+#if 0
 	if (!isStr())
 		throw typeError("strpiece");
 	const char * result = ((giStr *)ptr)->piece(index, len);
 	if (result)
 		unique = false;
 	return result;
+
+
+
+
+	// giStore * st;
+
+	if (!index)
+	{
+		if (idx < 0 || idx >= size)
+			return 0;
+		else
+		{
+			ptr = &((const char *)data)[idx];
+			return size - idx;
+		}
+	}
+	else
+	{
+		/*
+		 *	Make a key out of the index + 1.  We add one because
+		 *	giIndex::previous() is a "less-than" operation and
+		 *	we want "less-or-equal".
+		 */
+#warning "wrong here also"
+		// i += min;
+		// char k[sizeof (int)];
+		// giStore::mkKey(k, i+1);
+		// const char * kp = &k[0];
+		// unsigned l = sizeof k;
+
+#warning "check this"
+		// {
+			// intKey * kp = index->previous(i + 1);
+			// st = key.str;
+			// st = 0;
+		// }
+		// st = (giStore *)index->previous(kp, l);
+		// int start = giStore::gtKey(kp);
+		// if (!st || l != sizeof (k) || start > i)
+		    // throw gist::internalError("bogus index in giStr::piece");
+
+		// i -= start;
+	}
+
+	if ((unsigned)i >= st->size)
+	{
+		// len = 0;
+		return 0;
+	}
+	else
+	{
+		// len = st->size - i;
+		// idx += len;
+		return 0;
+		//return &((const char *)st->data)[i];
+	}
+
+#endif
+
 }
 
-/**********************************************************************/
+/************************************************************/
 /*
  *	String concatenation.
  */
@@ -582,7 +807,8 @@ gist::strcat(const gist & r)
 			 *	We are allowed to write to the left directly,
 			 *	and there is space available.  Go for it.
 			 */
-			giStr::copy(&ls->data[o], rp);
+			strcopy(&ls->data[o], r);
+			// giStr::copy(&ls->data[o], rp);
 			cnt += l;
 			ls->len += l;
 			if (!ls->index)
@@ -609,8 +835,10 @@ gist::strcat(const gist & r)
 			nls->hasNull = false;
 			nls->index = 0;
 
-			giStr::copy(&nls->data[0], this);
-			giStr::copy(&nls->data[cnt], rp);
+			strcopy(&nls->data[0], *this);
+			strcopy(&nls->data[cnt], r);
+			// giStr::copy(&nls->data[0], this);
+			// giStr::copy(&nls->data[cnt], rp);
 
 			unique = true;
 			ptr = nls;
@@ -737,4 +965,35 @@ gist::strcat(const char * r)
 {
 	gist rx(r);
 	strcat(rx);
+}
+
+/************************************************************/
+
+unsigned
+gist::strcopy(char * dest, const gist & src, unsigned start, unsigned count)
+{
+	int ix = start;
+	unsigned l;
+	const char * p;
+	unsigned c = 0;
+
+	while (count > 0 && (l = src.strpiece(ix, p)) > 0)
+	{
+		if (l > count)
+			l = count;
+
+		memcpy(dest, p, l);
+
+		dest += l;
+		c += l;
+		count -= l;
+	}
+
+	if (count > 0)
+	{
+		*dest++ = '\0';
+		c++;
+	}
+
+	return c;
 }
