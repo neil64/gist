@@ -8,6 +8,7 @@ OBJS =		gist.o gist-index.o gist-array.o gist-table.o gist-int.o \
 		gist-op1.o gist-op2.o gist-op3.o gist-op4.o gist-op5.o \
 		gist-file.o gist-regex.o \
 		gist-osdep.o gist-meth1.o gist-meth2.o \
+		gist-debug.o \
 		sgml.o
 
 

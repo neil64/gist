@@ -121,6 +121,11 @@ class giIndexInt
 	 *	Skip list head pointers.
 	 */
 	intKey *	head[0];
+
+	/*
+	 *	Debugging.
+	 */
+	friend void	gistPrintIntIndex(giIndexInt *, bool, int);
 };
 
 /******************************/

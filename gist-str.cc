@@ -616,13 +616,19 @@ gist::_strpiece(int & ix, const char *& pt) const
 	 */
 	int i1 = i + skip + sp->index->min;
 	intKey * kp = sp->index->previous(i1 + 1);
-	if (!kp || kp->key > i1)
+	if (!kp)
+	{
+  bogus:
 		throw gist::internalError("bogus index in gist::strpiece");
+	}
 
-	i1 -= kp->key;
 	giSChunk * cp = kp->schunk;
+	if (i1 < kp->key || i1 >= kp->key + (int)cp->len)
+		goto bogus;
+
 	pt = (const char *)cp->data;
 
+	i1 -= kp->key;
 	i1 = cp->len - i1;
 	ix = i + i1;
 
@@ -825,7 +831,10 @@ gist::strcat(const gist & r)
 			strncpy(&ls->data[o], *rp, ls->size - o);
 			cnt += l;
 			if (ls->index)
+			{
 				ls->chunk->len += l;
+				ls->index->max += l;
+			}
 			return;
 
 		} while (0);

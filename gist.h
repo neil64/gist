@@ -761,6 +761,11 @@ class gist
 	char *		fmt(const char *, ...);
 
 	/*
+	 *	Debugging.
+	 */
+	friend void	GistPrint(gist *);
+
+	/*
 	 *	A NIL gist, for convenience, such as when wanting to
 	 *	return NIL when a gist reference is required.
 	 */
