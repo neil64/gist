@@ -361,6 +361,14 @@ cmpGist(const gist & l, const gist & r)
 				return -1;
 			else
 				return 1;
+
+		case gist::GT_PTR:
+			if (l.ptr == r.ptr)
+				return 0;
+			else if (l.ptr < r.ptr)
+				return -1;
+			else
+				return 1;
 		}
 	}
 	else if (l.typ < r.typ)

@@ -308,6 +308,7 @@ gist::toString() const
 	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
+	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:

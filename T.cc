@@ -42,6 +42,10 @@ printGist(gist & g)
 		printf("table");
 		break;
 
+	case gist::GT_PTR:
+		printf("ptr");
+		break;
+
 	case gist::GT_CODE:
 		printf("code");
 		break;

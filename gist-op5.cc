@@ -20,6 +20,7 @@ gist::operator -() const
 	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
+	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
@@ -50,6 +51,7 @@ gist::operator ~() const
 	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
+	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
@@ -77,6 +79,7 @@ gist::operator !() const
 	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
+	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
@@ -105,6 +108,7 @@ gist::operator ++()
 	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
+	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
@@ -135,6 +139,7 @@ gist::operator ++(int)
 	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
+	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
@@ -163,6 +168,7 @@ gist::operator --()
 	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
+	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
@@ -193,6 +199,7 @@ gist::operator --(int)
 	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
+	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:

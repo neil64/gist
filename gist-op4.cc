@@ -50,7 +50,23 @@ gist::operator [](const gist & i)
 		throw indexError("array index must be integer");
 	}
 	if (typ == GT_TABLE)
+	{
+		switch (i.typ)
+		{
+		case GT_NIL:
+		case GT_STR:
+		case GT_INT:
+		case GT_FLOAT:
+		case GT_PTR:
+			break;
+
+		default:
+			throw indexError("table index must be nil, "
+						"str, int, float or ptr");
+		}
+
 		return _tableindex(i, true);
+	}
 
 	throw typeError("subscript not allowed");
 }
@@ -78,7 +94,23 @@ gist::operator [](const gist & i) const
 		throw indexError("array index must be integer");
 	}
 	if (typ == GT_TABLE)
+	{
+		switch (i.typ)
+		{
+		case GT_NIL:
+		case GT_STR:
+		case GT_INT:
+		case GT_FLOAT:
+		case GT_PTR:
+			break;
+
+		default:
+			throw indexError("table index must be nil, "
+						"str, int, float or ptr");
+		}
+
 		return ((gist *)this)->_tableindex(i, false);
+	}
 
 	throw typeError("subscript not allowed");
 }

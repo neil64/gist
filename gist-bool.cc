@@ -33,5 +33,8 @@ gist::operator bool() const
 
 	case GT_FLOAT:
 		return dval != 0.0;
+
+	case GT_PTR:
+		return ptr != 0;
 	}
 }

@@ -329,6 +329,7 @@ class gist
 		GT_STR,
 		GT_ARRAY,
 		GT_TABLE,
+		GT_PTR,
 		GT_CODE,
 		GT_INT,
 		GT_FLOAT,
@@ -344,6 +345,7 @@ class gist
 	bool		isNumber() const	{ return typ >= GT_INT; }
 	bool		isArray() const		{ return typ == GT_ARRAY; }
 	bool		isTable() const		{ return typ == GT_TABLE; }
+	bool		isPtr() const		{ return typ == GT_PTR; }
 
 	/********************************/
 	/*
@@ -377,8 +379,8 @@ class gist
 	GIST_ERROR(typeError)
 
 	/*
-	 *	When using a gist array, and index out of bounds gives
-	 *	an `indexError'.
+	 *	When using a gist array, and index out of bounds or an
+	 *	illegal index type gives an `indexError'.
 	 */
 	GIST_ERROR(indexError)
 
@@ -387,6 +389,12 @@ class gist
 	 *	is thrown.
 	 */
 	GIST_ERROR(overflowError)
+
+	/*
+	 *	If an attempt is made to extract a pointer with `ptrget()'
+	 *	on a non-pointer object, a `ptrError' is thrown.
+	 */
+	GIST_ERROR(ptrError)
 
 	/*
 	 *	A part of Gist that is not implemented yet.
@@ -492,6 +500,12 @@ class gist
 			unsigned    cnt;
 			unsigned    skip;
 		    };
+
+		    /*
+		     *	The value of this object if the object type is
+		     *	GT_PTR.
+		     */
+		    void *	ptr;		// Pointer type
 		};
 	    };
 
@@ -510,6 +524,7 @@ class gist
 		    long val;
 		    double dval;
 		    struct { unsigned cnt; unsigned skip; } s;
+		    void * ptr;
 		};
 	    } all;
 	};
@@ -605,7 +620,13 @@ class gist
 	gist &		table(bool clear = false);
 	void		tblset(gist & key, gist & val);
 	void		tbladd(gist & key, gist & val);
-	void		tbldel(gist & key, gist & val);
+	void		tbldel(gist & key);
+
+	/*
+	 *	Pointers.
+	 */
+	void		ptrset(void * p)	{ typ = GT_PTR; ptr = p; }
+	void *		ptrget() const;
 
 	/*
 	 *	Generic methods.
