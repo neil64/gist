@@ -174,6 +174,7 @@ gist::_strcast(bool rw) const
 	if (sp->index || !sp->hasNull || (!unique && rw))
 		_strflatten();
 
+	((gist *)this)->unique = false;
 	return sp->data;
 }
 
@@ -308,7 +309,7 @@ gist::toString() const
 				*--ap = '-';
 
 			gist r;
-			r.copy(a, &a[sizeof a] - ap);
+			r.copy(ap, &a[sizeof a] - ap);
 
 			return r;
 		}
@@ -414,103 +415,25 @@ gist::_strpiece(int & ix, const char *& pt) const
 		return cnt - i;
 	}
 
-	throw gist::notYetError("gist::_strpiece");
-
 	/*
 	 *	The string is multi.  Search for the string chunk that
 	 *	contains the required index.  We search for index + 1 because
 	 *	giIndexInt::previous() is a "less-than" operation and we want
 	 *	"less-or-equal".
 	 */
-	i = i + skip + sp->index->min;
-	intKey * kp = sp->index->previous(i + 1);
-	if (!kp || kp->key > i)
+	int i1 = i + skip + sp->index->min;
+	intKey * kp = sp->index->previous(i1 + 1);
+	if (!kp || kp->key > i1)
 		throw gist::internalError("bogus index in gist::strpiece");
 
-	// i += min;
-	// char k[sizeof (int)];
-	// giStore::mkKey(k, i+1);
-	// const char * kp = &k[0];
-	// unsigned l = sizeof k;
+	i1 -= kp->key;
+	giChunk * cp = kp->data;
+	pt = &((const char *)cp->data)[i1];
 
-	// {
-		// intKey * kp = index->previous(i + 1);
-		// st = key.str;
-		// st = 0;
-	// }
-	// st = (giStore *)index->previous(kp, l);
-	// int start = giStore::gtKey(kp);
-	// if (!st || l != sizeof (k) || start > i)
-	    // throw gist::internalError("bogus index in giStr::piece");
+	i1 = cp->len - i1;
+	ix = i + i1;
 
-	// i -= start;
-
-
-
-#if 0
-	if (!isStr())
-		throw typeError("strpiece");
-	const char * result = ((giStr *)ptr)->piece(index, len);
-	if (result)
-		unique = false;
-	return result;
-
-
-
-
-	// giStore * st;
-
-	if (!index)
-	{
-		if (idx < 0 || idx >= size)
-			return 0;
-		else
-		{
-			ptr = &((const char *)data)[idx];
-			return size - idx;
-		}
-	}
-	else
-	{
-		/*
-		 *	Make a key out of the index + 1.  We add one because
-		 *	giIndex::previous() is a "less-than" operation and
-		 *	we want "less-or-equal".
-		 */
-		// i += min;
-		// char k[sizeof (int)];
-		// giStore::mkKey(k, i+1);
-		// const char * kp = &k[0];
-		// unsigned l = sizeof k;
-
-		// {
-			// intKey * kp = index->previous(i + 1);
-			// st = key.str;
-			// st = 0;
-		// }
-		// st = (giStore *)index->previous(kp, l);
-		// int start = giStore::gtKey(kp);
-		// if (!st || l != sizeof (k) || start > i)
-		    // throw gist::internalError("bogus index in giStr::piece");
-
-		// i -= start;
-	}
-
-	if ((unsigned)i >= st->size)
-	{
-		// len = 0;
-		return 0;
-	}
-	else
-	{
-		// len = st->size - i;
-		// idx += len;
-		return 0;
-		//return &((const char *)st->data)[i];
-	}
-
-#endif
-
+	return i1;
 }
 
 
@@ -527,6 +450,21 @@ gist::strpiece(int & ix, const char *& pt) const
 /*
  *	String concatenation.
  */
+
+void
+giStr::makeMulti(unsigned len)
+{
+	giChunk * cp = (giChunk *)gistInternal::alloc(sizeof (giChunk));
+	cp->data = data;
+	cp->data0 = data;
+	cp->len = len;
+
+	index = new giIndexInt;
+	index->insert(0, cp);
+	index->min = 0;
+	index->max = len;
+}
+
 
 void
 gist::strcat(const gist & r)
@@ -587,8 +525,7 @@ gist::strcat(const gist & r)
 			 *	We are allowed to write to the left directly,
 			 *	and there is space available.  Go for it.
 			 */
-			strcopy(&ls->data[o], r);
-			// giStr::copy(&ls->data[o], rp);
+			strcopy(&ls->data[o], *rp);
 			cnt += l;
 			ls->len += l;
 			if (!ls->index)
@@ -616,9 +553,7 @@ gist::strcat(const gist & r)
 			nls->index = 0;
 
 			strcopy(&nls->data[0], *this);
-			strcopy(&nls->data[cnt], r);
-			// giStr::copy(&nls->data[0], this);
-			// giStr::copy(&nls->data[cnt], rp);
+			strcopy(&nls->data[cnt], *rp);
 
 			unique = true;
 			ptr = nls;
@@ -633,103 +568,81 @@ gist::strcat(const gist & r)
 		 *	and add it to the end of the current chunk list,
 		 *	making the left into a multi if needed.
 		 */
-		if (!unique || !ls->index)
-		{
-			// makeNewIndex();
-		}
+		if (!ls->index)
+			ls->makeMulti(skip + cnt);
 
-		giChunk * cp; // = gistInternal::alloc(sizeof (giChunk));
+		giChunk * cp = (giChunk *)gistInternal::alloc(sizeof (giChunk));
 		cp->data = (char *)gistInternal::alloc(strChunk);
+		cp->data0 = cp->data;
 		cp->len = rp->cnt;
+		strcopy(cp->data, *rp);
+
+		ls->index->insert(ls->index->max, cp);
+		ls->index->max += rp->cnt;
+
 		ls->data = cp->data;
 		ls->len = rp->cnt;
 		ls->size = strChunk;
-		// giStrCopy(cp->data, rp);
+
+		/*
+		 *	Setting `unique' here is subtle -- unique on a multi
+		 *	string really means that only the last chunk is
+		 *	unique, and then only if the chunk uses the `data'
+		 *	and `size' references in the giStr.  This allows
+		 *	the next concatenation to copy into that last chunk
+		 *	if needed.  The index structure itself, and all of
+		 *	the other chunks in it are never touched.
+		 */
+		unique = true;
+
 		return;
-
 	}
-
-	(void)rs->index->search(0);	// just to quiet the compiler.
-
-	throw gist::notYetError("giStr::concat");
 
 	/*
-	 *	Append the right onto the left.  If the right is a single
-	 *	string, make a new chunk header for it, otherwise, copy
-	 *	the chunks from the right to the left.  Both strings will
-	 *	no longer be unique.
+	 *	The right was too big to copy, so we will place references
+	 *	to it in our index.  If we (the left) don't have an index,
+	 *	make one.  Since there will be cross referencing, neither
+	 *	the left nor the right will remain unique.
 	 */
-	if (!ls->index || !unique)
+	if (!ls->index)
+		ls->makeMulti(skip + cnt);
+
+	((gist *)this)->unique = false;
+	((gist *)rp)->unique = false;
+
+	if (!rs->index)
 	{
-		// makeNewIndex();
+		/*
+		 *	The right is a (big) single.  Create a reference
+		 *	(giChunk) to it and store it in our index.
+		 */
+		giChunk * cp = (giChunk *)gistInternal::alloc(sizeof (giChunk));
+		cp->data0 = rs->data;
+		cp->data = rs->data + rp->skip;
+		cp->len = rp->cnt;
+
+		ls->index->insert(ls->index->max, cp);
+		ls->index->max += cp->len;
 	}
-
-
-/*
-
-
-	-  if b's size is less than the copy limit
-			(must copy, some code depends on it)
-		-  if a is unique
-			-  get final storage pointer and length
-				(if single, then the main pointer)
-				(if multi, last record, or main pointer)
-			-  if there is space available
-				-  copy b directly
-				-  update info
-				-  done
-		-  if the total size is less than the copy limit
-			-  allocate a new chunk
-			-  copy both strings there.
-			-  done
-		-  if a is not unique
-			-  create a new index structure
-			-  (makes a unique)
-		-  add a new chunk to the end of the string.
-		-  copy b into it.
-
-	(append function from here on...)
-	-  if a is not unique,
-		-  make a new index structure
-
-	-  append the b chunk onto the string (insert into index).
-
-
----
-
-	*  could say that unique means that the index has not changed,
-	   and that if the giStr has pointers, then that is also unique.
-	   So if another string chunk is appended to the index, the local
-	   pointers will be NIL.
-
-
-*/
-
-
-
-
-#if 0
-
-	if (a.isStr())
-		ap = &a;
 	else
 	{
-		ax = a.toString();
-		ap = &ax;
+		/*
+		 *	The right is a multi.  Insert all of its chunks
+		 *	into our index.
+		 */
+		int i = ls->index->max;
+		intKey * kp;
+
+		for (kp = rs->index->first();
+		     kp;
+		     kp = rs->index->next(kp->key))
+		{
+			ls->index->insert(i, kp->data);
+			i += kp->data->len;
+		}
+
+		ls->index->max = i;
 	}
-
-	if (b.isStr())
-		bp = &b;
-	else
-	{
-		bx = b.toString();
-		bp = &bx;
-	}
-
-	return ax;
-
-	// return *giStr::concat(ap, bp);
-#endif
 }
 
 

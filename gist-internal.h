@@ -215,14 +215,23 @@ struct giStr : gistInternal
 
 	/********/
 
+	void		makeMulti(unsigned len);
 	long		toInt(bool sign, unsigned base);
 	double		toFloat();
 };
 
+/*
+ *	A string chunk.  Used to store pieces of strings in the skip list.
+ *	`data' is the string data, `len' is the string length;  `data0'
+ *	points to the start of the string storage chunk.  It is not used
+ *	other than to create a reference for the garbage collector, since
+ *	we promise the GC that we would not have internal references.
+ */
 struct giChunk
 {
 	char *		data;
 	unsigned	len;
+	char *		data0;
 };
 
 /**********************************************************************/

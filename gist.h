@@ -184,24 +184,31 @@ class gist
 			operator double() const		{ return toFloat(); }
 
 	/*
-	 *	Obtain a string representation of the gist object (by
-	 *	using toString() if necessary), then copy the string,
-	 *	terminated with a '\0', into a new chunk of memory and
-	 *	return it.  Multiple calls may or may not return the same
-	 *	(cached) chunk of memory.  The alternate `const char *'
-	 *	can return the memory used for the actual string storage,
-	 *	rather than a cache;  modifying this memory might change
-	 *	the original string.
+	 *	Return a pointer to the string storage of the gist object.
+	 *	If necessary, the string storage is manipulated to make
+	 *	it a C++ string, by ensuring the string is in contiguous
+	 *	storage and that it is null terminated.
+	 *
+	 *	With "const char *", a pointer to existing storage is
+	 *	returned.  Repeated casts will return the same pointer.
+	 *	The storage may be referenced by other objects.	 Modifying
+	 *	the string data though this pointer can have unpredictable
+	 *	and undesirable results.
+	 *
+	 *	With "char *", the string storage is made to be unique before
+	 *	returning a pointer to it.  Repeated casts will return
+	 *	a pointer to different storage, copying the string data
+	 *	if necessary.  So long as the original gist string object is
+	 *	not modified or used in any way (including another cast), the
+	 *	string data referred to by the pointer can be modified and
+	 *	the changes will be reflected in the original gist string.
+	 *	As soon as the original object is used or changed, the
+	 *	pointer should be considered to refer to read-only data;
+	 *	changing the string data though the pointer after the object
+	 *	has been used or modified can have unpredictable results.
 	 */
-	operator const char *() const
-	{
-		return (const char *)_strcast(false);
-	}
-
-	operator char *() const
-	{
-		return _strcast(true);
-	}
+	operator const char *() const  { return (const char *)_strcast(false); }
+	operator char *() const	       { return _strcast(true); }
 
 	/********************************/
 	/*

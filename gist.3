@@ -30,7 +30,7 @@ and
 objects can store a variety of data types, and can automatically convert
 between them as necessary.
 The data types it supports are:
-.IP \(bu
+.IP \(bu .3i
 32\-bit integers
 .IP \(bu
 character strings
@@ -48,7 +48,7 @@ object (indexable by a variety of data types)
 In the future,
 .I gist
 may also support:
-.IP \(bu
+.IP \(bu .3i
 an arbitrary length integer type
 .IP \(bu
 an arbitrary length floating point type
@@ -60,7 +60,8 @@ Gist overloads almost all C++ operators allowing
 objects to be used as if they were first class data types.
 .B Gist
 objects are managed by a garbage collecting allocator.
-Object never need to be freed.  In fact,
+Objects never need to be freed.
+In fact,
 the
 .B delete
 operator and the
@@ -100,13 +101,6 @@ results in the
 object
 .B s
 containing the string "\fBabcdef\fP".
-.LP
-Note that either or both sides of a
-.B gist
-operator must be a
-.B gist
-object.
-This is a requirement of C++.
 .LP
 Operators of the form "\fI<object> <op> <object>\fP" work as follows:
 .TP
@@ -167,7 +161,7 @@ The result is a
 .B gist
 integer.
 .SH STRINGS
-.IP \(bu
+.IP \(bu .3i
 Assignment to a string from
 .B char *
 results in the string referring to the given character buffer directly.
@@ -177,10 +171,45 @@ modifications to the string will not change the buffer.
 When string data could be referenced by more than one string object or
 external pointer, the string buffer is permanently marked.
 From then on it is treated as read-only.
+.\" .IP \(bu
+.\" A string can be marked as volatile, meaning that it can be
+.\" changed without copying it, and that changes via one string object
+.\" are reflected in other string objects that refer to the same buffer.
 .IP \(bu
-A string can be marked as volatile, meaning that it can be
-changed without copying it, and that changes via one string object
-are reflected in other string objects that refer to the same buffer.
+A string can be cast into a
+.B "char *"
+or
+.BR "const char *" .
+In both cases, a pointer to the actual string storage is returned.
+If necessary, the string storage is manipulated to make it a C++
+string, by ensuring the string is in contiguous storage and that it
+is null terminated.
+.IP
+With
+.BR "const char *" ,
+the pointer returned refers to a string buffer that may be shared
+between many objects.
+Modifying the string data though this pointer can have unpredictable
+and undesirable results.
+Multiple casts will usually produce the same pointer.
+.IP
+With
+.BR "char *" ,
+the string storage is made to be unique before returning a pointer to it.
+Repeated casts will return a pointer to different storage,
+copying the string data if necessary.
+So long as the original
+.B gist
+string object is not modified or used in
+any way (including another cast), the string data referred to by the
+pointer can be modified and the changes will be reflected in the
+original
+.B gist
+string.
+As soon as the original object is used or changed, the
+pointer should be considered to refer to read-only data;
+changing the string data though the pointer after the object
+has been used or modified can have unpredictable results.
 .SH EXCEPTIONS
 .B Gist
 uses the C++ exception handling mechanism to handle situations it
@@ -219,7 +248,7 @@ catch (gist::valueError e) {
 .fi
 .LP
 .SH "TYPE COERCION RULES"
-.IP \(bu
+.IP \(bu .3i
 strings are converted to integers or floats by parsing them;
 valueError possible.
 .IP \(bu
