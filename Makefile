@@ -44,4 +44,5 @@ clean:
 
 T.o:		gist.h sgml.h
 gist-*.o:	gist.h gist-internal.h
+gist.o:		gist-version.h
 sgml.o:		gist.h 

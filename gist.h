@@ -261,7 +261,9 @@ class gist
 #define GIST_OPS2a(r, o)						\
 	GIST_OPS2(r, o)							\
 	friend r	operator o(const gist &, const char *);		\
-	friend r	operator o(const char *, const gist &);
+	friend r	operator o(const char *, const gist &);		\
+	friend r	operator o(const gist &, char *);		\
+	friend r	operator o(char *, const gist &);
 
 #define GIST_OPS2b(r, o)						\
 	GIST_OPS2a(r, o)						\
@@ -776,6 +778,11 @@ class gist
 	 *	return NIL when a gist reference is required.
 	 */
 	static gist	nil;
+
+	/*
+	 *	Gist version information.
+	 */
+	static gist	version;
 };
 
 /**********************************************************************/

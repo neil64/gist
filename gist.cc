@@ -13,7 +13,17 @@
 #include	"gist-internal.h"
 
 
-gist		gist::nil;		// The NIL gist.
+/*
+ *	The NIL gist.
+ */
+gist		gist::nil;
+
+/*
+ *	Gist version information.
+ */
+
+#include "gist-version.h"
+gist		gist::version(VERSION_STRING);
 
 /**********************************************************************/
 /*

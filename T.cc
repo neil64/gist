@@ -678,7 +678,7 @@ report(const char * ty, gist::error & e)
 int
 main(int argc, char ** argv)
 {
-	printf("Test gist\n\n");
+	printf("Test gist (gist version %s)\n\n", gist::version.CCS());
 	printf("\tSize of gist = %d\n", sizeof (gist));
 
 	char * t = "Inib=fsatm";

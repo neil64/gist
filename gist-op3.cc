@@ -95,6 +95,8 @@ bool operator ==(float l, const gist & r)		{ OP1f(r, l, ==) }
 bool operator ==(double l, const gist & r)		{ OP1f(r, l, ==) }
 bool operator ==(const gist & l, const char * r)	{ OP2(l, r, ==) }
 bool operator ==(const char * l, const gist & r)	{ OP2(r, l, ==) }
+bool operator ==(const gist & l, char * r)		{ OP2(l, r, ==) }
+bool operator ==(char * l, const gist & r)		{ OP2(r, l, ==) }
 bool operator ==(const gist & l, const void * r)	{ OP3(l, r, ==) }
 bool operator ==(const void * l, const gist & r)	{ OP3(r, l, ==) }
 
@@ -113,6 +115,8 @@ bool operator !=(float l, const gist & r)		{ OP1f(r, l, !=) }
 bool operator !=(double l, const gist & r)		{ OP1f(r, l, !=) }
 bool operator !=(const gist & l, const char * r)	{ OP2(l, r, !=) }
 bool operator !=(const char * l, const gist & r)	{ OP2(r, l, !=) }
+bool operator !=(const gist & l, char * r)		{ OP2(l, r, !=) }
+bool operator !=(char * l, const gist & r)		{ OP2(r, l, !=) }
 bool operator !=(const gist & l, const void * r)	{ OP3(l, r, !=) }
 bool operator !=(const void * l, const gist & r)	{ OP3(r, l, !=) }
 
@@ -131,6 +135,8 @@ bool operator <(float l, const gist & r)		{ OP1f(r, l, >) }
 bool operator <(double l, const gist & r)		{ OP1f(r, l, >) }
 bool operator <(const gist & l, const char * r)		{ OP2(l, r, <) }
 bool operator <(const char * l, const gist & r)		{ OP2(r, l, >) }
+bool operator <(const gist & l, char * r)		{ OP2(l, r, <) }
+bool operator <(char * l, const gist & r)		{ OP2(r, l, >) }
 
 bool operator >(const gist & l, const gist & r)		{ OP0(l, r, >) }
 bool operator >(const gist & l, int r)			{ OP1(l, r, >) }
@@ -147,6 +153,8 @@ bool operator >(float l, const gist & r)		{ OP1f(r, l, <) }
 bool operator >(double l, const gist & r)		{ OP1f(r, l, <) }
 bool operator >(const gist & l, const char * r)		{ OP2(l, r, >) }
 bool operator >(const char * l, const gist & r)		{ OP2(r, l, <) }
+bool operator >(const gist & l, char * r)		{ OP2(l, r, >) }
+bool operator >(char * l, const gist & r)		{ OP2(r, l, <) }
 
 bool operator <=(const gist & l, const gist & r)	{ OP0(l, r, <=) }
 bool operator <=(const gist & l, int r)			{ OP1(l, r, <=) }
@@ -163,6 +171,8 @@ bool operator <=(float l, const gist & r)		{ OP1f(r, l, >=) }
 bool operator <=(double l, const gist & r)		{ OP1f(r, l, >=) }
 bool operator <=(const gist & l, const char * r)	{ OP2(l, r, <=) }
 bool operator <=(const char * l, const gist & r)	{ OP2(r, l, >=) }
+bool operator <=(const gist & l, char * r)		{ OP2(l, r, <=) }
+bool operator <=(char * l, const gist & r)		{ OP2(r, l, >=) }
 
 bool operator >=(const gist & l, const gist & r)	{ OP0(l, r, >=) }
 bool operator >=(const gist & l, int r)			{ OP1(l, r, >=) }
@@ -179,6 +189,8 @@ bool operator >=(float l, const gist & r)		{ OP1f(r, l, <=) }
 bool operator >=(double l, const gist & r)		{ OP1f(r, l, <=) }
 bool operator >=(const gist & l, const char * r)	{ OP2(l, r, >=) }
 bool operator >=(const char * l, const gist & r)	{ OP2(r, l, <=) }
+bool operator >=(const gist & l, char * r)		{ OP2(l, r, >=) }
+bool operator >=(char * l, const gist & r)		{ OP2(r, l, <=) }
 
 
 
