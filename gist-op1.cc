@@ -13,15 +13,46 @@
 gist
 operator +(const gist & a, const gist & b)
 {
-	if (a.isInt())
-	{
-		if (b.isInt())
-		{
-			return gist(a.val + b.val);
-		}
-	}
+	if (a.isFloat() || b.isFloat())
+		return gist(a.toFloat() + b.toFloat());
+	else if (a.isInt() || b.isInt())
+		return gist(a.toInt() + b.toInt());
+	else if (a.isStr() && b.isStr())
+		return giStr::concat(a, b);
+	else
+		throw gist::typeError("operator +");
+}
 
-	throw gist::typeError("operator +");
+
+gist
+operator +(const gist & a, int b)
+{
+	if (a.isFloat())
+		return gist(a.toFloat() + (double)b);
+	else if (a.isInt())
+		return gist(a.val + b);
+	else
+		throw gist::typeError("operator +");
+}
+
+
+gist
+operator +(const gist & a, unsigned b)
+{
+	return a + (int)b;
+}
+
+/******************************/
+
+gist
+operator -(const gist & a, const gist & b)
+{
+	if (a.isFloat() || b.isFloat())
+		return gist(a.toFloat() - b.toFloat());
+	else if (a.isInt() || b.isInt())
+		return gist(a.toInt() - b.toInt());
+	else
+		throw gist::typeError("operator -");
 }
 
 

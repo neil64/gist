@@ -10,6 +10,14 @@
 
 /**********************************************************************/
 
+gist
+giStr::concat(const gist & a, const gist & b)
+{
+	throw gist::notYetError("giStr::concat");
+}
+
+/**********************************************************************/
+
 gist &
 gist::set(const char * s, int l)
 {

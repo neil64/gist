@@ -139,7 +139,7 @@ class gist
 			operator unsigned long() const;
 			operator long long() const;
 			operator unsigned long long() const;
-	double		toNumber() const;
+	double		toFloat() const;
 			operator float() const;
 			operator double() const;
 
@@ -318,6 +318,11 @@ class gist
 	 *	is thrown.
 	 */
 	GIST_ERROR(overflowError)
+
+	/*
+	 *	A part of Gist that is not implemented yet.
+	 */
+	GIST_ERROR(notYetError)
 
 	/*
 	 *	Some sort of internal error (please file a bug report).

@@ -21,6 +21,8 @@ struct giStr : giBase
 		giStr() : giBase(gist::GT_STR) {}
 		giStr(gist::type_e t) : giBase(t) {}
 
+	static gist	concat(const gist &, const gist &);
+
 	// cord like structures, right here.
 };
 

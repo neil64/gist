@@ -3,12 +3,14 @@
 #
 ################
 
-OBJS =		gist.o gist-op1.o gist-op2.o gist-op3.o
+OBJS =		gist.o \
+		gist-int.o gist-float.o gist-str.o gist-long.o \
+		gist-op1.o gist-op2.o gist-op3.o
 
 
-CXXFLAGS =	-g -Wall
-## CXXFLAGS =	-g -O -Wall
-## CXXFLAGS =	-O -Wall
+## CXXFLAGS =	-g -Wall
+## CXXFLAGS =	-g -O3 -Wall
+CXXFLAGS =	-O3 -Wall
 OPTIM =
 
 ################
