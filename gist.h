@@ -509,9 +509,16 @@ class gist
 	char *		_strcast(bool rw) const;
 	unsigned	_strpiece(int & index, const char *& ptr) const;
 	void		_strflatten() const;
-	static void	_coerce1(const gist & l, const gist *& lp,
-				const gist & r, const gist *& rp,
-				gist & x, const char * op);
+
+	gist &		_arrayindex(long);
+	gist &		_tableindex(long);
+	gist &		_tableindex(double);
+	gist &		_tableindex(const char *);
+	gist &		_tableindex(const gist &);
+
+//	static void	_coerce1(const gist & l, const gist *& lp,
+//				const gist & r, const gist *& rp,
+//				gist & x, const char * op);
 
 	/*
 	 *	Some internal structures that we call friends.

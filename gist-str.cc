@@ -1,5 +1,5 @@
 /*
- *	Gist -- Operators part 3.
+ *	Gist -- Strings.
  *
  *	Contains:	set(char *), cons(char *), (char *)
  */
