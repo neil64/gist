@@ -211,8 +211,7 @@ My scripting language and object library
 041228
 
 *  To implement a file interface using gist.
-	-  Buffering can be done by allocating a string of, say, 512 bytes
-	   and reading.
+	-  Buffering can be done by allocating a string of, say, 512 bytes.
 	-  The read buffering function is actually called with the amount
 	   required, and a string of that amount returned.  The string is
 	   made by doing multiple 512 reads until enough data exists, and
@@ -222,3 +221,17 @@ My scripting language and object library
 	   by prepending the put back data to the stream string.
 	-  The advantage of all this is that there is minimal (if any)
 	   data copying.
+
+
+========
+
+050201
+
+*  Last I played with gist, was to use it to parse tables in a data file
+   into an internal C++ data structure.  It didn't work too well, getting
+   corrupted memory.  It seemed likely that this was caused by the fact that
+   memory was allocated with the old allocator as well as with the Boehm GC
+   (through gist).  If I remember rightly, the GC would not search the
+   non-GC memory for references to GC data, and many gist objects would
+   be incorrectly collected.  I abandoned gist, because I needed to get
+   that program working quickly.

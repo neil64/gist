@@ -35,14 +35,14 @@ gistInternal::readOnlyDataTestInit()
 	extern int _fp_hw;
 
 	/*
-	 *	Some Linux distributions arrange to define __data_start.
-	 *	Some define data_start as a weak symbol.  The latter is
-	 *	technically broken, since the user program may define
-	 *	data_start, in which case we lose.  Nonetheless, we try
-	 *	both, preferring __data_start.	We assume GCC compatible
-	 *	pragmas.  Linux systems also define `_fp_hw' in crtbegin.S
-	 *	(for compatibility with the SYSV ABI), so if it exists it
-	 *	can be used as the start of the read only data area.
+	 *	Some linux distributions define __data_start.  Some define
+	 *	data_start as a weak symbol.  The latter is technically
+	 *	broken, since the user program may define data_start, in
+	 *	which case we lose.  Nonetheless, we try both, preferring
+	 *	__data_start.  We assume GCC style pragmas.  Linux systems
+	 *	also define `_fp_hw' in crtbegin.S (for compatibility with
+	 *	the SYSV ABI), so if it exists it can be used as the start
+	 *	of the read only data area.
 	 */
 	void * loc = (void *)&__data_start;
 	if (!loc)

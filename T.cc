@@ -102,6 +102,13 @@ test_init()
 		printGist(ga[i]);
 		printf("\n");
 	}
+
+	printf("init2:\n");
+	gist * a = new gist;
+	gist * b = new gist;
+	printf("\tGC allocated a to 0x%08x and b to 0x%08x "
+		"(%d bytes difference)\n",
+		(int)a, (int)b, (char *)a - (char *)b);
 }
 
 
@@ -634,6 +641,8 @@ test_misc()
 	// .... ?.copy(const gist *);
 
 	{
+		// For testing read only regions.
+
 		char * hw1 = "Hello world";
 		static char hw2[] = "Hello world";
 

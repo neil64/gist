@@ -29,7 +29,7 @@ gcInit()
 		extern int GC_is_initialized;
 		if (!GC_is_initialized)
 		{
-			GC_all_interior_pointers = 0;
+			// GC_all_interior_pointers = 0;
 			GC_init();
 		}
 
@@ -55,12 +55,23 @@ gist::operator new(unsigned sz)
 
 	/*
 	 *	Allocate it through the Boehm garbage collector.
-	 *	The allocation size here should almost always be 8 (or
-	 *	is it 12?), the size of a gist.	 The only time it will be
+	 *	The allocation size here should almost always be 16,
+	 *	the size of a gist.  The only time it will be
 	 *	different is if someone derives from gist.
+	 *
+	 *	If the size is 16, we assume that we are only allocating
+	 *	a gist, in which case we will reduce the size to 15 bytes,
+	 *	so that GC_malloc() won't round the size up to 32 bytes.
+	 *	With `GC_all_interior_pointers' enabled (see the GC
+	 *	documentation), the allocator wants to put an extra byte
+	 *	at the end of everything, so that a pointer to just past
+	 *	the end of the object still refers to the object.  The
+	 *	allocator will round the size back up to 16.
 	 *
 	 *	Much of gist assumes that the new memory is cleared.
 	 */
+	if (sz == 16)
+		sz = 15;
 	void * ptr = GC_malloc(sz);
 	if (!ptr)
 		throw std::bad_alloc();

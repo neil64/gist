@@ -454,36 +454,6 @@ class gist
 	{
 	    struct
 	    {
-		/*
-		 *  Object type.  Set to one of the values from the
-		 *  enum above.  The bit field syntax is used to ensure that
-		 *  the type only takes a byte of storage.  The size will
-		 *  be rounded up on architectures that have other than
-		 *  8-bits per byte.
-		 */
-		type_e	typ : 8;		// Object type
-
-		/*
-		 *  True if the value of this object is known not to be
-		 *  referenced by another object;  this is of most use
-		 *  for string types, to allow the string to be modified
-		 *  directly rather than having to copy it first; it is
-		 *  not initialized on objects that don't use it, such as
-		 *  integer and floating types.
-		 */
-		bool	unique;			// Set if no other refs to this
-
-		/*
-		 *	2 bytes reserved for future use.
-		 */
-		// short	res0;
-
-		/*
-		 *  A pointer to internal data, if required.  For string
-		 *  and array types, this is the string / array storage.
-		 */
-		struct gistInternal * intern;	// Internal data
-
 		union
 		{
 		    /*
@@ -516,6 +486,37 @@ class gist
 		     */
 		    void *	ptr;		// Pointer type
 		};
+
+		/*
+		 *  A pointer to internal data, if required.  For string
+		 *  and array types, this is the string / array storage.
+		 */
+		struct gistInternal * intern;	// Internal data
+
+		/*
+		 *  Object type.  Set to one of the values from the
+		 *  enum above.  The bit field syntax is used to ensure that
+		 *  the type only takes a byte of storage.  The size will
+		 *  be rounded up on architectures that have other than
+		 *  8-bits per byte.
+		 */
+		type_e	typ : 8;		// Object type
+
+		/*
+		 *  True if the value of this object is known not to be
+		 *  referenced by another object;  this is of most use
+		 *  for string types, to allow the string to be modified
+		 *  directly rather than having to copy it first; it is
+		 *  not initialized on objects that don't use it, such as
+		 *  integer and floating types.
+		 */
+		bool	unique;			// Set if no other refs to this
+
+		/*
+		 *	2 bytes reserved for future use.  However, see
+		 *	gist::opertor new() in gist.cc before using this.
+		 */
+		// short	res0;
 	    };
 
 	    /*
@@ -526,15 +527,15 @@ class gist
 	     *	declarations so that we can get gdb to behave.
 	     */
 	    struct {
-		type_e typ:8;
-		bool unique;
-		struct gistInternal * intern;
 		union {
 		    long val;
 		    double dval;
 		    struct { unsigned cnt; unsigned skip; } s;
 		    void * ptr;
 		};
+		struct gistInternal * intern;
+		type_e typ:8;
+		bool unique;
 	    } all;
 	};
 
