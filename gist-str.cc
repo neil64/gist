@@ -10,6 +10,17 @@
 #include	"gist-internal.h"
 
 
+/*
+ *	The maximum number of characters that we will copy when concatenating
+ *	strings.  If greater than this, we create a "multi" string.
+ */
+const int	maxCopy = 32;
+
+/*
+ *	String space is allocated in multiples of this value.
+ */
+const int	strChunk = 64;
+
 /**********************************************************************/
 /*
  *	Internal gist member functions.
@@ -126,7 +137,6 @@ giStr::piece(int & idx, int & len)
 	}
 	else
 	{
-		st->multiRef = 1;
 		len = st->size - i;
 		idx += len;
 		return &((const char *)st->data)[i];
@@ -280,15 +290,14 @@ gist::gist(const char * s, int l)
 }
 
 
-gist &
+void
 gist::set(const char * s, int l)
 {
 	giStore * st = giStore::alloc(0);
-	st->data = (char *)s;		// Drop const, but multiRef is set.
-	st->multiRef = 1;
+	st->data = (char *)s;		// Drop const, but unique is false.
 	if (l < 0)
 	{
-		st->hasNull = 1;
+		st->hasNull = true;
 		l = strlen(s);
 	}
 	st->size = l;
@@ -297,18 +306,83 @@ gist::set(const char * s, int l)
 	sp->str = st;
 	sp->index = 0;
 
+	typ = GT_STR;
+	unique = false;		// 'cause the caller may use it for other
+	ptr = sp;		// things, and 'cause it could be in read-
+	cnt = l;		// only memory, and other reasons.
+	skip = 0;
+}
+
+
+void
+gist::copy(const char * s, int l)
+{
+	if (l < 0)
+		l = strlen(s);
+	giStore * st = giStore::alloc(l+1);
+	memcpy(st->data, s, l);
+	((char *)st->data)[l] = '\0';
+
+	giStr * sp = new giStr;
+	sp->str = st;
+	sp->index = 0;
+
+	typ = GT_STR;
+	unique = true;
 	ptr = sp;
 	cnt = l;
 	skip = 0;
-
-	return *this;
 }
 
 
 gist
 gist::toString() const
 {
-	throw notYetError("giStr::toString");
+	switch (typ)
+	{
+	case GT_NIL:
+	case GT_ARRAY:
+	case GT_TABLE:
+	case GT_CODE:
+	case GT_LONG:
+	case GT_REAL:
+	default:
+		throw typeError("toString");
+
+	case GT_STR:
+		return *this;
+
+	case GT_INT:
+		{
+			char a[12];
+			char * ap = &a[sizeof a];
+			long n = val;
+			bool sign = n < 0;
+			if (sign)
+				n = -n;
+
+			*--ap = '\0';
+			if (n == 0)
+				*--ap = '0';
+			else
+				while (n)
+				{
+					*--ap = '0' + (n % 10);
+					n /= 10;
+				}
+
+			if (sign)
+				*--ap = '-';
+
+			gist r;
+			r.copy(a, &a[sizeof a] - ap);
+
+			return r;
+		}
+
+	case GT_FLOAT:
+		throw notYetError("toString");
+	}
 }
 
 
@@ -349,15 +423,59 @@ gist::strpiece(int & index, int & len)
 {
 	if (!isStr())
 		throw typeError("strpiece");
-	return ((giStr *)ptr)->piece(index, len);
+	const char * result = ((giStr *)ptr)->piece(index, len);
+	if (result)
+		unique = false;
+	return result;
 }
 
 
-gist
-gist::strcat(gist & a, gist & b)
+void
+gist::strcat(const gist & r)
 {
-	gist ax, *ap;
-	gist bx, *bp;
+	const gist * rp;
+
+	if (!isStr())
+		throw typeError("strcat");
+
+	if (r.isStr())
+		rp = &r;
+	else
+		rp = new gist(r.toString());
+
+	giStr * sp = (giStr *)ptr;
+
+	if (!sp->index && unique)
+	{
+		/*
+		 *	There is a chance that we could just copy the
+		 *	new string data onto the end of the current
+		 *	string, assuming there is space.
+		 */
+	}
+
+/*
+
+	-  This will become "the" concatenation function, since access to
+	   the gist is needed.
+
+	-  if a is a single string
+		if a's string is not a multi
+			if b's size is less than copy limit,
+			   and there is space available to copy it to a
+				copy b into a
+				done
+
+		else if a's size + b's size is less than the copy limit
+			allocate a new string and copy both to it.
+			done
+
+*/
+
+
+
+
+#if 0
 
 	if (a.isStr())
 		ap = &a;
@@ -376,46 +494,15 @@ gist::strcat(gist & a, gist & b)
 	}
 
 	return ax;
-#warning "XXX"
+
 	// return *giStr::concat(ap, bp);
+#endif
 }
 
 
-gist
-gist::strcat(gist & a, const char * b)
+void
+gist::strcat(const char * r)
 {
-	gist ax, *ap;
-	gist bx(b);
-
-	if (a.isStr())
-		ap = &a;
-	else
-	{
-		ax = a.toString();
-		ap = &ax;
-	}
-
-	return ax;
-#warning "XXX"
-	// return *giStr::concat(ap, &bx);
-}
-
-
-gist
-gist::strcat(const char * a, gist & b)
-{
-	gist ax(a);
-	gist bx, *bp;
-
-	if (b.isStr())
-		bp = &b;
-	else
-	{
-		bx = b.toString();
-		bp = &bx;
-	}
-
-	return ax;
-#warning "XXX"
-	// return *giStr::concat(&ax, bp);
+	gist rx(r);
+	strcat(rx);
 }

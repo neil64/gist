@@ -85,29 +85,20 @@ class gist
 	gist &		operator =(const char *);
 
 
-	gist &		set()			{ typ = GT_NIL;
-							return *this; }
-	gist &		set(int v)		{ typ = GT_INT; val = v;
-							return *this; }
-	gist &		set(unsigned v)		{ typ = GT_INT; val = v;
-							return *this; }
-	gist &		set(long v)		{ typ = GT_INT; val = v;
-							return *this; }
-	gist &		set(unsigned long v)	{ typ = GT_INT; val = v;
-							return *this; }
-	gist &		set(float v)		{ typ = GT_FLOAT; dval = v;
-							return *this; }
-	gist &		set(double v)		{ typ = GT_FLOAT; dval = v;
-							return *this; }
-	gist &		set(const gist & g)	{ ((gist &)g).unique = 0;
-						  all = g.all;
-						  return *this; }
-	gist &		set(const gist * g)	{ ((gist *)g)->unique = 0;
-						  all = g->all;
-						  return *this; }
-	gist &		set(long long);
-	gist &		set(unsigned long long);
-	gist &		set(const char *, int = -1);
+	void		set()			{ typ = GT_NIL; }
+	void		set(int v)		{ typ = GT_INT; val = v; }
+	void		set(unsigned v)		{ typ = GT_INT; val = v; }
+	void		set(long v)		{ typ = GT_INT; val = v; }
+	void		set(unsigned long v)	{ typ = GT_INT; val = v; }
+	void		set(float v)		{ typ = GT_FLOAT; dval = v; }
+	void		set(double v)		{ typ = GT_FLOAT; dval = v; }
+	void		set(const gist & g)	{ ((gist &)g).unique = 0;
+						  all = g.all; }
+	void		set(const gist * g)	{ ((gist *)g)->unique = 0;
+						  all = g->all; }
+	void		set(long long);
+	void		set(unsigned long long);
+	void		set(const char *, int = -1);
 
 	void		clear()			{ typ = GT_NIL; }
 
@@ -116,9 +107,9 @@ class gist
 	 *	Shallow copying.
 	 */
 
-	gist &		copy(const char *, int = -1);
-	gist &		copy(const gist &);
-	gist &		copy(const gist *);
+	void		copy(const char *, int = -1);
+	void		copy(const gist &);
+	void		copy(const gist *);
 
 	/********************************/
 	/*
@@ -495,9 +486,8 @@ class gist
 	int		cmp(const gist &) const;
 	const char *	strpiece(int & index, int & len);
 
-	gist		strcat(gist &, gist &);
-	gist		strcat(gist &, const char *);
-	gist		strcat(const char *, gist &);
+	void		strcat(const gist &);
+	void		strcat(const char *);
 
 	/*
 	 *	Formatting.

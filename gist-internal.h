@@ -86,18 +86,16 @@ struct giStore
 	unsigned	size;
 
 	/*
-	 *	`multiRef' is set if we are not sure that there is only a
-	 *	single reference.  `hasNull' is set if there is a '\0' after
+	 *	`hasNull' is set if we know that there is a '\0' after
 	 *	the last byte of the string.  `flag' covers all of the
 	 *	other flags, just for convenience.
 	 */
 	union
 	{
 		struct {
-			char		multiRef;
-			char		hasNull;
+			bool	hasNull;
 		};
-		int		flags;
+		int	flags;
 	};
 
 	static giStore * alloc(unsigned sz);
@@ -116,6 +114,26 @@ struct gistInternal
 };
 
 
+/*
+ *	`Index' is a skip list that contains nodes of the string.  If set,
+ *	the string is stored as many pieces, indexed by the offset of
+ *	the first character in each piece.  Offsets start at zero, but
+ *	can go negative if data is prepended.  `min' is the offset of the
+ *	first character (usually zero, but can be negative);  `max' is the
+ *	offset of the character position just after the last character.
+ *	"max - min" is the length of the string.
+ *
+ *	If `index' is NIL, the string contains a single piece referenced by
+ *	`str'.
+ *
+ *	Strings use the `unique' value in the gist object that refers to
+ *	this giStr.  If `unique' is true then we know that this giStr is not
+ *	referenced by any other gist object.  If such a string is modified,
+ *	the internal implementation may choose to modify the string in place.
+ *	One benefit of this is that appending single characters to a string
+ *	is not an exponential operation as it is in some languages with
+ *	string types.
+ */
 struct giStr : gistInternal
 {
 	giIndex *	index;

@@ -36,14 +36,14 @@ gist::operator =(unsigned long long)
 }
 
 
-gist &
+void
 gist::set(long long)
 {
 	throw notYetError("long long set");
 }
 
 
-gist &
+void
 gist::set(unsigned long long)
 {
 	throw notYetError("unsigned long long set");
