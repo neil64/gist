@@ -33,6 +33,18 @@ test_float()
 
 
 void
+test_string()
+{
+	gist s = "abc";
+
+	s += "def";
+	assert(s == "abcdef");
+
+	printf("abcdef = %s\n", (const char *)s);
+}
+
+
+void
 report(const char * ty, gist::error & e)
 {
 	printf("gist %s error", ty);
@@ -50,6 +62,7 @@ main(int argc, char ** argv)
 	{
 		test_int();
 		test_float();
+		test_string();
 	}
 	catch (gist::valueError e)
 	{

@@ -74,13 +74,30 @@ class gist
 							return *this; }
 	gist &	operator =(const gist * g)	{ ptr = g->ptr; val = g->val;
 							return *this; }
-
 	gist &		operator =(long long);
 	gist &		operator =(unsigned long long);
 	gist &		operator =(float);
 	gist &		operator =(double);
-
 	gist &		operator =(const char *);
+
+
+	gist &		set(int v)		{ ptr = &Int; val = v;
+							return *this; }
+	gist &		set(unsigned v)		{ ptr = &Int; val = v;
+							return *this; }
+	gist &		set(long v)		{ ptr = &Int; val = v;
+							return *this; }
+	gist &		set(unsigned long v)	{ ptr = &Int; val = v;
+							return *this; }
+	gist &		set(const gist & g)	{ ptr = g.ptr; val = g.val;
+							return *this; }
+	gist &		set(const gist * g)	{ ptr = g->ptr; val = g->val;
+							return *this; }
+	gist &		set(long long);
+	gist &		set(unsigned long long);
+	gist &		set(float);
+	gist &		set(double);
+	gist &		set(const char *, int = -1);
 
 	/********************************/
 	/*
@@ -131,35 +148,44 @@ class gist
 	 *	using toString() if necessary), then copy the string,
 	 *	terminated with a '\0', into a new chunk of memory and
 	 *	return it.  Multiple calls may or may not return the same
-	 *	(cached) chunk of memory.
+	 *	(cached) chunk of memory.  The alternate `const char *'
+	 *	can return the memory used for the actual string storage,
+	 *	rather than a cache;  modifying this memory might change
+	 *	the original string.
 	 */
+			operator const char *() const;
 			operator char *() const;
 
 	/********************************/
 	/*
 	 *	Operators.
 	 */
-#define GIST_OPS1(o)							\
-	friend gist	operator o(const gist &, const gist &);		\
-	friend gist	operator o(const gist &, int);			\
-	friend gist	operator o(const gist &, unsigned);		\
-	friend gist	operator o(const gist &, long);			\
-	friend gist	operator o(const gist &, unsigned long);	\
-	friend gist	operator o(const gist &, long long);		\
-	friend gist	operator o(const gist &, unsigned long long);	\
-	friend gist	operator o(int, const gist &);			\
-	friend gist	operator o(unsigned, const gist &);		\
-	friend gist	operator o(long, const gist &);			\
-	friend gist	operator o(unsigned long, const gist &);	\
-	friend gist	operator o(long long, const gist &);		\
-	friend gist	operator o(unsigned long long, const gist &);
+#define GIST_OPS1(r, o)							\
+	friend r	operator o(const gist &, const gist &);		\
+	friend r	operator o(const gist &, int);			\
+	friend r	operator o(const gist &, unsigned);		\
+	friend r	operator o(const gist &, long);			\
+	friend r	operator o(const gist &, unsigned long);	\
+	friend r	operator o(const gist &, long long);		\
+	friend r	operator o(const gist &, unsigned long long);	\
+	friend r	operator o(int, const gist &);			\
+	friend r	operator o(unsigned, const gist &);		\
+	friend r	operator o(long, const gist &);			\
+	friend r	operator o(unsigned long, const gist &);	\
+	friend r	operator o(long long, const gist &);		\
+	friend r	operator o(unsigned long long, const gist &);
 
-#define GIST_OPS2(o)							\
-	GIST_OPS1(o)							\
-	friend gist	operator o(const gist &, float);		\
-	friend gist	operator o(const gist &, double);		\
-	friend gist	operator o(float, const gist &);		\
-	friend gist	operator o(double, const gist &);
+#define GIST_OPS2(r, o)							\
+	GIST_OPS1(r, o)							\
+	friend r	operator o(const gist &, float);		\
+	friend r	operator o(const gist &, double);		\
+	friend r	operator o(float, const gist &);		\
+	friend r	operator o(double, const gist &);
+
+#define GIST_OPS2a(r, o)						\
+	GIST_OPS2(r, o)							\
+	friend r	operator o(const gist &, const char *);		\
+	friend r	operator o(const char *, const gist &);
 
 #define GIST_OPS3(o)							\
 	gist &		operator o(const gist &);			\
@@ -175,27 +201,25 @@ class gist
 	gist &		operator o(float);				\
 	gist &		operator o(double);
 
-	GIST_OPS2(+)
-	friend gist	operator +(const gist &, const char *);
-	friend gist	operator +(const char *, const gist &);
-	GIST_OPS2(-)
-	GIST_OPS2(*)
-	GIST_OPS2(/)
-	GIST_OPS2(%)
-	GIST_OPS2(==)
-	GIST_OPS2(!=)
-	GIST_OPS2(<)
-	GIST_OPS2(>)
-	GIST_OPS2(<=)
-	GIST_OPS2(>=)
+	GIST_OPS2a(gist, +)
+	GIST_OPS2(gist, -)
+	GIST_OPS2(gist, *)
+	GIST_OPS2(gist, /)
+	GIST_OPS2(gist, %)
+	GIST_OPS2a(int, ==)
+	GIST_OPS2a(int, !=)
+	GIST_OPS2a(int, <)
+	GIST_OPS2a(int, >)
+	GIST_OPS2a(int, <=)
+	GIST_OPS2a(int, >=)
 
-	GIST_OPS1(^)
-	GIST_OPS1(&)
-	GIST_OPS1(|)
-	GIST_OPS1(<<)
-	GIST_OPS1(>>)
-	GIST_OPS1(&&)
-	GIST_OPS1(||)
+	GIST_OPS1(gist, ^)
+	GIST_OPS1(gist, &)
+	GIST_OPS1(gist, |)
+	GIST_OPS1(gist, <<)
+	GIST_OPS1(gist, >>)
+	GIST_OPS1(gist, &&)
+	GIST_OPS1(gist, ||)
 
 	GIST_OPS4(+=)
 	gist &		operator +=(const char *);

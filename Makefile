@@ -3,7 +3,7 @@
 #
 ################
 
-OBJS =		gist.o gist-op1.o gist-op2.o
+OBJS =		gist.o gist-op1.o gist-op2.o gist-op3.o
 
 
 CXXFLAGS =	-g -Wall
@@ -22,6 +22,9 @@ T:		T.o libgist.a
 
 libgist.a:	$(OBJS)
 	ar rv libgist.a $?
+
+
+$(OBJS):	gist.h gist-internal.h
 
 
 clean:

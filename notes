@@ -154,3 +154,37 @@ My scripting language and object library
    there is a call that makes a string read-write.  Once r/w, it can be
    the gist becomes a reference to it;  that is, a copied gist will see
    changes made elsewhere.
+
+
+========
+
+041027
+
+*  The data structure for strings and arrays.  When inserting or appending
+   to a string:
+
+	-  If inserting (only at the beginning allowed),
+		-  find the first block
+		-  See if there is room before the current entries.
+	-  If appending,
+		-  find the last block
+		-  see if there is room after the current entries.
+	-  If there is room for the new stuff, just copy it.
+	-  Otherwise,
+
+*  Each block contains a count of the number of items, and an index for the
+   first item in the block.  A string starts out with the first block with
+   index zero, then if data is prepended, indexes go negative.
+
+*  Each block is inserted into a skip list, with the block index as the key.
+   Prepended blocks get an index to cover the whole amount.
+
+*  The actual bounds of indexes is stored in the header.
+
+*  To find an item at a specific index, search the skip list for an entry
+   equal to or just less than.  ...
+
+*  If the size of the whold list or array is small enough, there is no skip
+   list and just a single block.
+
+*  What about adding lists?

@@ -1,0 +1,223 @@
+.\"
+.\"	Gist -- Loosely typed data.
+.\"
+.\"
+.TH GIST 3 2004-10-31 "" ""
+.SH NAME
+Gist \- a scripting language like data type
+.SH SYNOPSIS
+.nf
+.B #include <gist.h>
+.sp
+.I <gist-object> <op> <gist-object>
+.br
+.IB <gist-object> . <method> ( ... )
+.br
+.I "	(too much to list here)"
+.sp
+.BI "cc " ... " -lgist -lgc"
+.fi
+.SH DESCRIPTION
+.B Gist
+provides script language like data structures to C++.
+The data structure is in part modeled after those found in languages
+like
+.I Python
+and
+.IR JavaScript .
+.LP
+.B Gist
+objects can store a variety of data types, and can automatically convert
+between them as necessary.
+The data types it supports are:
+.IP \(bu
+32\-bit integers
+.IP \(bu
+character strings
+.IP \(bu
+IEEE-748 floating point (C++'s \fBdouble\fP type)
+.IP \(bu
+single dimensional arrays containing any
+.B gist
+object (indexed from zero)
+.IP \(bu
+associative arrays containing any
+.I gist
+object (indexable by a variety of data types)
+.LP
+In the future,
+.I gist
+may also support:
+.IP \(bu
+an arbitrary length integer type
+.IP \(bu
+an arbitrary length floating point type
+.IP \(bu
+a code type, representing compiled script code.
+.LP
+Gist overloads almost all C++ operators allowing
+.I gist
+objects to be used as if they were first class data types.
+.SH OPERATORS
+.B Gist
+supports almost all of the C++ operators, allowing mixed operands
+as needed.
+For example:
+.IP
+.nf
+gist i = 123;
+i = i + 10;
+i *= 2;
+.fi
+.LP
+results in the
+.B gist
+object
+.B i
+containing the integer value 266.
+.LP
+String operations work a little differently:
+.IP
+.nf
+gist s = "abc";
+s += "def";
+.fi
+.LP
+results in the
+.B gist
+object
+.B s
+containing the string "\fBabcdef\fP".
+.LP
+Note that either or both sides of a
+.B gist
+operator must be a
+.B gist
+object.
+This is a requirement of C++.
+.LP
+Operators of the form "\fI<object> <op> <object>\fP" work as follows:
+.TP
+\fB+  -  *  /  %\fP
+Each of these operators accept any C++ numeric type on either side, or a
+.B gist
+object on either or both sides.
+If either side is a C++ \fBfloat\fP or \fBdouble\fP, or if either or both
+sides are a
+.B gist
+floating point type,
+the other side is converted to a
+.B gist
+floating point type for the operation and the result is a
+.B gist
+float.
+.IP
+Otherwise, if either side is a C++ integer type, or if either or both
+sodes are a
+.B gist
+integer type,
+then the operation is an integer operation and the result is a
+.B gist
+integer.
+If either side is a
+.B gist
+string and the other side is a integer or floating point type,
+then the string is coerced into the appropriate numerical type
+by calling the
+.B toInt
+or
+.B toFloat
+method,
+and the operator then applied, with the result being the numerical type.
+.IP
+For the \fB+\fP operator,
+if one side is a
+.B gist
+string type and the other side is either a
+.B gist
+string or a C++
+.BR "char *" ,
+The two strings are concatenated together and the result is a
+.B gist
+string type.
+.TP
+\fB^  &  |\fP
+Either side may be a C++ integer, floating point or
+.B char *
+type, or either or both sides may be a
+.B gist
+numerical type or string type.
+The operands are coerced to a
+.B gist
+integer type by calling the
+.B toInt
+method and the operation performed.
+The result is a
+.B gist
+integer.
+.SH EXCEPTIONS
+.B Gist
+uses the C++ exception handling mechanism to handle situations it
+can't address.
+For example, attempting to convert a string value to an integer
+when the string does not contain legal chracters results in a
+.B gist::valueError
+exception.
+.LP
+All exceptions are derived from the
+.B gist::error
+class.
+All exceptions transmit some details of the exception that occurred.
+The
+.B gist::error
+class is defined as:
+.IP
+.nf
+class error {
+	const char * msg;
+};
+.fi
+.LP
+A code expample:
+.IP
+.nf
+try {
+	gist a = "abc";
+	int i;
+
+	i = a.toInt();
+}
+catch (gist::valueError e) {
+	fprintf(stderr, "gist value error: %s\\n", e->msg);
+}
+.fi
+.LP
+.SH "TYPE COERCION RULES"
+.IP \(bu
+strings are converted to integers or floats by parsing them;
+valueError possible.
+.IP \(bu
+integers are converted to floats as needed.
+.SH NOTES
+.IP \(bu
+Conversion of a \fIgist\fP object to a C++ integer
+is "quiet";  that is, it will succeed regardless of the type.
+This is to support its use as a boolean type.
+.IP \(bu
+Conversion to integer by using the
+.B toInt()
+method is strict, resulting in valueError's if the value is unsuitable.
+.SH "RETURN VALUE"
+(You figure it out...)
+.SH "SEE ALSO"
+The gc(3) manual page.
+.LP
+Boehm, H., and M. Weiser, "Garbage Collection in an Uncooperative Environment",
+\fISoftware Practice & Experience\fP, September 1988, pp. 807-820.
+.LP
+The web site at
+.BR http://www.hpl.hp.com/personal/Hans_Boehm/gc .
+.SH AUTHOR
+Neil Russell (neil@c-side.com)
+.br
+.I (others?)

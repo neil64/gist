@@ -1,7 +1,7 @@
 /*
- *	Gist -- Operators part 2.
+ *	Gist -- Operators part 3.
  *
- *	Contains:	
+ *	Contains:	==
  */
 
 #include	"gist.h"
@@ -9,3 +9,9 @@
 
 
 /**********************************************************************/
+
+int
+operator ==(const gist & g, const char * s)
+{
+	return 0;
+}
