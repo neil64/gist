@@ -58,6 +58,18 @@ a code type, representing compiled script code.
 Gist overloads almost all C++ operators allowing
 .I gist
 objects to be used as if they were first class data types.
+.B Gist
+objects are managed by a garbage collecting allocator.
+Object never need to be freed.  In fact,
+the
+.B delete
+operator and the
+.B gist
+destructor both have no effect.
+Note, if you are using a garbage collector in the same program as
+.BR gist ,
+you should consider the remifications.
+See the section on garbage collection near the end of this document.
 .SH OPERATORS
 .B Gist
 supports almost all of the C++ operators, allowing mixed operands
@@ -223,6 +235,32 @@ Conversion to integer by using the
 method is strict, resulting in valueError's if the value is unsuitable.
 .SH "RETURN VALUE"
 (You figure it out...)
+.SH "GARBAGE COLLECTION"
+.B Gist
+uses the conservative garbage collector for C and C++
+written by Hans Boehm, Alan Demers and Mark Weiser.
+.B Gist
+uses the collector in its default configuration, except that it sets the
+.I GC_all_interior_pointers
+variable to zero.
+On most architectures it is set to one by default.
+This has the effect that the collector expects pointers to objects to
+point to the first byte of the object, and also prevents the allocator
+from allocating an extra byte on the end of the object to allow a pointer
+to point just past an object.
+This results in faster collection and smaller memory usage.
+.B Gist
+will still function correctly if this value is set to one.
+.B Gist
+sets the variable on the first call to the
+.B gist
+constructor, but only if the garbage collector is not yet initialized.
+If global
+.B gist
+objects exist, the collector will be initialized before
+the program's
+.B main
+function is called.
 .SH "SEE ALSO"
 The gc(3) manual page.
 .LP
