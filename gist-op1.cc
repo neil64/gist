@@ -10,9 +10,10 @@
 
 gist::operator int() const
 {
+	giBase * gi = (giBase *)ptr;
 	giStr * s;
 
-	switch (type())
+	switch (gi->type)
 	{
 	case GT_NIL:
 	case GT_ARRAY:
@@ -26,12 +27,12 @@ gist::operator int() const
 	case GT_STR:
 		if (cnt == 0)
 			return 0;
-		s = (giStr *)ptr;
+		s = (giStr *)gi;
 		goto str;
 
 	case GT_STR32:
 		{
-			giStr32 * s32 = (giStr32 *)ptr;
+			giStr32 * s32 = (giStr32 *)gi;
 			if (s32->cnt == 0)
 				return 0;
 			s = s32->str;
@@ -46,7 +47,7 @@ gist::operator int() const
 		return val;
 
 	case GT_FLOAT:
-		return (int)((giFloat *)ptr)->val;
+		return (int)((giFloat *)gi)->val;
 	}
 }
 
@@ -54,9 +55,9 @@ gist::operator int() const
 gist
 operator +(const gist & a, const gist & b)
 {
-	if (a.type() == gist::GT_INT)
+	if (a.isInt())
 	{
-		if (b.type() == gist::GT_INT)
+		if (b.isInt())
 		{
 			return gist(a.val + b.val);
 		}
@@ -69,9 +70,9 @@ operator +(const gist & a, const gist & b)
 gist &
 gist::operator +=(const gist & b)
 {
-	if (type() == gist::GT_INT)
+	if (isInt())
 	{
-		if (b.type() == gist::GT_INT)
+		if (b.isInt())
 		{
 			val += b.val;
 			return *this;
