@@ -12,42 +12,87 @@
 #include	"gist-internal.h"
 
 
-/*
- *	The maximum number of characters that we will copy when concatenating
- *	strings.  If greater than this, we create a "multi" string.
- */
-const unsigned	maxCopy = 32;
+/**********************************************************************/
 
 /*
- *	String space is allocated in multiples of this value.
+ *	Create a new array of `length', or change the size of an existing
+ *	array to `length'.
  */
-const unsigned	strChunk = 64;
+gist &
+gist::table()
+{
+	if (typ != GT_TABLE)
+	{
+		giTable * ap = new giTable;
+
+		typ = GT_TABLE;
+		ptr = ap;
+	}
+
+	return *this;
+}
 
 /**********************************************************************/
 
 gist &
-gist::_tableindex(long i)
+gist::_tableindex(const gist & i, bool make)
 {
-	throw notYetError("array index");
+
+#if 1
+
+	/*
+	 *	Given that C++ will not necessarily use the `const' version
+	 *	of the subscript operator when an r-value is required, we
+	 *	cannot rely on getting an exception when a table element
+	 *	doesn't exist and only an r-value is required.	It is
+	 *	possible someone could write code that works on one compiler
+	 *	and not on another, which is not a situation that I like.
+	 *	So, `make' is ignored, and we always build a new element when
+	 *	`i' doesn't match, even when the subscript is an r-value.
+	 */
+	giTable * tp = (giTable *)ptr;
+	gistKey * k = tp->index.search(i, true);
+	if (!k)
+		throw internalError("table entry was not built as "
+						"it should have been");
+	return k->val;
+
+#else // 1
+
+	/*
+	 *	This is how it should be;  see above.
+	 */
+	giTable * tp = (giTable *)ptr;
+	gistKey * k = tp->index.search(i, make);
+	if (!k)
+		throw indexError("table index does not exist");
+	return k->val;
+
+#endif // 1
+
+}
+
+/********************/
+
+gist &
+gist::_tableindex(long i, bool make)
+{
+	gist ix = i;
+	return _tableindex(ix, make);
 }
 
 
 gist &
-gist::_tableindex(double i)
+gist::_tableindex(double i, bool make)
 {
-	throw notYetError("array index");
+	gist ix = i;
+	return _tableindex(ix, make);
 }
 
 
 gist &
-gist::_tableindex(const char * i)
+gist::_tableindex(const char * i, bool make)
 {
-	throw notYetError("array index");
-}
-
-
-gist &
-gist::_tableindex(const gist & i)
-{
-	throw notYetError("array index");
+	gist ix = i;
+	return _tableindex(ix, make);
 }

@@ -487,6 +487,15 @@ void
 test_table()
 {
 	printf("table1:\n");
+
+	int i = 0;
+	int x = 1;
+	gist g, h;
+	g.table();
+
+	h = g[i];
+	// h = ((const gist)g)[i];
+	g[i] = 1234;
 }
 
 

@@ -12,10 +12,14 @@
  */
 
 class giChunk;				// Forward references
-class giSChunk;				// Forward references
+class giSChunk;
 class giAChunk;
 
 
+/*
+ *	Key, data and skip list pointers for a node of the integer indexed
+ *	skip list.
+ */
 struct intKey
 {
 	int		key;
@@ -28,6 +32,9 @@ struct intKey
 };
 
 
+/*
+ *	An integer indexed skip list.
+ */
 class giIndexInt
 {
     public:
@@ -42,7 +49,7 @@ class giIndexInt
 	 *	Search will locate and return the entry that matches the
 	 *	given `key'.
 	 */
-	intKey *	search(int);
+	intKey *	search(int key);
 
 	/*
 	 *	Return the first or the last tuple in the index.
@@ -51,35 +58,41 @@ class giIndexInt
 	intKey *	last();
 
 	/*
-	 *	Find the tuple either just before or just after the
-	 *	record matching the given `key'.  The key of the matched
-	 *	record replaces `key' and `len'.  If no records remain,
-	 *	NIL is returned and `key' is set to NIL and `len' to zero.
-	 *	If NIL is passed as the key, NIL will be returned.
+	 *	Find the node either just before or just after the record
+	 *	matching the given `key'.  If no records remain, NIL is
+	 *	returned.
 	 */
-	intKey *	next(int);
-	intKey *	previous(int);
+	intKey *	next(int key);
+	intKey *	previous(int key);
 
 	/*
-	 *	Insert the given `ref' at the given `key' and return true.
+	 *	Insert the given `data' at the given `key' and return true.
 	 *	If an entry already exists, false is returned.
 	 */
-	bool		insert(int, giChunk *);
+	bool		insert(int key, giChunk * data);
 
 	/*
 	 *	Remove the entry matching the given `key', if it exists.
 	 *	True is returned if it was deleted, or false if it was not
 	 *	found.
 	 */
-	bool		remove(int);
+	bool		remove(int key);
 
     private:
 	unsigned char	levels;
 	unsigned char	maxLevel;
 
+	/*
+	 *	The last entry returned.  The skip list code may use this
+	 *	to optimise searches.
+	 */
 	intKey *	cache;
 
     public:
+	/*
+	 *	Minimum and maximum keys used.  Used in both the string code
+	 *	and the array code to help with inserts and appends.
+	 */
 	int		min, max;
 
 	/*
@@ -104,74 +117,87 @@ class giIndexInt
 	};
 
     private:
+	/*
+	 *	Skip list head pointers.
+	 */
 	intKey *	head[0];
 };
 
 /******************************/
 
-struct strKey
+/*
+ *	Key, data and skip list pointers for a node of the gist indexed
+ *	skip list.
+ */
+struct gistKey
 {
-	const char *	key;
-	unsigned	klen;
+	gist		key;
 	gist		val;
-	strKey	*	fwd[0];
+	gistKey	*	fwd[0];
 };
 
 
-class giIndexStr
+class giIndexGist
 {
     public:
-	giIndexStr();
-	~giIndexStr();
+	giIndexGist();
+	~giIndexGist();
+
+	void *		operator new(unsigned sz);
+	void		operator delete(void *)		{}
 
     public:
 	/*
 	 *	Search will locate and return the entry that matches the
-	 *	given `key'.
+	 *	given `key'.  If no matching entry is found and `make' is
+	 *	true, make a new entry with NIL as the value, and return it.
 	 */
-	strKey *	search(int);
+	gistKey *	search(const gist & key, bool make = false);
 
 	/*
 	 *	Return the first or the last tuple in the index.
 	 */
-	strKey *	first();
-	strKey *	last();
+	gistKey *	first();
+	gistKey *	last();
 
 	/*
-	 *	Find the tuple either just before or just after the
-	 *	record matching the given `key'.  The key of the matched
-	 *	record replaces `key' and `len'.  If no records remain,
-	 *	NIL is returned and `key' is set to NIL and `len' to zero.
-	 *	If NIL is passed as the key, NIL will be returned.
+	 *	Find the tuple either just before or just after the record
+	 *	matching the given `key'.  If no records remain, NIL is
+	 *	returned.
 	 */
-	strKey *	next(int);
-	strKey *	previous(int);
+	gistKey *	next(const gist & key);
+	gistKey *	previous(const gist & key);
 
 	/*
-	 *	Insert the given `ref' at the given `key' and return true.
+	 *	Insert the given `data' at the given `key' and return true.
 	 *	If an entry already exists, false is returned.
 	 */
-	bool		insert(strKey *);
+	bool		insert(const gist & key, const gist & data);
 
 	/*
 	 *	Remove the entry matching the given `key', if it exists.
 	 *	True is returned if it was deleted, or false if it was not
 	 *	found.
 	 */
-	bool		remove(int);
+	bool		remove(const gist & key);
 
     private:
 	enum
 	{
 		MaxLevel = 16,
-		P = (((unsigned)-1) / 2)
 	};
 
-	strKey *	head[MaxLevel];
+	/*
+	 *	The skip list head pointers.
+	 */
+	gistKey *	head[MaxLevel];
 	unsigned	levels;
 
-	strKey *	cache;
-	int		min, max;
+	/*
+	 *	The last entry returned.  The skip list code may use this
+	 *	to optimise searches.
+	 */
+	gistKey *	cache;
 };
 
 /******************************/
@@ -264,6 +290,13 @@ struct giArray : gistInternal
 	giIndexInt *	index;
 	giAChunk *	cache;
 	unsigned	ci;
+};
+
+/******************************/
+
+struct giTable : gistInternal
+{
+	giIndexGist	index;
 };
 
 /******************************/

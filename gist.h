@@ -145,6 +145,17 @@ class gist
 	gist &		operator [](const char *);
 	gist &		operator [](const gist &);
 
+	const gist &	operator [](int) const;
+	const gist &	operator [](unsigned) const;
+	const gist &	operator [](long) const;
+	const gist &	operator [](unsigned long) const;
+	const gist &	operator [](float) const;
+	const gist &	operator [](double) const;
+	const gist &	operator [](long long) const;
+	const gist &	operator [](unsigned long long) const;
+	const gist &	operator [](const char *) const;
+	const gist &	operator [](const gist &) const;
+
 	/********************************/
 	/*
 	 *	Type conversion.
@@ -512,10 +523,10 @@ class gist
 	void		_strzero();
 
 	gist &		_arrayindex(long);
-	gist &		_tableindex(long);
-	gist &		_tableindex(double);
-	gist &		_tableindex(const char *);
-	gist &		_tableindex(const gist &);
+	gist &		_tableindex(long, bool);
+	gist &		_tableindex(double, bool);
+	gist &		_tableindex(const char *, bool);
+	gist &		_tableindex(const gist &, bool);
 
 	/*
 	 *	Some internal structures that we call friends.
@@ -577,13 +588,18 @@ class gist
 				{ return str.strtrim(start, count); }
 
 	/*
-	 *	Array's.
+	 *	Arrays.
 	 */
 	gist &		array(unsigned len);
 	void		push(const gist &);
 	gist &		pop();
 	void		unshift(const gist &);
 	gist &		shift();
+
+	/*
+	 *	Tables.
+	 */
+	gist &		table();
 
 	/*
 	 *	Generic methods.
