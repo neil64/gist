@@ -23,6 +23,8 @@ indent(const char * label, int level)
 }
 
 
+static void	gistPrint(gist * gp, const char * label, int level);
+
 void
 gistPrintIntIndex(giIndexInt * ip, bool str, int level)
 {
@@ -53,13 +55,16 @@ gistPrintIntIndex(giIndexInt * ip, bool str, int level)
 		}
 		else
 		{
-			fprintf(stderr, " ----\n");
+			fprintf(stderr, "\n");
+			giAChunk * cp = kp->achunk;
+			for (int i = 0; i < giAChunk::items; i++)
+				gistPrint(&cp->g[i], "", level+3);
 		}
 	}
 }
 
 
-void
+static void
 gistPrint(gist * gp, const char * label, int level)
 {
 	if (level >= 16)
@@ -118,7 +123,23 @@ gistPrint(gist * gp, const char * label, int level)
 		break;
 
 	case gist::GT_ARRAY:
-		fprintf(stderr, "ARRAY\n");
+		{
+			giArray * ap = (giArray *)gp->intern;
+			giIndexInt * ip = ap->index;
+
+			fprintf(stderr, "ARRAY  unique=%s, skip=%d, cnt=%d, "
+					"intern=0x%08x, \n",
+				gp->unique ? "true" : "false",
+				gp->skip, gp->cnt, (int)ap);
+			indent("    ", level);
+			fprintf(stderr, "     "
+					"skip=%d, len=%d, "
+					"index=0x%08x\n",
+				ap->skip, ap->len,
+				(int)ip);
+
+			gistPrintIntIndex(ip, false, level+1);
+		}
 		break;
 
 	case gist::GT_TABLE:

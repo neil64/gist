@@ -701,8 +701,8 @@ class gist
 	friend void	strfill(gist &, unsigned size, const char * pattern);
 	friend void	strfill(gist &, unsigned size, const gist & pattern);
 
-	friend void	strstrip(gist &);
-	friend void	strcapwords(gist &);
+	friend gist	strstrip(const gist &);
+	friend gist	strcapwords(const gist &);
 
 	/*
 	 *	Arrays.

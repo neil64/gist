@@ -420,8 +420,8 @@ strfill(gist & g, unsigned size, const gist & pattern)
 
 /**********************************************************************/
 
-void
-strstrip(gist & g)
+gist
+strstrip(const gist & g)
 {
 	if (!g.isStr())
 		throw gist::typeError("strstrip expects a string");
@@ -450,8 +450,8 @@ strstrip(gist & g)
   brk1:
 	if (front >= g.len())
 	{
-		g.set("");
-		return;
+		gist r("");
+		return r;
 	}
 
 	gl = 0;
@@ -478,5 +478,11 @@ strstrip(gist & g)
   brk2:
 
 	if (front > 0 || back > 0)
-		g.strtrim(front, g.len() - front - back);
+	{
+		gist r = g;
+		r.strtrim(front, r.len() - front - back);
+		return r;
+	}
+	else
+		return g;
 }
