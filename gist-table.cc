@@ -19,9 +19,9 @@
  *	array to `length'.
  */
 gist &
-gist::table()
+gist::table(bool clear)
 {
-	if (typ != GT_TABLE)
+	if (typ != GT_TABLE || clear)
 	{
 		giTable * ap = new giTable;
 

@@ -1,7 +1,7 @@
 /*
  *	Gist -- Methods part 2.
  *
- *	Contains:	substr, strtrim
+ *	Contains:	substr, strtrim, atoi, tolower, toupper
  *		(all non-core string methods)
  */
 
@@ -56,4 +56,35 @@ gist::strtrim(int s, unsigned c)
 	}
 	else
 		_strzero();
+}
+
+
+int
+atoi(const gist & g, int base)
+{
+	throw gist::notYetError("atoi");
+}
+
+
+gist
+strlower(const gist & g)
+{
+	if (!g.isStr())
+		throw gist::typeError("strlower expects a string");
+
+	// look at gist-str.cc:copy() for space allocation
+
+	throw gist::notYetError("strlower");
+}
+
+
+gist
+strupper(const gist & g)
+{
+	if (!g.isStr())
+		throw gist::typeError("strupper expects a string");
+
+	// look at gist-str.cc:copy() for space allocation
+
+	throw gist::notYetError("strupper");
 }

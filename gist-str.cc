@@ -248,6 +248,16 @@ gist::set(const char * s, int l)
 {
 	giStr * sp = new giStr;
 
+#warning "broken for non-const strings, such as a local array of chars"
+		// do a non-portable test to see if the string is in
+		// the read only data section, and if so, use it;
+		// otherwise copy it.  Also, check for "" strings and
+		// just adjust the pointers.
+
+		// Also, it would be better to have a set(char *) function,
+		// so that calls didn't have to pass a -1 all the time,
+		// since the use of the length will be rare.
+
 	sp->index = 0;
 	sp->data = (char *)s;		// Drop const, but unique is false.
 	if (l < 0)
@@ -273,6 +283,9 @@ gist::copy(const char * s, int l)
 	sp->index = 0;
 	if (l < 0)
 		l = ::strlen(s);
+#warning "should allocate minimum of strChunk in size"
+		// could also split this function to allocate space
+		// for functions like strlower()
 	sp->data = (char *)gistInternal::alloc(l+1);
 	memcpy(sp->data, s, l);
 	sp->data[l] = '\0';
@@ -778,6 +791,7 @@ gist::strcat(const gist & r)
 		int i = ls->index->max;
 		intKey * kp;
 
+#warning "broken if left is the same gist as the right"
 		for (kp = rs->index->first();
 		     kp;
 		     kp = rs->index->next(kp->key))

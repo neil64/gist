@@ -7,6 +7,7 @@
 #include	<stdlib.h>
 
 #include	"gist.h"
+#include	"sgml.h"
 
 
 gist g1, g2;
@@ -515,6 +516,16 @@ test_pickle()
 	printf("\tpickled hello world = '%s'\n", str.CCS());
 }
 #endif
+
+
+void
+test_sgml()
+{
+	SGML_t s;
+
+		// Only here so that it gets linked into T, so I can
+		// look at the compiler results.
+}
 
 
 void

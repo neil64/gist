@@ -66,6 +66,25 @@
 	return *this;
 
 
+#define OP2s(r, op)						\
+	if (isInt())						\
+	{							\
+		val op r;					\
+		return *this;					\
+	}							\
+	if (isFloat())						\
+	{							\
+		dval op (double)r;				\
+		return *this;					\
+	}							\
+	if (isStr())						\
+	{							\
+		strcat(r);					\
+		return *this;					\
+	}							\
+	throw gist::typeError("operator " #op);
+
+
 /********************/
 
 gist &
@@ -76,12 +95,12 @@ gist::operator +=(const gist & r)
 		val += r.toInt();
 		return *this;
 	}
-	else if (isFloat())
+	if (isFloat())
 	{
 		dval += r.toFloat();
 		return *this;
 	}
-	else if (isStr())
+	if (isStr())
 	{
 		strcat(r);
 		return *this;
@@ -107,10 +126,10 @@ gist::operator +=(const char * s)
 }
 
 
-gist & gist::operator +=(int r)			{ OP2f(r, +=) }
-gist & gist::operator +=(unsigned r)		{ OP2f(r, +=) }
-gist & gist::operator +=(long r)		{ OP2f(r, +=) }
-gist & gist::operator +=(unsigned long r)	{ OP2f(r, +=) }
+gist & gist::operator +=(int r)			{ OP2s(r, +=) }
+gist & gist::operator +=(unsigned r)		{ OP2s(r, +=) }
+gist & gist::operator +=(long r)		{ OP2s(r, +=) }
+gist & gist::operator +=(unsigned long r)	{ OP2s(r, +=) }
 gist & gist::operator +=(float r)		{ OP2g(r, +=) }
 gist & gist::operator +=(double r)		{ OP2g(r, +=) }
 

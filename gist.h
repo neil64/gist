@@ -586,6 +586,9 @@ class gist
 	friend void	strtrim(gist & str, int start,
 						unsigned count = (~0U>>1))
 				{ return str.strtrim(start, count); }
+	friend int	atoi(const gist &, int base = 0);
+	friend gist	strlower(const gist &);
+	friend gist	strupper(const gist &);
 
 	/*
 	 *	Arrays.
@@ -599,7 +602,7 @@ class gist
 	/*
 	 *	Tables.
 	 */
-	gist &		table();
+	gist &		table(bool clear = false);
 
 	/*
 	 *	Generic methods.
