@@ -45,7 +45,7 @@ void
 gist::strtrim(int s, unsigned c)
 {
 	if (!isStr())
-		throw typeError("substr() expects a string");
+		throw typeError("strtrim() expects a string");
 
 	if (s < -(int)skip)
 		s = -(int)skip;
@@ -93,8 +93,9 @@ strlower(const gist & g)
 		if (gl == 0)
 			break;
 
-		while (gl-- > 0)
+		while (gl > 0)
 		{
+			gl--;
 			int c = *gp++;
 			if (c >= 'A' && c <= 'Z')
 				*rp++ = c + ('a' - 'A');
@@ -127,8 +128,9 @@ strupper(const gist & g)
 		if (gl == 0)
 			break;
 
-		while (gl-- > 0)
+		while (gl > 0)
 		{
+			gl--;
 			int c = *gp++;
 			if (c >= 'a' && c <= 'z')
 				*rp++ = c + ('A' - 'a');
@@ -422,5 +424,60 @@ strfill(gist & g, unsigned size, const gist & pattern)
 void
 strstrip(gist & g)
 {
-	throw gist::notYetError("strstrip");
+	if (!g.isStr())
+		throw gist::typeError("strstrip expects a string");
+
+	unsigned gl = 0;
+	int gi = 0;
+	const char * gp;
+	unsigned front = 0;
+
+	for (;;)
+	{
+		if (gl == 0)
+			gl = g._strpiece(gi, gp);
+		if (gl == 0)
+			break;
+
+		while (gl > 0)
+		{
+			gl--;
+			int c = *gp++;
+			if (c != ' ' && c != '\t' && c != '\n')
+				goto brk1;
+			front++;
+		}
+	}
+  brk1:
+	if (front >= g.len())
+	{
+		g.set("");
+		return;
+	}
+
+	gl = 0;
+	gi = g.len() - 1;
+	unsigned back = 0;
+
+	while (gi >= 0)
+	{
+		if (gl == 0)
+			gl = g._strpiece(gi, gp);
+		if (gl == 0)
+			break;
+		gi -= gl+1;
+
+		while (gl > 0)
+		{
+			gl--;
+			int c = gp[gl];
+			if (c != ' ' && c != '\t' && c != '\n')
+				goto brk2;
+			back++;
+		}
+	}
+  brk2:
+
+	if (front > 0 || back > 0)
+		g.strtrim(front, g.len() - front - back);
 }

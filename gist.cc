@@ -2,7 +2,8 @@
  *	Gist -- Main / general.
  */
 
-#include <stdio.h>
+// #include <stdio.h>
+// #define GC_DEBUG
 
 #include	<exception>
 #include	<new>
@@ -118,7 +119,7 @@ gistInternal::allocAtomic(unsigned sz)
 	 *	Allocate space for an object containing no pointers, and
 	 *	pointers to it will be near its start.  It is not cleared.
 	 */
-	void * ptr = GC_malloc_atomic_ignore_off_page(sz);
+	void * ptr = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(sz);
 	if (!ptr)
 		throw std::bad_alloc();
 	return ptr;
@@ -133,7 +134,7 @@ gistInternal::strAlloc(unsigned sz)
 	 *	multiple of `strChunk'.
 	 */
 	sz += giStr::strChunk - 1;
-	sz &= giStr::strChunk - 1;
+	sz &= ~(giStr::strChunk - 1);
 
 	return allocAtomic(sz);
 }

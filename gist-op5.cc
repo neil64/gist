@@ -76,16 +76,22 @@ gist::operator !() const
 
 	switch (type())
 	{
-	case GT_NIL:
 	case GT_ARRAY:
 	case GT_TABLE:
 	case GT_PTR:
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
-	case GT_STR:
 	default:
 		throw typeError("operator !");
+
+	case GT_STR:
+		if (cnt > 0)
+			x.clear();
+		else
+	case GT_NIL:
+			x = 1;
+		break;
 
 	case GT_INT:
 		x.val = !x.val;

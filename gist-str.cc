@@ -216,7 +216,7 @@ gist::_strflatten() const
 		}
 	}
 
-	l++;
+	l++;				// space for a '\0'
 	char * cp = (char *)gistInternal::strAlloc(l);
 	(void)strcpy(cp, *gp);
 
@@ -822,7 +822,7 @@ gist::strcat(const gist & r)
 			 *	We are allowed to write to the left directly,
 			 *	and there is space available.  Go for it.
 			 */
-			strcpy(&ls->data[o], *rp);
+			strncpy(&ls->data[o], *rp, ls->size - o);
 			cnt += l;
 			if (ls->index)
 				ls->chunk->len += l;
@@ -848,8 +848,8 @@ gist::strcat(const gist & r)
 			nls->size = giStr::strChunk;
 			nls->index = 0;
 
-			strcpy(&nls->data[0], *this);
-			strcpy(&nls->data[cnt], *rp);
+			strncpy(&nls->data[0], *this, giStr::strChunk);
+			strncpy(&nls->data[cnt], *rp, giStr::strChunk - cnt);
 
 			unique = true;
 			intern = nls;
@@ -872,7 +872,7 @@ gist::strcat(const gist & r)
 		cp->data = (char *)gistInternal::strAlloc(giStr::strChunk);
 		cp->data0 = cp->data;
 		cp->len = rp->cnt;
-		strcpy(cp->data, *rp);
+		strncpy(cp->data, *rp, giStr::strChunk);
 
 		ls->index->insert(ls->index->max, cp);
 		ls->index->max += rp->cnt;
@@ -911,6 +911,7 @@ gist::strcat(const gist & r)
 	ls->chunk = 0;
 	((gist *)this)->unique = false;
 	((gist *)rp)->unique = false;
+	cnt += rp->cnt;
 
 	if (!rs->index)
 	{
@@ -1044,3 +1045,20 @@ strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 
 	return c;
 }
+
+
+#if 0
+
+unsigned
+strcpy1(char * dest, const gist & src, unsigned xcnt)
+{
+#if 0
+	if (!src.isStr())
+		throw gist::internalError("not string in strcpy1");
+	if (xcnt < src.cnt+1)
+		throw gist::internalError("string too long in strcpy1");
+#endif
+	return strncpy(dest, src, xcnt);
+}
+
+#endif // 0
