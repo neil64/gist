@@ -297,9 +297,9 @@ class gist
 	gist		operator !() const;
 
 	gist &		operator ++();
-	gist &		operator ++(int);
+	gist		operator ++(int);
 	gist &		operator --();
-	gist &		operator --(int);
+	gist		operator --(int);
 
 	// gist		operator &();
 	// gist		operator ,(const gist &);

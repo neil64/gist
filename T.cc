@@ -127,18 +127,39 @@ test_int()
 	p = a;
 	q = a++;
 	printf("\ta = %d, a++ = %d, a = %d\n", p, q, (int)a);
+	assert(q == 1);
+	assert(a == 2);
 
 	p = a;
 	q = ++a;
 	printf("\ta = %d, ++a = %d, a = %d\n", p, q, (int)a);
+	assert(q == 3);
+	assert(a == 3);
 
 	p = a;
 	q = a--;
 	printf("\ta = %d, a-- = %d, a = %d\n", p, q, (int)a);
+	assert(q == 3);
+	assert(a == 2);
 
 	p = a;
 	q = --a;
 	printf("\ta = %d, --a = %d, a = %d\n", p, q, (int)a);
+	assert(q == 1);
+	assert(a == 1);
+
+	b = -a;
+	printf("\ta = %d, -a = %d\n", (int)a, (int)b);
+	assert(b == -1);
+
+	a = 0xf0e1a537;
+	b = ~a;
+	printf("\ta = %#x, ~a = %#x\n", (int)a, (int)b);
+	assert(b == 0x0f1e5ac8);
+
+	b = !a;
+	printf("\ta = %#x, !a = %#x\n", (int)a, (int)b);
+	assert(b == 0);
 
 	printf("int5:\n");
 
@@ -221,53 +242,53 @@ test_bool()
 
 	printf("bool2:\n");
 
-	r = b==c;	printf("b==c: %s (true)\n", cb(r));	assert(r);
-	r = b==y;	printf("b==y: %s (true)\n", cb(r));	assert(r);
-	r = y==c;	printf("y==c: %s (true)\n", cb(r));	assert(r);
+	r = b==c;	printf("\tb==c: %s (true)\n", cb(r));	assert(r);
+	r = b==y;	printf("\tb==y: %s (true)\n", cb(r));	assert(r);
+	r = y==c;	printf("\ty==c: %s (true)\n", cb(r));	assert(r);
 
-	r = g==h;	printf("g==h: %s (true)\n", cb(r));	assert(r);
-	r = g==m;	printf("g==m: %s (true)\n", cb(r));	assert(r);
-	r = m==h;	printf("m==h: %s (true)\n", cb(r));	assert(r);
+	r = g==h;	printf("\tg==h: %s (true)\n", cb(r));	assert(r);
+	r = g==m;	printf("\tg==m: %s (true)\n", cb(r));	assert(r);
+	r = m==h;	printf("\tm==h: %s (true)\n", cb(r));	assert(r);
 
-	r = a!=c;	printf("a!=c: %s (true)\n", cb(r));	assert(r);
-	r = a!=y;	printf("a!=y: %s (true)\n", cb(r));	assert(r);
-	r = x!=c;	printf("x!=c: %s (true)\n", cb(r));	assert(r);
+	r = a!=c;	printf("\ta!=c: %s (true)\n", cb(r));	assert(r);
+	r = a!=y;	printf("\ta!=y: %s (true)\n", cb(r));	assert(r);
+	r = x!=c;	printf("\tx!=c: %s (true)\n", cb(r));	assert(r);
 
-	r = f!=h;	printf("f!=h: %s (true)\n", cb(r));	assert(r);
-	r = f!=m;	printf("f!=m: %s (true)\n", cb(r));	assert(r);
-	r = l!=h;	printf("l!=h: %s (true)\n", cb(r));	assert(r);
+	r = f!=h;	printf("\tf!=h: %s (true)\n", cb(r));	assert(r);
+	r = f!=m;	printf("\tf!=m: %s (true)\n", cb(r));	assert(r);
+	r = l!=h;	printf("\tl!=h: %s (true)\n", cb(r));	assert(r);
 
-	r = a<c;	printf("a<c: %s (true)\n", cb(r));	assert(r);
-	r = a<y;	printf("a<y: %s (true)\n", cb(r));	assert(r);
-	r = x<c;	printf("x<c: %s (true)\n", cb(r));	assert(r);
+	r = a<c;	printf("\ta<c: %s (true)\n", cb(r));	assert(r);
+	r = a<y;	printf("\ta<y: %s (true)\n", cb(r));	assert(r);
+	r = x<c;	printf("\tx<c: %s (true)\n", cb(r));	assert(r);
 
-	r = f<h;	printf("f<h: %s (true)\n", cb(r));	assert(r);
-	r = f<m;	printf("f<m: %s (true)\n", cb(r));	assert(r);
-	r = l<h;	printf("l<h: %s (true)\n", cb(r));	assert(r);
+	r = f<h;	printf("\tf<h: %s (true)\n", cb(r));	assert(r);
+	r = f<m;	printf("\tf<m: %s (true)\n", cb(r));	assert(r);
+	r = l<h;	printf("\tl<h: %s (true)\n", cb(r));	assert(r);
 
-	r = a>c;	printf("a>c: %s (false)\n", cb(r));	assert(!r);
-	r = a>y;	printf("a>y: %s (false)\n", cb(r));	assert(!r);
-	r = x>c;	printf("x>c: %s (false)\n", cb(r));	assert(!r);
+	r = a>c;	printf("\ta>c: %s (false)\n", cb(r));	assert(!r);
+	r = a>y;	printf("\ta>y: %s (false)\n", cb(r));	assert(!r);
+	r = x>c;	printf("\tx>c: %s (false)\n", cb(r));	assert(!r);
 
-	r = f>h;	printf("f>h: %s (false)\n", cb(r));	assert(!r);
-	r = f>m;	printf("f>m: %s (false)\n", cb(r));	assert(!r);
-	r = l>h;	printf("l>h: %s (false)\n", cb(r));	assert(!r);
+	r = f>h;	printf("\tf>h: %s (false)\n", cb(r));	assert(!r);
+	r = f>m;	printf("\tf>m: %s (false)\n", cb(r));	assert(!r);
+	r = l>h;	printf("\tl>h: %s (false)\n", cb(r));	assert(!r);
 
-	r = a<=c;	printf("a<=c: %s (true)\n", cb(r));	assert(r);
-	r = a<=y;	printf("a<=y: %s (true)\n", cb(r));	assert(r);
-	r = x<=c;	printf("x<=c: %s (true)\n", cb(r));	assert(r);
+	r = a<=c;	printf("\ta<=c: %s (true)\n", cb(r));	assert(r);
+	r = a<=y;	printf("\ta<=y: %s (true)\n", cb(r));	assert(r);
+	r = x<=c;	printf("\tx<=c: %s (true)\n", cb(r));	assert(r);
 
-	r = f<=h;	printf("f<=h: %s (true)\n", cb(r));	assert(r);
-	r = f<=m;	printf("f<=m: %s (true)\n", cb(r));	assert(r);
-	r = l<=h;	printf("l<=h: %s (true)\n", cb(r));	assert(r);
+	r = f<=h;	printf("\tf<=h: %s (true)\n", cb(r));	assert(r);
+	r = f<=m;	printf("\tf<=m: %s (true)\n", cb(r));	assert(r);
+	r = l<=h;	printf("\tl<=h: %s (true)\n", cb(r));	assert(r);
 
-	r = a>=c;	printf("a>=c: %s (false)\n", cb(r));	assert(!r);
-	r = a>=y;	printf("a>=y: %s (false)\n", cb(r));	assert(!r);
-	r = x>=c;	printf("x>=c: %s (false)\n", cb(r));	assert(!r);
+	r = a>=c;	printf("\ta>=c: %s (false)\n", cb(r));	assert(!r);
+	r = a>=y;	printf("\ta>=y: %s (false)\n", cb(r));	assert(!r);
+	r = x>=c;	printf("\tx>=c: %s (false)\n", cb(r));	assert(!r);
 
-	r = f>=h;	printf("f>=h: %s (false)\n", cb(r));	assert(!r);
-	r = f>=m;	printf("f>=m: %s (false)\n", cb(r));	assert(!r);
-	r = l>=h;	printf("l>=h: %s (false)\n", cb(r));	assert(!r);
+	r = f>=h;	printf("\tf>=h: %s (false)\n", cb(r));	assert(!r);
+	r = f>=m;	printf("\tf>=m: %s (false)\n", cb(r));	assert(!r);
+	r = l>=h;	printf("\tl>=h: %s (false)\n", cb(r));	assert(!r);
 }
 
 
@@ -326,24 +347,41 @@ test_float()
 
 	printf("float4:\n");
 
-	a = 1.7;
+	a = 1.5;
 	double p, q;
 
 	p = a;
 	q = a++;
 	printf("\ta = %g, a++ = %g, a = %g\n", p, q, (double)a);
+	assert(q == 1.5);
+	assert(a == 2.5);
 
 	p = a;
 	q = ++a;
 	printf("\ta = %g, ++a = %g, a = %g\n", p, q, (double)a);
+	assert(q == 3.5);
+	assert(a == 3.5);
 
 	p = a;
 	q = a--;
 	printf("\ta = %g, a-- = %g, a = %g\n", p, q, (double)a);
+	assert(q == 3.5);
+	assert(a == 2.5);
 
 	p = a;
 	q = --a;
 	printf("\ta = %g, --a = %g, a = %g\n", p, q, (double)a);
+	assert(q == 1.5);
+	assert(a == 1.5);
+
+	a = 1.5;
+	b = -a;
+	printf("\ta = %g, -a = %g\n", (double)a, (double)b);
+	assert(b == -1.5);
+
+	b = !a;
+	printf("\ta = %g, !a = %g\n", (double)a, (double)b);
+	assert(b == 0);
 }
 
 
