@@ -8,27 +8,36 @@
 
 /**********************************************************************/
 /*
- *	Skip lists.
+ *	Indexing.
  */
 
-class giIndex
+
+struct intKey
+{
+	int		key;
+	giStr *		str;
+	intKey	*	fwd[0];
+};
+
+
+class giIndexInt
 {
     public:
-	giIndex();
-	~giIndex();
+	giIndexInt();
+	~giIndexInt();
 
     public:
 	/*
 	 *	Search will locate and return the entry that matches the
 	 *	given `key'.
 	 */
-	void *		search(const char * key, unsigned len);
+	intKey *	search(int);
 
 	/*
 	 *	Return the first or the last tuple in the index.
 	 */
-	void *		first(const char *& key, unsigned & len);
-	void *		last(const char *& key, unsigned & len);
+	intKey *	first();
+	intKey *	last();
 
 	/*
 	 *	Find the tuple either just before or just after the
@@ -37,41 +46,101 @@ class giIndex
 	 *	NIL is returned and `key' is set to NIL and `len' to zero.
 	 *	If NIL is passed as the key, NIL will be returned.
 	 */
-	void *		next(const char *& key, unsigned & len);
-	void *		previous(const char *& key, unsigned & len);
+	intKey *	next(int);
+	intKey *	previous(int);
 
 	/*
 	 *	Insert the given `ref' at the given `key' and return true.
 	 *	If an entry already exists, false is returned.
 	 */
-	int		insert(const char * key, unsigned len, void * ref);
+	bool		insert(int, giStr *);
 
 	/*
 	 *	Remove the entry matching the given `key', if it exists.
 	 *	True is returned if it was deleted, or false if it was not
 	 *	found.
 	 */
-	int		remove(const char * key, unsigned len);
+	bool		remove(int);
 
     private:
-	struct sk_t
-	{
-		char *		key;
-		unsigned	len;
-		void *		ref;
-		sk_t *		fwd[0];
-
-		int		cmp(const char *, unsigned);
-	};
-
 	enum
 	{
 		MaxLevel = 16,
 		P = (((unsigned)-1) / 2)
 	};
 
-	sk_t *		head[MaxLevel];
+	intKey *	head[MaxLevel];
 	unsigned	levels;
+
+	intKey *	cache;
+	int		min, max;
+};
+
+/******************************/
+
+struct strKey
+{
+	const char *	key;
+	unsigned	klen;
+	gist		val;
+	strKey	*	fwd[0];
+};
+
+
+class giIndexStr
+{
+    public:
+	giIndexStr();
+	~giIndexStr();
+
+    public:
+	/*
+	 *	Search will locate and return the entry that matches the
+	 *	given `key'.
+	 */
+	strKey *	search(int);
+
+	/*
+	 *	Return the first or the last tuple in the index.
+	 */
+	strKey *	first();
+	strKey *	last();
+
+	/*
+	 *	Find the tuple either just before or just after the
+	 *	record matching the given `key'.  The key of the matched
+	 *	record replaces `key' and `len'.  If no records remain,
+	 *	NIL is returned and `key' is set to NIL and `len' to zero.
+	 *	If NIL is passed as the key, NIL will be returned.
+	 */
+	strKey *	next(int);
+	strKey *	previous(int);
+
+	/*
+	 *	Insert the given `ref' at the given `key' and return true.
+	 *	If an entry already exists, false is returned.
+	 */
+	bool		insert(strKey *);
+
+	/*
+	 *	Remove the entry matching the given `key', if it exists.
+	 *	True is returned if it was deleted, or false if it was not
+	 *	found.
+	 */
+	bool		remove(int);
+
+    private:
+	enum
+	{
+		MaxLevel = 16,
+		P = (((unsigned)-1) / 2)
+	};
+
+	strKey *	head[MaxLevel];
+	unsigned	levels;
+
+	strKey *	cache;
+	int		min, max;
 };
 
 /******************************/
@@ -136,7 +205,7 @@ struct gistInternal
  */
 struct giStr : gistInternal
 {
-	giIndex *	index;
+	giIndexInt *	index;
 	union {
 		giStore *	str;
 		struct {
@@ -151,6 +220,20 @@ struct giStr : gistInternal
 	double		toFloat();
 	const char *	piece(int & idx, int & len);
 	int		cmp(giStr *);
+};
+
+struct giStr0 : gistInternal
+{
+	char *		data;
+	unsigned	size;
+	bool		big;
+	bool		hasNull;
+};
+
+struct giStr1 : giStr
+{
+	giIndexInt *	index;
+	// int		min, max;
 };
 
 /**********************************************************************/

@@ -84,6 +84,9 @@ giStr::flatten()
 	// always add a '\0'
 	// set multiRef and hasNull
 	// may need to move a non-index string if there is no '\0'.
+
+	// some calls change this gist ((char *)),
+	//	others need a new copy (copy())
 }
 
 
@@ -122,12 +125,18 @@ giStr::piece(int & idx, int & len)
 		const char * kp = &k[0];
 		unsigned l = sizeof k;
 
-		st = (giStore *)index->previous(kp, l);
-		int start = giStore::gtKey(kp);
-		if (!st || l != sizeof (k) || start > i)
-		    throw gist::internalError("bogus index in giStr::piece");
+#warning "check this"
+		{
+			intKey * kp = index->previous(i + 1);
+			// st = key.str;
+			st = 0;
+		}
+		// st = (giStore *)index->previous(kp, l);
+		// int start = giStore::gtKey(kp);
+		// if (!st || l != sizeof (k) || start > i)
+		    // throw gist::internalError("bogus index in giStr::piece");
 
-		i -= start;
+		// i -= start;
 	}
 
 	if ((unsigned)i >= st->size)
@@ -429,6 +438,10 @@ gist::strpiece(int & index, int & len)
 	return result;
 }
 
+/**********************************************************************/
+/*
+ *	String concatenation.
+ */
 
 void
 gist::strcat(const gist & r)
