@@ -277,10 +277,7 @@ struct giStr : gistInternal
 	giIndexInt *	index;
 	char *		data;
 	unsigned	size;
-	union {
-		giSChunk *	chunk;
-		bool		hasNull;
-	};
+	giSChunk *	chunk;
 
 	/********/
 

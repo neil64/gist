@@ -32,7 +32,23 @@ printGist(gist & g)
 		break;
 
 	case gist::GT_STR:
-		printf("str = %s", (const char *)g);
+		printf("str(intern=%x, skip=%d, cnt=%d) = \"",
+					(unsigned)g.intern, g.skip, g.cnt);
+		fflush(stdout);
+		{
+			int si = 0;
+			unsigned sl;
+			const char * sp;
+
+			for (;;)
+			{
+				sl = g.strpiece(si, sp);
+				if (sl == 0)
+					break;
+				printf("%.*s", sl, sp);
+			}
+		}
+		printf("\"");
 		break;
 
 	case gist::GT_ARRAY:
@@ -83,7 +99,7 @@ test_init()
 
 	for (i = 0; i < sizeof ga / sizeof ga[0]; i++)
 	{
-		printf("\t0: ");
+		printf("\t%d: ", i);
 		printGist(ga[i]);
 		printf("\n");
 	}
@@ -411,6 +427,30 @@ test_float()
 }
 
 
+static void
+split(const char * str, const char * sep)
+{
+	gist s = str;
+	printf("\tsplit: ");
+	printGist(s);
+	printf("\n");
+	gist t = strsplit(s, sep);
+
+	printf("\tsplit into array of len = %d:\n", len(t));
+	printf("\tsplit: ");
+	printGist(s);
+	printf("\n");
+
+	for (int i = 0; i < (int)len(t); i++)
+	{
+		printf("\t\t%d: ", i);
+		printGist(t[i]);
+		printf("\n");
+	}
+	printf("\n");
+}
+
+
 void
 test_string()
 {
@@ -450,6 +490,15 @@ test_string()
 	cp = s.CCS();
 	printf("\tstrlen(s):  %d, %d, %d\n", s.strlen(), strlen(s), strlen(cp));
 	printf("\ts: %.64s\n\t   %.64s\n", cp, cp+64);
+
+	printf("string4:\n");
+
+	split("aa bb  cc\t\tdd \tx    ", 0);
+	split("a,b,c", ",");
+	split("", ",");
+	split(" ", ",");
+	split(", ", ",");
+	split("x,,y", ",");
 }
 
 
@@ -495,7 +544,7 @@ test_table()
 	printf("table1:\n");
 
 	int i = 0;
-	int x = 1;
+	// int x = 1;
 	gist g, h;
 	g.table();
 
@@ -546,7 +595,8 @@ test_misc()
 		char * hw1 = "Hello world";
 		static char hw2[] = "Hello world";
 
-		printf("\t&hw1 = %lx, &hw2 = %x\n", hw1, hw2);
+		printf("\t&hw1 = %x, &hw2 = %x\n",
+					(unsigned)hw1, (unsigned)hw2);
 	}
 }
 

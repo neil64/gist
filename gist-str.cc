@@ -155,6 +155,12 @@ giStr::toFloat()
  *	do anyhow, except that the change will not effect the value of the
  *	object (that is, we may flatten the string or move it to add a '\0',
  *	but the value will remain the same).
+ *
+ *	It is tempting to leave `unique' set on the string if `rw' is false,
+ *	since the caller is promising not to change the string.  However,
+ *	I decided that the returned string should remain valid no matter
+ *	what -- if `unique' remains set, and the original gist is modified,
+ *	then the returned string becomes invalid.
  */
 char *
 gist::_strcast(bool rw) const
@@ -171,12 +177,22 @@ gist::_strcast(bool rw) const
 	}
 
 	giStr * sp = (giStr *)gp->intern;
+	unsigned sk;
+	unsigned l = gp->cnt;
 
-	if (sp->index || !sp->hasNull || (!unique && rw))
-		_strflatten();
+	if (l == 0)
+		return "";
 
-	((gist *)this)->unique = false;
-	return sp->data;
+	if (sp->index ||
+	    (!unique && rw) ||
+	    (sk = gp->skip) + l >= sp->size ||
+	    sp->data[sk+l] != '\0')
+	{
+		gp->_strflatten();
+	}
+
+	gp->unique = false;
+	return ((giStr *)gp->intern)->data + gp->skip;
 }
 
 
@@ -193,28 +209,45 @@ gist::_strflatten() const
 
 	if (!sp->index && gp->unique)
 	{
-		if (sp->hasNull)
+		char * dp = sp->data;
+		unsigned sk = gp->skip;
+
+		if (dp[sk+l] == '\0')
 			return;
-		if (gp->skip + l < sp->size)
+
+		if (l < sp->size)
 		{
-			sp->data[gp->skip + l] = '\0';
-			sp->hasNull = true;
+			if (sk + l >= sp->size)
+			{
+				memmove(&sp->data[0], &sp->data[sk], l);
+				gp->skip = sk = 0;
+			}
+			sp->data[sk + l] = '\0';
 			return;
 		}
 	}
 
 	l++;
 	char * cp = (char *)gistInternal::alloc(l);
-
 	(void)strcpy(cp, *gp);
 
-	gp->unique = true;
-	sp->index = 0;
+	if (gp->unique)
+		sp->index = 0;
+	else
+	{
+		sp = new giStr;
+		gp->intern = sp;
+		gp->unique = true;
+	}
+
 	sp->data = cp;
 	sp->size = l;
-	sp->hasNull = true;
+	gp->skip = 0;
 }
 
+
+#if 0
+	// This is a bad idea, I think.
 
 void
 gist::_strzero()
@@ -222,12 +255,13 @@ gist::_strzero()
 	if (!isStr())		// (should never happen)
 		return;
 
-	giStr * sp = (giStr *)intern;
-
-	sp->index = 0;
-	sp->data = 0;
-	sp->hasNull = false;
-	sp->size = 0;
+	if (unique)
+	{
+		giStr * sp = (giStr *)intern;
+		sp->index = 0;
+		sp->data = 0;
+		sp->size = 0;
+	}
 
 	cnt = 0;
 	skip = 0;
@@ -235,6 +269,8 @@ gist::_strzero()
 	unique = false;		// (doesn't matter, but false makes strcat()
 				//  slightly more efficient)
 }
+
+#endif // 0
 
 /**********************************************************************/
 /**********************************************************************/
@@ -288,8 +324,7 @@ gist::set(const char * s)
 
   hop:
 	// sp->index = 0;
-	sp->size = l;
-	sp->hasNull = true;
+	sp->size = l + 1;	// Size includes the '\0' to help _strflatten()
 
 	typ = GT_STR;
 	unique = false;		// 'cause the caller may use it for other
@@ -317,7 +352,6 @@ gist::set(const char * s, int l)
 		 *	If we were not given any data, just be nice.
 		 */
 		sp->data = "";
-		sp->hasNull = true;
 		l = 0;
 		goto hop;
 	}
@@ -340,12 +374,11 @@ gist::set(const char * s, int l)
 		sp->data = (char *)gistInternal::alloc(l+1);
 		memcpy(sp->data, s, l);
 		sp->data[l] = '\0';
-		sp->hasNull = true;
 	}
 
   hop:
 	// sp->index = 0;
-	sp->size = l;
+	sp->size = l + 1;	// Size includes the '\0' to help _strflatten()
 
 	typ = GT_STR;
 	unique = false;		// 'cause the caller may use it for other
@@ -369,7 +402,6 @@ gist::copy(const char * s, int l)
 	sp->data = (char *)gistInternal::alloc(l+1);
 	memcpy(sp->data, s, l);
 	sp->data[l] = '\0';
-	sp->hasNull = true;
 
 	typ = GT_STR;
 	unique = true;
@@ -758,9 +790,7 @@ gist::strcat(const gist & r)
 			 */
 			strcpy(&ls->data[o], *rp);
 			cnt += l;
-			if (!ls->index)
-				ls->hasNull = false;
-			else
+			if (ls->index)
 				ls->chunk->len += l;
 			return;
 
@@ -781,7 +811,6 @@ gist::strcat(const gist & r)
 							sizeof (giStr));
 			nls->data = (char *)gistInternal::alloc(strChunk);
 			nls->size = strChunk;
-			nls->hasNull = false;
 			nls->index = 0;
 
 			strcpy(&nls->data[0], *this);
@@ -921,9 +950,7 @@ strcat(gist & g, const char * r, int count)
 {
 	if (count == 0)
 		return;
-	gist rx(r);
-	if (count > 0)
-		rx.strtrim(0, count);
+	gist rx(r, count);
 	g.strcat(rx);
 }
 

@@ -31,7 +31,12 @@ gist::array(unsigned l)
 	{
 		giArray * ap = (giArray *)intern;
 
-		if (l < ap->len)
+		if (l == 0 && ap->len > 0)
+		{
+			ap->skip = 0;
+			ap->index = new (giIndexInt::ArrayLevels) giIndexInt;
+		}
+		else if (l < ap->len)
 		{
 			unsigned i;
 			unsigned pi = l / giAChunk::items;

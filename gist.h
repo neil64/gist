@@ -52,7 +52,8 @@ class gist
 	gist(double v)		{ typ = GT_FLOAT; dval = v; }
 	gist(const gist & g)	{ ((gist &)g).unique = 0; all = g.all; }
 	gist(const gist * g)	{ ((gist *)g)->unique = 0; all = g->all; }
-	gist(const char * s, int len = -1)	{ set(s, len); }
+	gist(const char * s)	{ set(s); }
+	gist(const char * s, int len)	{ set(s, len); }
 
 	/*
 	 *	These should make Long's or Real's, but for now ...
@@ -543,7 +544,8 @@ class gist
 	char *		_strcast(bool rw) const;
 	unsigned	_strpiece(int & index, const char *& ptr) const;
 	void		_strflatten() const;
-	void		_strzero();
+	// void		_strzero();
+	void		_strsplit(const gist &);
 	void		_strsplit(const gist &, const char *, int);
 
 	gist &		_arrayindex(long);
@@ -582,19 +584,19 @@ class gist
 	friend unsigned	strpiece(const gist &, int & index, const char *& ptr);
 
 	void		strcat(int);
-	void		strcat(const char *, int count = (~0U>>1));
-	void		strcopycat(const char *, int count = (~0U>>1));
+	void		strcat(const char *, int count = -1);
+	void		strcopycat(const char *, int count = -1);
 	void		strcat(const gist &);
 	friend void	strcat(gist &, int);
-	friend void	strcat(gist &, const char *, int count = (~0U>>1));
-	friend void	strcopycat(gist &, const char *, int count = (~0U>>1));
+	friend void	strcat(gist &, const char *, int count = -1);
+	friend void	strcopycat(gist &, const char *, int count = -1);
 	friend void	strcat(gist &, const gist &);
 	friend void	strcat(char *, const gist &);
 	friend void	strncat(char *, const gist &, unsigned count);
 
 	void		strins(int);
-	void		strins(const char *, int count = (~0U>>1));
-	void		strcopyins(const char *, int count = (~0U>>1));
+	void		strins(const char *, int count = -1);
+	void		strcopyins(const char *, int count = -1);
 	void		strins(const gist &);
 
 	friend unsigned	strcpy(char * dest, const gist & src,
