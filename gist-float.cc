@@ -10,17 +10,9 @@
 
 /**********************************************************************/
 
-gist::gist(double d)
-{
-	giFloat * f = new giFloat();
-	f->val = d;
-	ptr = f;
-}
-
-
 gist::operator double() const
 {
-	giStr * s;
+	giBase * gi = (giBase *)ptr;
 
 	switch (type())
 	{
@@ -34,29 +26,22 @@ gist::operator double() const
 		return 0.0;
 
 	case GT_STR:
-		if (cnt == 0)
-			return 0.0;
-		s = (giStr *)ptr;
-		goto str;
-
-	case GT_STR32:
 		{
-			giStr32 * s32 = (giStr32 *)ptr;
-			if (s32->cnt == 0)
+			if (cnt == 0)
 				return 0.0;
-			s = s32->str;
-		}
+			giStr * s = (giStr *)gi;
 
-	str:
-		// try to parse the string as a number.
-		// if we can't return 1 anyhow (boolean conversion)
+			// XXX
+			// try to parse the string as a number.
+			// if we can't return 1 anyhow (boolean conversion)
+		}
 		return 1;
 
 	case GT_INT:
 		return (double)val;
 
 	case GT_FLOAT:
-		return ((giFloat *)ptr)->val;
+		return dval;
 	}
 }
 
@@ -65,7 +50,6 @@ double
 gist::toFloat() const
 {
 	giBase * gi = (giBase *)ptr;
-	giStr * s;
 
 	switch (gi->type)
 	{
@@ -79,20 +63,6 @@ gist::toFloat() const
 		throw valueError("toFloat");
 
 	case GT_STR:
-		if (cnt == 0)
-			return 0;
-		s = (giStr *)gi;
-		goto str;
-
-	case GT_STR32:
-		{
-			giStr32 * s32 = (giStr32 *)gi;
-			if (s32->cnt == 0)
-				return 0;
-			s = s32->str;
-		}
-
-	str:
 		// XXX
 		// try to parse the string as a number.
 		// if we can't return 1 anyhow (boolean conversion)
@@ -102,6 +72,6 @@ gist::toFloat() const
 		return (double)val;
 
 	case GT_FLOAT:
-		return ((giFloat *)gi)->val;
+		return dval;
 	}
 }

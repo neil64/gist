@@ -13,6 +13,7 @@
 
 gist::gistInternal	gist::Nil = { GT_NIL };
 gist::gistInternal	gist::Int = { GT_INT };
+gist::gistInternal	gist::Float = { GT_FLOAT };
 
 /**********************************************************************/
 
@@ -43,4 +44,21 @@ giBase::operator new(unsigned sz)
 	if (!ptr)
 		throw std::bad_alloc();
 	return ptr;
+}
+
+
+void *
+giBase::alloc(unsigned sz)
+{
+	void * ptr = GC_malloc(sz);
+	if (!ptr)
+		throw std::bad_alloc();
+	return ptr;
+}
+
+
+void
+giBase::free(void * p)
+{
+	GC_free(p);
 }

@@ -154,6 +154,21 @@ method and the operation performed.
 The result is a
 .B gist
 integer.
+.SH STRINGS
+.IP \(bu
+Assignment to a string from
+.B char *
+results in the string referring to the given character buffer directly.
+Modifications to the buffer will be reflected in the string, however,
+modifications to the string will not change the buffer.
+.IP \(bu
+When string data could be referenced by more than one string object or
+external pointer, the string buffer is permanently marked.
+From then on it is treated as read-only.
+.IP \(bu
+A string can be marked as volatile, meaning that it can be
+changed without copying it, and that changes via one string object
+are reflected in other string objects that refer to the same buffer.
 .SH EXCEPTIONS
 .B Gist
 uses the C++ exception handling mechanism to handle situations it

@@ -13,7 +13,6 @@
 gist::operator long() const
 {
 	giBase * gi = (giBase *)ptr;
-	giStr * s;
 
 	switch (gi->type)
 	{
@@ -27,30 +26,22 @@ gist::operator long() const
 		return 0;
 
 	case GT_STR:
-		if (cnt == 0)
-			return 0;
-		s = (giStr *)gi;
-		goto str;
-
-	case GT_STR32:
 		{
-			giStr32 * s32 = (giStr32 *)gi;
-			if (s32->cnt == 0)
+			if (cnt == 0)
 				return 0;
-			s = s32->str;
-		}
+			giStr * s = (giStr *)gi;
 
-	str:
-		// XXX
-		// try to parse the string as a number.
-		// if we can't return 1 anyhow (boolean conversion)
+			// XXX
+			// try to parse the string as a number.
+			// if we can't return 1 anyhow (boolean conversion)
+		}
 		return 1;
 
 	case GT_INT:
 		return val;
 
 	case GT_FLOAT:
-		return (int)((giFloat *)gi)->val;
+		return (long)dval;
 	}
 }
 
@@ -64,7 +55,6 @@ gist::operator int() const
 gist::operator unsigned long() const
 {
 	giBase * gi = (giBase *)ptr;
-	giStr * s;
 
 	switch (gi->type)
 	{
@@ -78,30 +68,22 @@ gist::operator unsigned long() const
 		return 0;
 
 	case GT_STR:
-		if (cnt == 0)
-			return 0;
-		s = (giStr *)gi;
-		goto str;
-
-	case GT_STR32:
 		{
-			giStr32 * s32 = (giStr32 *)gi;
-			if (s32->cnt == 0)
+			if (cnt == 0)
 				return 0;
-			s = s32->str;
-		}
+			giStr * s = (giStr *)gi;
 
-	str:
-		// XXX
-		// try to parse the string as a number.
-		// if we can't return 1 anyhow (boolean conversion)
+			// XXX
+			// try to parse the string as a number.
+			// if we can't return 1 anyhow (boolean conversion)
+		}
 		return 1;
 
 	case GT_INT:
 		return val;
 
 	case GT_FLOAT:
-		return (int)((giFloat *)gi)->val;
+		return (unsigned long)dval;
 	}
 }
 
@@ -116,7 +98,6 @@ long
 gist::toInt() const
 {
 	giBase * gi = (giBase *)ptr;
-	giStr * s;
 
 	switch (gi->type)
 	{
@@ -130,29 +111,21 @@ gist::toInt() const
 		throw valueError("toInt");
 
 	case GT_STR:
-		if (cnt == 0)
-			return 0;
-		s = (giStr *)gi;
-		goto str;
-
-	case GT_STR32:
 		{
-			giStr32 * s32 = (giStr32 *)gi;
-			if (s32->cnt == 0)
+			if (cnt == 0)
 				return 0;
-			s = s32->str;
-		}
+			giStr * s = (giStr *)gi;
 
-	str:
-		// XXX
-		// try to parse the string as a number.
-		// if we can't return 1 anyhow (boolean conversion)
+			// XXX
+			// try to parse the string as a number.
+			// if we can't return 1 anyhow (boolean conversion)
+		}
 		return 1;
 
 	case GT_INT:
 		return val;
 
 	case GT_FLOAT:
-		return (int)((giFloat *)gi)->val;
+		return (long)dval;
 	}
 }

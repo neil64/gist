@@ -48,13 +48,13 @@ class gist
 	gist(unsigned v)	{ ptr = &Int; val = v; }
 	gist(long v)		{ ptr = &Int; val = v; }
 	gist(unsigned long v)	{ ptr = &Int; val = v; }
+	gist(float v)		{ ptr = &Float; dval = v; }
+	gist(double v)		{ ptr = &Float; dval = v; }
 	gist(const gist & g)	{ ptr = g.ptr; val = g.val; }
 	gist(const gist * g)	{ ptr = g->ptr; val = g->val; }
 
 	gist(long long);
 	gist(unsigned long long);
-	gist(float);
-	gist(double);
 
 	gist(const char *, int len = -1);
 
@@ -70,14 +70,20 @@ class gist
 							return *this; }
 	gist &	operator =(unsigned long v)	{ ptr = &Int; val = v;
 							return *this; }
-	gist &	operator =(const gist & g)	{ ptr = g.ptr; val = g.val;
+	gist &	operator =(float v)		{ ptr = &Float; dval = v;
 							return *this; }
-	gist &	operator =(const gist * g)	{ ptr = g->ptr; val = g->val;
+	gist &	operator =(double v)		{ ptr = &Float; dval = v;
 							return *this; }
+	gist &	operator =(const gist & g)	{ ptr = g.ptr;
+						  all[0] = g.all[0];
+						  all[1] = g.all[1];
+						  return *this; }
+	gist &	operator =(const gist * g)	{ ptr = g->ptr;
+						  all[0] = g->all[0];
+						  all[1] = g->all[1];
+						  return *this; }
 	gist &		operator =(long long);
 	gist &		operator =(unsigned long long);
-	gist &		operator =(float);
-	gist &		operator =(double);
 	gist &		operator =(const char *);
 
 
@@ -89,10 +95,14 @@ class gist
 							return *this; }
 	gist &		set(unsigned long v)	{ ptr = &Int; val = v;
 							return *this; }
-	gist &		set(const gist & g)	{ ptr = g.ptr; val = g.val;
-							return *this; }
-	gist &		set(const gist * g)	{ ptr = g->ptr; val = g->val;
-							return *this; }
+	gist &		set(const gist & g)	{ ptr = g.ptr;
+						  all[0] = g.all[0];
+						  all[1] = g.all[1];
+						  return *this; }
+	gist &		set(const gist * g)	{ ptr = g->ptr;
+						  all[0] = g->all[0];
+						  all[1] = g->all[1];
+						  return *this; }
 	gist &		set(long long);
 	gist &		set(unsigned long long);
 	gist &		set(float);
@@ -101,10 +111,19 @@ class gist
 
 	/********************************/
 	/*
+	 *	Shallow copying.
+	 */
+
+	gist &		copy(const char *, int = -1);
+	gist &		copy(const gist &);
+	gist &		copy(const gist *);
+
+	/********************************/
+	/*
 	 *	Memory allocation.
 	 */
 	void *		operator new(unsigned);
-	void		operator delete(void *) {}
+	void		operator delete(void * p) {}
 
 	/********************************/
 	/*
@@ -255,18 +274,17 @@ class gist
 	 */
 	enum type_e
 	{
-		GT_NIL = 0x00,
-		GT_STR = 0x02,
-		GT_STR32 = 0x03,
-		GT_ARRAY = 0x04,
-		GT_TABLE = 0x06,
-		GT_CODE = 0x08,
-		GT_INT = 0x0a,
-		GT_FLOAT = 0x0c,
-		GT_LONG = 0x0e,
-		GT_REAL = 0x10,
+		GT_NIL = 0,
+		GT_STR,
+		GT_ARRAY,
+		GT_TABLE,
+		GT_CODE,
+		GT_INT,
+		GT_FLOAT,
+		GT_LONG,
+		GT_REAL
 	};
-	type_e		type() const	{ return (type_e)(ptr->type & ~1); }
+	type_e		type() const		{ return ptr->type; }
 
 	int		isNil() const		{ return ptr == &Nil; }
 	int		isInt() const		{ return ptr == &Int; }
@@ -352,17 +370,29 @@ class gist
 	 *	integer with the integer value stored in `value.  If the
 	 *	pointer is non-zero, the type is determined in other ways.
 	 *	For non-integer values, the use of `value' is varied.
+	 *
+	 *	Well ok, it's now 12 bytes.  This should not make a whole
+	 *	lot of difference with the use of the Boehm GC -- the GC
+	 *	defaults to placing a single byte after any allocation,
+	 *	to allow pointer references to the the of an object + 1
+	 *	to still hit the object (reasonable, I guess), then after
+	 *	adding the byte, it rounds up to the next allocation size.
+	 *	So for 8 bytes, to really get 16.  For 12 bytes we still
+	 *	get 16.  Voila.  (Tellement maintenant nous devons essayer
+	 *	tres dur de ne pas lui faire plus de 15 bytes.)
 	 */
     private:
 	gistInternal *		ptr;
 	union
 	{
-		long		val;
+		long		val;		// Integer type
+		double		dval;		// Float type
 		struct
 		{
-			unsigned short	skip;
-			unsigned short	cnt;
+			unsigned	cnt;	// String/Array type
+			unsigned	skip;
 		};
+		long		all[2];		// One entry to cover it all
 	};
 
 	/*
@@ -371,6 +401,7 @@ class gist
 	 */
 	static gistInternal	Nil;
 	static gistInternal	Int;
+	static gistInternal	Float;
 };
 
 
