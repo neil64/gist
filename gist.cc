@@ -2,6 +2,8 @@
  *	Gist -- Main / general.
  */
 
+#include <stdio.h>
+
 #include	<exception>
 #include	<new>
 #include	<gc.h>
@@ -72,7 +74,7 @@ gist::operator new(unsigned sz)
 	 */
 	if (sz == 16)
 		sz = 15;
-	void * ptr = GC_malloc(sz);
+	void * ptr = GC_MALLOC(sz);
 	if (!ptr)
 		throw std::bad_alloc();
 	return ptr;
@@ -87,7 +89,7 @@ gistInternal::operator new(unsigned sz)
 	/*
 	 *	Much of gist assumes that the new memory is cleared.
 	 */
-	void * ptr = GC_malloc(sz);
+	void * ptr = GC_MALLOC(sz);
 	if (!ptr)
 		throw std::bad_alloc();
 	return ptr;
@@ -100,7 +102,7 @@ gistInternal::alloc(unsigned sz)
 	/*
 	 *	Much of gist assumes that the new memory is cleared.
 	 */
-	void * ptr = GC_malloc(sz);
+	void * ptr = GC_MALLOC(sz);
 	if (!ptr)
 		throw std::bad_alloc();
 	return ptr;
@@ -110,5 +112,31 @@ gistInternal::alloc(unsigned sz)
 void
 gistInternal::free(void * p)
 {
-	GC_free(p);
+	GC_FREE(p);
+}
+
+/**********************************************************************/
+
+/*
+ *	The Boehm GC will not scan into non GC controlled heap.  So we
+ *	replace the system versions of the standard C++ allocators
+ *	(operator new and delete) with ones that call the GC.
+ */
+
+void *
+operator new(unsigned sz)
+{
+	gcInit();
+
+	void * ptr = GC_MALLOC(sz);
+	if (!ptr)
+		throw std::bad_alloc();
+	return ptr;
+}
+
+
+void
+operator delete(void * ptr)
+{
+	// GC_FREE(ptr);
 }
