@@ -1,0 +1,44 @@
+
+
+
+
+
+
+Expression:
+	Like C expressions
+
+
+Block
+
+	{ statement list }
+
+
+
+object blah
+{
+	stuff in here is in the "blah" scope.
+}
+
+
+
+{
+	fact(10);
+
+
+
+: fact
+{
+	args n;
+
+	if (n == 1)
+		return 1;
+	else
+		return fact(n - 1) * n;
+}
+
+
+fact:
+{
+	nargs(name);
+
+}

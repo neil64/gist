@@ -1,0 +1,155 @@
+
+My scripting language and object library
+========================================
+
+
+030526
+
+*  Called Gist, as in the "essence" of a scripting language.
+
+*  A scripting language that has data representation similar to that of
+   Python.  That is, it has the flavor of LISP (free form lists), C++
+   (classes), and others.
+
+*  The syntax of the language compiles to P-code, that is translated and
+   executed in a similar way to what I was planning with CVM.
+
+*  The execution engine of Gist is "secure", in that a Gist executable
+   cannot gain access to the surounding "system", even if that system is
+   in the same address space.
+
+*  Make a C++ library that implements the data model, such that data can
+   be used directly in C++, not requiring the execution engine and Gist
+   compiler.
+
+*  To use Gist in the same way as Python, PERL, etc, a system module is
+   added to the execution engine, which provides the necessary system
+   features to make it work.  Such a system interface would be required
+   for each system, so that the same code could work anywhere.  Additional
+   modules are not required by the language.  Many would be portable, some
+   not.
+
+*  The data module must include:
+	-  integer
+	-  float
+	-  string
+	-  lists
+	-  property lists (dictionaries)
+   and should include:
+	-  file
+	-  code
+	-  bignum
+	-  complex numbers
+
+*  If the language is good enough, those additional data types should be
+   implementable in Gist.
+
+*  Internally, data is stored in a similar way as it is in LISP.  There is
+   a pool of dotted-pairs, all 8-bytes in size, at fixed address.  All data
+   types except lists will require additional storage, which is allocated
+   from a garbage collected arena.
+
+
+========
+
+040525
+
+*  The library can be done in C++ in a fairly nice way, I think.  I realised
+   that a class can have a cast operator to any other type, which would allow
+   almost arbitrary assignment between the library types.
+
+	struct Var  
+	{
+		Var_t(int);
+		Var_t(Int);
+		Var_t(Str);
+		Var_t(List);
+		Var_t(Dict);
+	};
+
+*  Various other member functions can implement the useful syntax that
+   Python provides, such as subscripting (eg. s[4:6]).
+
+*  The possible types:
+
+	Var	-  An arbitrary variable
+	Int	-  32-bit integer
+	Long	-  Arbitrary length integer
+	Real	-  Floating point arbitrary length number
+	Str	-  String
+	Float	-  64-bit double
+	Array	-  Simple array (similar to a Python list)
+	Table	-  Associative array (similar to a Python dictionary)
+	Code	-  Executable code (P-code)
+
+*  For formatting types for print, I could provide a "printf" operator
+   using "operator %", similar to Python.  The difference is that I can
+   do the interpreting myself, and as such get conversion of my own types.
+
+*  For dynamic values, I could allow each fundamental type to include an
+   "eval" function which is called to get the value when something reads it.
+   So, something like "a = b" could cause the `b' object to run code.
+
+
+========
+
+040628
+
+*  Implement the storage in the same was as the arena that I used in the
+   old Str_t code that I did.
+
+*  I considered using other schemes, such as just allocating space using
+   malloc(), since modern malloc's are less likely to fragment than older
+   ones.  I decided not to because I would need to use realloc() a lot,
+   which would probably move data more often than not.
+
+*  Actually, the above is not true.  The common case of extending an object
+   happens shortly after a previous extend, and in this case, realloc()
+   almost never moves.  The other advantage of using malloc/realloc/free, is
+   that objects will not move without warning, since they are not GC'd,
+   meaning code does not have to be as careful.
+
+*  In any case, most of the code to manage Str_t::str_t's can be used, with
+   changes to allow non-character data to be used (for Array's).
+
+
+============================================================================
+
+Syntax play
+-----------
+
+
+defun hello(a, b)				(defun hello (a , b)
+{						  (
+	printf("Hello world\n");		    (printf ("Hello world\n"))
+	a = b + c;				    (a = b + c)
+	if (a < 10)				    (if (a < 10)
+	{					      (
+		a += 10;				(a += 10)
+	}					      ) )
+
+	if (b > 20)				    (if (b > 20)
+		b -= 10;			      (b -= 10))
+	else					    (else
+		b -= 5;				      (b -= 5))
+}						  ) )
+
+
+(defun hello (a , b)
+  (
+    (printf ("Hello world\n"))
+    (a = b + c)
+    (if (a < 10)
+      (
+        (a += 10)
+      ) )
+
+    (if (b > 20)
+      (b -= 10))
+    (else
+      (b -= 5))
+  )
+)
+
+
+(set-class a)
