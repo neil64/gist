@@ -1,3 +1,9 @@
+/x
 /x.*
 /x?.*
+/T
+/lf.*
+/str.*
+/stub.C
+/.gdb_history
 *.o

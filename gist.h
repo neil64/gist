@@ -62,12 +62,18 @@ class gist
 	/*
 	 *	Assignment.
 	 */
-	gist &	operator =(int v)		{ ptr = &Int; val = v; }
-	gist &	operator =(unsigned v)		{ ptr = &Int; val = v; }
-	gist &	operator =(long v)		{ ptr = &Int; val = v; }
-	gist &	operator =(unsigned long v)	{ ptr = &Int; val = v; }
-	gist &	operator =(const gist & g)	{ ptr = g.ptr; val = g.val; }
-	gist &	operator =(const gist * g)	{ ptr = g->ptr; val = g->val; }
+	gist &	operator =(int v)		{ ptr = &Int; val = v;
+							return *this; }
+	gist &	operator =(unsigned v)		{ ptr = &Int; val = v;
+							return *this; }
+	gist &	operator =(long v)		{ ptr = &Int; val = v;
+							return *this; }
+	gist &	operator =(unsigned long v)	{ ptr = &Int; val = v;
+							return *this; }
+	gist &	operator =(const gist & g)	{ ptr = g.ptr; val = g.val;
+							return *this; }
+	gist &	operator =(const gist * g)	{ ptr = g->ptr; val = g->val;
+							return *this; }
 
 	gist &		operator =(long long);
 	gist &		operator =(unsigned long long);
@@ -203,14 +209,14 @@ class gist
 	GIST_OPS3(<<=)
 	GIST_OPS3(>>=)
 
-	gist		operator -();
-	gist		operator ~();
-	gist		operator !();
+	gist		operator -() const;
+	gist		operator ~() const;
+	gist		operator !() const;
 
-	gist		operator ++();
-	gist		operator ++(int);
-	gist		operator --();
-	gist		operator --(int);
+	gist &		operator ++();
+	gist &		operator ++(int);
+	gist &		operator --();
+	gist &		operator --(int);
 
 	// gist		operator &();
 	// gist		operator ,(const gist &);
@@ -218,30 +224,6 @@ class gist
 #undef GIST_OPS2
 #undef GIST_OPS3
 #undef GIST_OPS4
-
-	/********************************/
-	/*
-	 *	Exceptions.
-	 */
-
-	/*
-	 *	A value error is thrown typically when a value cannot be
-	 *	coerced into a useful form, such as trying to convert a
-	 *	string to a number where the string does not contain digits.
-	 */
-	struct valueError {};
-
-	/*
-	 *	When using a gist array, and index out of bounds gives
-	 *	an `indexError'.
-	 */
-	struct indexError {};
-
-	/*
-	 *	If a conversion causes an overflow, an `overflowError'
-	 *	is thrown.
-	 */
-	struct overlowError {};
 
 	/********************************/
 	/*
@@ -260,15 +242,65 @@ class gist
 		GT_LONG = 0x0e,
 		GT_REAL = 0x10,
 	};
-	type_e		type()		{ return (type_e)(ptr->type & ~1); }
+	type_e		type() const	{ return (type_e)(ptr->type & ~1); }
 
-	int		isNil()		{ return ptr == &Nil; }
-	int		isInt()		{ return ptr == &Int; }
-	int		isStr()		{ return type() == GT_STR; }
-	int		isFloat()	{ return type() == GT_FLOAT; }
-	int		isNumber()	{ return type() >= GT_INT; }
-	int		isArray()	{ return type() >= GT_ARRAY; }
-	int		isTable()	{ return type() >= GT_TABLE; }
+	int		isNil() const		{ return ptr == &Nil; }
+	int		isInt() const		{ return ptr == &Int; }
+	int		isStr() const		{ return type() == GT_STR; }
+	int		isFloat() const		{ return type() == GT_FLOAT; }
+	int		isNumber() const	{ return type() >= GT_INT; }
+	int		isArray() const		{ return type() == GT_ARRAY; }
+	int		isTable() const		{ return type() == GT_TABLE; }
+
+	/********************************/
+	/*
+	 *	Exceptions.
+	 */
+	struct error
+	{
+		const char * msg;
+		error() : msg(0) {}
+		error(const char * m) : msg(m) {}
+	};
+#define GIST_ERROR(t)					\
+	struct t : error				\
+	{						\
+		t() {}					\
+		t(const char * m) : error(m) {}		\
+	};
+
+	/*
+	 *	A value error is thrown typically when a value cannot be
+	 *	coerced into a useful form, such as trying to convert a
+	 *	string to a number where the string does not contain digits.
+	 */
+	GIST_ERROR(valueError)
+
+	/*
+	 *	A type error is thrown when the operands of an operation
+	 *	are not suitable for the operation.  (ie.  trying to add
+	 *	an array to an integer.)
+	 */
+	GIST_ERROR(typeError)
+
+	/*
+	 *	When using a gist array, and index out of bounds gives
+	 *	an `indexError'.
+	 */
+	GIST_ERROR(indexError)
+
+	/*
+	 *	If a conversion causes an overflow, an `overflowError'
+	 *	is thrown.
+	 */
+	GIST_ERROR(overflowError)
+
+	/*
+	 *	Some sort of internal error (please file a bug report).
+	 */
+	GIST_ERROR(internalError)
+
+#undef GIST_ERROR
 
 	/**************************************************************/
 	/**************************************************************/
@@ -279,8 +311,7 @@ class gist
 	/*
 	 *	The base type of the internal gist data structure.
 	 */
-    private:
-	struct gist_internal
+	struct gistInternal
 	{
 		type_e	type;
 	};
@@ -293,7 +324,8 @@ class gist
 	 *	pointer is non-zero, the type is determined in other ways.
 	 *	For non-integer values, the use of `value' is varied.
 	 */
-	gist_internal *		ptr;
+    private:
+	gistInternal *		ptr;
 	union
 	{
 		long		val;
@@ -308,8 +340,8 @@ class gist
 	 *	The NIL object and integer typing object.  All NIL objects,
 	 *	and integer objects point here.
 	 */
-	static gist_internal	Nil;
-	static gist_internal	Int;
+	static gistInternal	Nil;
+	static gistInternal	Int;
 };
 
 

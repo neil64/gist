@@ -5,26 +5,42 @@
 #ifndef __GIST_INTERNAL_H__
 #define __GIST_INTERNAL_H__
 
-namespace gist
-{
 
 /**********************************************************************/
 
-class giStr : public gist::gist_internal
+struct giBase : public gist::gistInternal
 {
+		giBase(gist::type_e t) { type = t; }
+	void *	operator new(unsigned);
+	void	operator delete(void *) {}
+};
+
+
+struct giStr : giBase
+{
+		giStr() : giBase(gist::GT_STR) {}
+		giStr(gist::type_e t) : giBase(t) {}
+
 	// cord like structures, right here.
 };
 
-class giStr32 : public giStr
+struct giStr32 : giStr
 {
+		giStr32() : giStr(gist::GT_STR32) {}
+
 	giStr *		str;
 	unsigned long	skip;
 	unsigned long	cnt;
 };
 
+struct giFloat : giBase
+{
+		giFloat() : giBase(gist::GT_FLOAT) {}
+
+	double		val;
+};
+
 
 /**********************************************************************/
-
-} // namespace
 
 #endif // __GIST_INTERNAL_H__
