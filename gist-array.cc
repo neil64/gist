@@ -8,13 +8,65 @@
 
 /**********************************************************************/
 
+/*
+ *	Create a new array of `length', or change the size of an existing
+ *	array to `length'.
+ */
+gist &
+gist::array(unsigned l)
+{
+	if (typ != GT_ARRAY)
+	{
+		giArray * ap = new giArray;
+
+		ap->skip = 0;
+		ap->len = l;
+		ap->index = new (giIndexInt::ArrayLevels) giIndexInt;
+		ap->cache = 0;
+
+		typ = GT_ARRAY;
+		ptr = ap;
+	}
+	else
+	{
+		giArray * ap = (giArray *)ptr;
+
+		if (l < ap->len)
+		{
+			unsigned i;
+			unsigned pi = l / giAChunk::items;
+			unsigned px = i % giAChunk::items;
+
+			intKey * kp = ap->index->search(pi);
+
+			if (kp)
+			{
+				giAChunk * pp = kp->achunk;
+				for (i = px; px < giAChunk::items; i++)
+					pp->g[i].clear();
+			}
+
+			i = pi;
+			pi = (ap->len + 1) / giAChunk::items;
+			for (; i < pi; i++)
+				ap->index->remove(i);
+		}
+	}
+
+	return *this;
+}
+
+
 gist &
 gist::_arrayindex(long i)
 {
-	if (i < 0)
-		throw indexError("-ve array index not allowed (yet)");
-
 	giArray * ap = (giArray *)ptr;
+
+	if (i < 0)
+		i = ap->len + i;
+	if (i < 0 || (unsigned)i >= ap->len)
+		throw indexError("array index out of range");
+
 	unsigned pi = i / giAChunk::items;
 	unsigned px = i % giAChunk::items;
 	giAChunk * pp;
@@ -25,7 +77,7 @@ gist::_arrayindex(long i)
 	{
 		intKey * kp = ap->index->search(pi);
 		if (kp)
-			pp = (giAChunk *)kp->chunk;
+			pp = kp->achunk;
 		else
 		{
 			/*
@@ -37,36 +89,7 @@ gist::_arrayindex(long i)
 
 		ap->cache = pp;
 		ap->ci = pi;
-
-		if ((unsigned)i >= cnt)
-			cnt = i + 1;
 	}
-
-	return pp->g[px];
-}
-
-
-gist &
-gist::_makearray(long i)
-{
-	if (i < 0)
-		throw indexError("-ve array index not allowed (yet)");
-
-	unsigned pi = i / giAChunk::items;
-	unsigned px = i % giAChunk::items;
-
-	giArray * ap = new giArray;
-	giAChunk * pp = (giAChunk *)gistInternal::alloc(sizeof (giAChunk));
-
-	ap->index = new (giIndexInt::ArrayLevels) giIndexInt;
-	ap->index->insert(pi, pp);
-	ap->cache = pp;
-	ap->ci = pi;
-
-	typ = GT_ARRAY;
-	ptr = ap;
-	cnt = i + 1;
-	skip = 0;
 
 	return pp->g[px];
 }
@@ -75,8 +98,10 @@ gist::_makearray(long i)
 unsigned
 gist::len() const
 {
-	if (typ == GT_ARRAY || typ == GT_STR)
-		return cnt;
+	if (typ == GT_ARRAY)
+		return ((giArray *)ptr)->len;
+	else if (typ == GT_STR)
+		return strlen();
 	else
 		return 0;
 }
@@ -85,8 +110,10 @@ gist::len() const
 unsigned
 len(const gist & g)
 {
-	if (g.typ == gist::GT_ARRAY || g.typ == gist::GT_STR)
-		return g.cnt;
+	if (g.typ == gist::GT_ARRAY)
+		return ((giArray *)g.ptr)->len;
+	else if (g.typ == gist::GT_STR)
+		return g.strlen();
 	else
 		return 0;
 }

@@ -15,8 +15,6 @@
 		return _arrayindex((long)i);				\
 	else if (typ == GT_TABLE)					\
 		return _tableindex((long)i);				\
-	else if (typ == GT_NIL)						\
-		return _makearray((long)i);				\
 	else								\
 		throw typeError("subscript not allowed");
 
@@ -54,12 +52,6 @@ gist::operator [](const gist & i)
 	}
 	if (typ == GT_TABLE)
 		return _tableindex(i);
-	if (typ == GT_NIL)
-	{
-		if (i.typ == GT_INT)
-			return _makearray(i.val);
-		throw indexError("array index must be integer");
-	}
 
 	throw typeError("subscript not allowed");
 }

@@ -258,6 +258,9 @@ struct giStr : gistInternal
 
 struct giArray : gistInternal
 {
+	unsigned	skip;
+	unsigned	len;
+
 	giIndexInt *	index;
 	giAChunk *	cache;
 	unsigned	ci;

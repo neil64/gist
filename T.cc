@@ -238,6 +238,14 @@ test_bool()
 {
 	printf("bool1:\n");
 
+	gist zero(false);
+	gist one = true;
+	bool r;
+
+	r = one==zero;	printf("\t1!=0: %s (false)\n", cb(r));	assert(!r);
+
+	printf("bool2:\n");
+
 	gist a = 123;
 	gist b(456);
 	gist c;
@@ -249,11 +257,10 @@ test_bool()
 	gist h(567.8);
 	double l = 123.4;
 	double m = 567.8;
-	bool r;
 
 	printf("\t(bool)a = %s\n", cb((bool)a));
 
-	printf("bool2:\n");
+	printf("bool3:\n");
 
 	r = b==c;	printf("\tb==c: %s (true)\n", cb(r));	assert(r);
 	r = b==y;	printf("\tb==y: %s (true)\n", cb(r));	assert(r);
@@ -446,12 +453,13 @@ test_array()
 	printf("array1:\n");
 
 	gist a;
+	a.array(10);
 
-	a[10] = 10;
+	a[9] = 9;
 	a[5] = "5";
 	a[0] = 0;
 	a[1] = "one";
-	a[2][3] = "2/3";
+	a[2].array(5)[3] = "2/3";
 
 	printf("\tarray length = %d (%d)\n", a.len(), len(a));
 

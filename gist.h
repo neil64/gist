@@ -511,15 +511,10 @@ class gist
 	void		_strflatten() const;
 
 	gist &		_arrayindex(long);
-	gist &		_makearray(long);
 	gist &		_tableindex(long);
 	gist &		_tableindex(double);
 	gist &		_tableindex(const char *);
 	gist &		_tableindex(const gist &);
-
-//	static void	_coerce1(const gist & l, const gist *& lp,
-//				const gist & r, const gist *& rp,
-//				gist & x, const char * op);
 
 	/*
 	 *	Some internal structures that we call friends.
@@ -572,9 +567,10 @@ class gist
 	/*
 	 *	Array's.
 	 */
-	void		append(const gist &);
-	void		insert(const gist &);
+	gist &		array(unsigned len);
+	void		push(const gist &);
 	gist &		pop();
+	void		unshift(const gist &);
 	gist &		shift();
 	unsigned	len() const;		// Works on strings also.
 	friend unsigned	len(const gist &);
