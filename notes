@@ -112,44 +112,40 @@ My scripting language and object library
 *  In any case, most of the code to manage Str_t::str_t's can be used, with
    changes to allow non-character data to be used (for Array's).
 
+========
 
-============================================================================
+041026
 
-Syntax play
------------
+*  I've thought long about trying to duplicate some of Python's data
+   structures in C++.
 
+*  I could use the Boehm GC.  If I do, I would use it only for Gist objects.
+   I would still need to have a reference count on strings, so I can determine
+   whether to copy string data or not.
 
-defun hello(a, b)				(defun hello (a , b)
-{						  (
-	printf("Hello world\n");		    (printf ("Hello world\n"))
-	a = b + c;				    (a = b + c)
-	if (a < 10)				    (if (a < 10)
-	{					      (
-		a += 10;				(a += 10)
-	}					      ) )
+*  Use the Boehm idea of Cords.  That is, strings need not be stored
+   contiguously in memory.  This could make appending much more efficient,
+   and reasonable.
 
-	if (b > 20)				    (if (b > 20)
-		b -= 10;			      (b -= 10))
-	else					    (else
-		b -= 5;				      (b -= 5))
-}						  ) )
+*  I'd probably not do the cord thing of storing references to external
+   strings, and overloading the cord pointer
 
+*  Put it all in the "gist" namespace (C++).
 
-(defun hello (a , b)
-  (
-    (printf ("Hello world\n"))
-    (a = b + c)
-    (if (a < 10)
-      (
-        (a += 10)
-      ) )
+*  Use skip lists to manage an associative array.
 
-    (if (b > 20)
-      (b -= 10))
-    (else
-      (b -= 5))
-  )
-)
+*  If I add an extension language to gist, I should either use SpiderMonkey,
+   or implement a JS interpreter.  Implementing a new language would not
+   really be worthwhile.
 
+*  Perhaps I could consider making strings into arrays of some sort.  I could
+   use the Cord "tree of strings" idea to implement appending and inserting
+   in arrays.
 
-(set-class a)
+*  If we assume for a moment that we are using GC, and we don't keep any
+   reference counts, how to append?  We could just append if there is space
+   available in the current storage, and the referencing Gist already covers
+   all existing data.  Other references will still be ok, but they will not
+   be able to append without a copy.  Prepend could work in a similar way.
+
+*  I've coded a lot of gist.h, and it all seems to be falling out ok.
