@@ -13,19 +13,51 @@ gist g1, g2;
 
 
 void
+test_nil()
+{
+	gist a;
+	gist b(1234);
+
+	printf("nil1:\n");
+
+	assert(a.isNil());
+	assert(!b.isNil());
+	b.clear();
+	assert(b.isNil());
+}
+
+
+void
 test_int()
 {
 	printf("int1:\n");
 
 	gist a(123);
 	gist b = 456;
+	gist c;  c.set(789);
+	gist d(b);
 
-	printf("int1:\n");
+	printf("int2:\n");
 
 	assert((int)a == 123);
 	assert((int)b == 456);
+	assert((int)c == 789);
+	assert((int)(c - 790) == -1);
+	assert(b == d);
+	assert(d == 456);
+	assert((unsigned)d == 456);
 	b = 454;
 	assert((int)(a + b) == 577);
+	printf("a-b = %s (-331)\n", (const char *)((a - b).toString()));
+
+	printf("int3:\n");
+
+	a = "0x1000";
+	printf("%s = %ld\n", (const char *)a, a.toInt());
+	a = "z00";
+	printf("%s = %ld\n", (const char *)a, a.toInt(36));
+	a = "11110100001001000000";
+	printf("%s = %ld\n", (const char *)a, a.toInt(2));
 }
 
 
@@ -46,6 +78,7 @@ test_float()
 	printf("\t\"exact\" pi  = %la\n", pi0);
 	printf("\tconstant pi = %.30g\n", pi0);
 	printf("\tgist pi     = %.30g\n", (double)s);
+	printf("\tpi.toString = %s\n", (const char *)pi.toString());
 	assert((double)pi == (double)s);
 	assert(pi == s);
 }
@@ -67,6 +100,10 @@ test_string()
 	gist t("abcdefghijklmnopqrstuvwxyz");
 	s += t;
 	printf("\ts+t = %s\n", (const char *)s);
+
+	printf("string3:\n");
+
+	printf("\ttest many more string cases\n");
 }
 
 
@@ -77,6 +114,17 @@ test_subscript()
 	gist b = a[1.0f];
 
 	printf("b = %d\n", (int)b);
+}
+
+
+void
+test_misc()
+{
+	printf("misc1:\n");
+
+	printf("\tnot testing copy(gist)\n");
+	// .... ?.copy(const gist &);
+	// .... ?.copy(const gist *);
 }
 
 
@@ -101,6 +149,7 @@ main(int argc, char ** argv)
 
 	try
 	{
+		test_nil();
 		test_int();
 		test_float();
 		test_string();

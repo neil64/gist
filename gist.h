@@ -57,7 +57,7 @@ class gist
 	/*
 	 *	These should make Long's or Real's, but for now ...
 	 */
-	gist(long long v)			{ typ = GT_INT; val = v; }
+	gist(long long v)		{ typ = GT_INT; val = v; }
 	gist(unsigned long long v)	{ typ = GT_INT; val = v; }
 	gist(long double v)		{ typ = GT_FLOAT; dval = v; }
 
@@ -257,7 +257,7 @@ class gist
 	GIST_OPS2(gist, -)
 	GIST_OPS2(gist, *)
 	GIST_OPS2(gist, /)
-	GIST_OPS2(gist, %)
+	GIST_OPS1(gist, %)
 	GIST_OPS2a(bool, ==)
 	GIST_OPS2a(bool, !=)
 	GIST_OPS2a(bool, <)

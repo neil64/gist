@@ -4,6 +4,7 @@
  *	Contains:	set(char *), cons(char *), (char *)
  */
 
+#include	<stdio.h>
 #include	<string.h>
 #include	<memory.h>
 #include	<stdlib.h>
@@ -65,14 +66,14 @@ giStr::toInt(bool sign, unsigned base)
 		}
 	}
 
-	while ((c == *cp++))
+	while ((c = *cp++))
 	{
 		if (c >= '0' && c <= '9')
 			c -= '0';
 		else if (c >= 'A' && c <= 'Z')
-			c -= 'A';
+			c -= 'A' - 10;
 		else if (c >= 'a' && c <= 'z')
-			c -= 'a';
+			c -= 'a' - 10;
 		else
 			break;
 
@@ -309,7 +310,29 @@ gist::toString() const
 		}
 
 	case GT_FLOAT:
-		throw notYetError("toString");
+		{
+			int x;
+			char a[64];
+
+			double d = dval;
+			if (d < 0.0)
+				d = -d;
+
+			if (d < 1e-32)
+				x = snprintf(a, sizeof a, "%.48g", dval);
+			else
+				x = snprintf(a, sizeof a, "%.48f", dval);
+
+			if (x < 0)
+				x = 0;
+			else if ((unsigned)x >= sizeof a)
+				x = sizeof a - 1;
+
+			gist r;
+			r.copy(a, x);
+
+			return r;
+		}
 	}
 }
 

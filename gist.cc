@@ -86,6 +86,8 @@ gistInternal::free(void * p)
 
 /******************************/
 
+#if 0
+
 /*
  *	Coerce the types of the operands into suitable types for one of
  *	the operators +, -, *, /, %, ==, !=, <, >, <=, >=.
@@ -154,3 +156,5 @@ gist::_coerce1(const gist & l, const gist *& lp,
 
 	throw typeError(op);
 }
+
+#endif

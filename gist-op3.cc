@@ -13,18 +13,26 @@
 bool
 operator ==(const gist & l, const gist & r)
 {
-	gist x;
-	const gist * lp;
-	const gist * rp;
+	if (l.isFloat() || r.isFloat())
+		return l.toFloat() == r.toFloat();
+	else if (l.isInt() || r.isInt())
+		return l.toInt() == r.toInt();
+	else if (l.isStr() && r.isStr())
+		return l.strcmp(r) == 0;
+	else
+		throw gist::typeError("operator ==");
+}
 
-	gist::_coerce1(l, lp, r, rp, x, "==");
 
-	if (lp->isInt())
-		return lp->val == rp->val;
-	else if (lp->isFloat())
-		return lp->dval == rp->dval;
-	else // if (lp->isStr())
-		return lp->strcmp(*rp) == 0;
+bool
+operator ==(const gist & l, int r)
+{
+	if (l.isFloat())
+		return l.toFloat() == (double)r;
+	else if (l.isInt())
+		return l.val == r;
+	else
+		throw gist::typeError("operator -");
 }
 
 
