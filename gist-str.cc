@@ -232,7 +232,7 @@ gist::set(const char * s, int l)
 	if (l < 0)
 	{
 		sp->hasNull = true;
-		l = strlen(s);
+		l = ::strlen(s);
 	}
 	sp->size = l;
 
@@ -243,6 +243,7 @@ gist::set(const char * s, int l)
 	skip = 0;
 }
 
+/******************************/
 
 void
 gist::copy(const char * s, int l)
@@ -250,7 +251,7 @@ gist::copy(const char * s, int l)
 	giStr * sp = new giStr;
 	sp->index = 0;
 	if (l < 0)
-		l = strlen(s);
+		l = ::strlen(s);
 	sp->data = (char *)gistInternal::alloc(l+1);
 	memcpy(sp->data, s, l);
 	sp->data[l] = '\0';
@@ -263,6 +264,7 @@ gist::copy(const char * s, int l)
 	skip = 0;
 }
 
+/******************************/
 
 gist
 gist::toString() const
@@ -336,6 +338,7 @@ gist::toString() const
 	}
 }
 
+/******************************/
 
 int
 gist::strcmp(const gist & r) const
@@ -394,7 +397,7 @@ int
 gist::strcmp(const char * s) const
 {
 	gist l;
-	gist * lp;
+	const gist * lp;
 	gist r(s);
 
 	/*
@@ -412,6 +415,81 @@ gist::strcmp(const char * s) const
 	return lp->strcmp(r);
 }
 
+
+int
+strcmp(const gist & l, const char * r)
+{
+	gist lx;
+	const gist * lp;
+	gist rx(r);
+
+	/*
+	 *	If the left is not a string try to make it into one.
+	 */
+	if (l.isStr())
+		lp = &l;
+	else
+	{
+		lx = l.toString();
+		lp = &lx;
+	}
+
+	return lp->strcmp(rx);
+}
+
+
+int
+strcmp(const char * l, const gist & r)
+{
+	gist lx(l);
+	gist rx;
+	const gist * rp;
+
+	/*
+	 *	If the right is not a string try to make it into one.
+	 */
+	if (r.isStr())
+		rp = &r;
+	else
+	{
+		rx = r.toString();
+		rp = &rx;
+	}
+
+	return lx.strcmp(*rp);
+}
+
+
+int
+strcmp(const gist & l, const gist & r)
+{
+	gist lx;
+	const gist * lp;
+	gist rx;
+	const gist * rp;
+
+	/*
+	 *	Try to make both objects into strings.
+	 */
+	if (l.isStr())
+		lp = &l;
+	else
+	{
+		lx = l.toString();
+		lp = &lx;
+	}
+	if (r.isStr())
+		rp = &r;
+	else
+	{
+		rx = r.toString();
+		rp = &rx;
+	}
+
+	return lp->strcmp(*rp);
+}
+
+/******************************/
 
 unsigned
 gist::_strpiece(int & ix, const char *& pt) const
@@ -460,6 +538,16 @@ gist::strpiece(int & ix, const char *& pt) const
 	unsigned l = _strpiece(ix, pt);
 	if (l > 0)
 		((gist *)this)->unique = false;
+	return l;
+}
+
+
+unsigned
+strpiece(const gist & g, int & ix, const char *& pt)
+{
+	unsigned l = g._strpiece(ix, pt);
+	if (l > 0)
+		((gist &)g).unique = false;
 	return l;
 }
 
@@ -529,10 +617,10 @@ gist::strcat(const gist & r)
 			unsigned o;
 			if (!ls->index)
 				o = skip + cnt;
-			else if (!ls->data)
+			else if (!ls->chunk)
 				break;
 			else
-				o = ls->len;
+				o = ls->chunk->len;
 
 			unsigned l = rp->cnt;
 			if (l > (ls->size - o))
@@ -544,9 +632,10 @@ gist::strcat(const gist & r)
 			 */
 			strcopy(&ls->data[o], *rp);
 			cnt += l;
-			ls->len += l;
 			if (!ls->index)
 				ls->hasNull = false;
+			else
+				ls->chunk->len += l;
 			return;
 
 		} while (0);
@@ -598,7 +687,8 @@ gist::strcat(const gist & r)
 		ls->index->max += rp->cnt;
 
 		ls->data = cp->data;
-		ls->len = rp->cnt;
+		// ls->len = rp->cnt;
+		ls->chunk = cp;
 		ls->size = strChunk;
 
 		cnt += rp->cnt;
@@ -626,7 +716,8 @@ gist::strcat(const gist & r)
 	if (!ls->index)
 		ls->makeMulti(skip + cnt);
 
-	ls->data = 0;
+	// ls->data = 0;
+	ls->chunk = 0;
 	((gist *)this)->unique = false;
 	((gist *)rp)->unique = false;
 
@@ -680,6 +771,23 @@ gist::strcat(const char * r)
 {
 	gist rx(r);
 	strcat(rx);
+}
+
+
+void
+strcat(gist & g, int c)
+{
+	char a[2] = { c, '\0' };
+	gist cx(a);
+	g.strcat(cx);
+}
+
+
+void
+strcat(gist & g, const char * r)
+{
+	gist rx(r);
+	g.strcat(rx);
 }
 
 /************************************************************/

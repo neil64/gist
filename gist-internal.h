@@ -149,6 +149,27 @@ class giIndexStr
 
 /******************************/
 
+/*
+ *	A string chunk.  Used to store pieces of strings in the skip list.
+ *	`data' is the string data, `len' is the string length;  `data0'
+ *	points to the start of the string storage chunk.  It is not used
+ *	other than to create a reference for the garbage collector, since
+ *	we promise the GC that we would not have internal references.
+ */
+struct giChunk
+{
+	char *		data;
+	unsigned	len;
+	char *		data0;
+};
+
+/******************************/
+
+/*
+ *	`gistInternal' is a class that is mentioned in the main `gist'
+ *	class as a generic name for internal data.  We don't store anything
+ *	there;  we jsut use it as a handy place to put a few methods.
+ */
 struct gistInternal
 {
 	void *		operator new(unsigned);
@@ -209,7 +230,8 @@ struct giStr : gistInternal
 	char *		data;
 	unsigned	size;
 	union {
-		unsigned	len;
+		// unsigned	len;
+		giChunk *	chunk;
 		bool		hasNull;
 	};
 
@@ -218,20 +240,6 @@ struct giStr : gistInternal
 	void		makeMulti(unsigned len);
 	long		toInt(bool sign, unsigned base);
 	double		toFloat();
-};
-
-/*
- *	A string chunk.  Used to store pieces of strings in the skip list.
- *	`data' is the string data, `len' is the string length;  `data0'
- *	points to the start of the string storage chunk.  It is not used
- *	other than to create a reference for the garbage collector, since
- *	we promise the GC that we would not have internal references.
- */
-struct giChunk
-{
-	char *		data;
-	unsigned	len;
-	char *		data0;
 };
 
 /**********************************************************************/

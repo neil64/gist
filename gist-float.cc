@@ -25,6 +25,7 @@ gist::toFloat() const
 		throw valueError("toFloat");
 
 	case GT_STR:
+		_strflatten();
 		return ((giStr *)ptr)->toFloat();
 
 	case GT_INT:

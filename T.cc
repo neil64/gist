@@ -15,6 +15,9 @@ gist ga[10] =
 	1, 2, 3, "abc", 4.5
 };
 
+const char *	ascii = " !\"#$%&'()*+,-./0123456789:;<=>?"
+			"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+			"`abcdefghijklmnopqrstuvwxyz{|}~";
 
 
 void
@@ -405,7 +408,25 @@ test_string()
 
 	printf("string3:\n");
 
-	printf("\ttest many more string cases\n");
+	int i;
+	s = "";
+	for (i = 32; i < 126; i++)
+		s.strcat(i);
+	const char * cp = s.CCS();
+	printf("\tstrlen(s):  %d, %d, %d\n", s.strlen(), strlen(s), strlen(cp));
+	printf("\ts: %.64s\n\t   %.64s\n", cp, cp+64);
+	// printf("\ts: %.64s\n", s.CCS());
+	// printf("\ts: %.64s\n", s.CCS() + 64);
+
+	s = "";
+	for (i = 32; i < 126; i += 2)
+	{
+		char a[3] = { i, i+1, 0 };
+		strcat(s, a);
+	}
+	cp = s.CCS();
+	printf("\tstrlen(s):  %d, %d, %d\n", s.strlen(), strlen(s), strlen(cp));
+	printf("\ts: %.64s\n\t   %.64s\n", cp, cp+64);
 }
 
 

@@ -535,13 +535,29 @@ class gist
 	/*
 	 *	Strings.
 	 */
+	unsigned	strlen() const
+					{ return typ == GT_STR ? cnt : 0; }
+	friend unsigned	strlen(const gist & g)
+					{ return g.typ == GT_STR ? g.cnt : 0; }
+
 	int		strcmp(const char *) const;
 	int		strcmp(const gist &) const;
+	friend int	strcmp(const gist &, const char *);
+	friend int	strcmp(const char *, const gist &);
+	friend int	strcmp(const gist &, const gist &);
+
 	unsigned	strpiece(int & index, const char *& ptr) const;
+	friend unsigned	strpiece(const gist &, int & index, const char *& ptr);
 
 	void		strcat(int);
 	void		strcat(const char *);
 	void		strcat(const gist &);
+	friend void	strcat(gist &, int);
+	friend void	strcat(gist &, const char *);
+	friend void	strcat(gist &, const gist &);
+	friend void	strcat(char *, const gist &);
+	friend void	strncat(char *, const gist &, unsigned);
+
 	void		strins(int);
 	void		strins(const char *);
 	void		strins(const gist &);
