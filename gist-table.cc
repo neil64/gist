@@ -15,8 +15,7 @@
 /**********************************************************************/
 
 /*
- *	Create a new array of `length', or change the size of an existing
- *	array to `length'.
+ *	Create a new table, or clear the current table.
  */
 gist &
 gist::table(bool clear)
@@ -26,7 +25,7 @@ gist::table(bool clear)
 		giTable * ap = new giTable;
 
 		typ = GT_TABLE;
-		ptr = ap;
+		intern = ap;
 	}
 
 	return *this;
@@ -50,7 +49,7 @@ gist::_tableindex(const gist & i, bool make)
 	 *	So, `make' is ignored, and we always build a new element when
 	 *	`i' doesn't match, even when the subscript is an r-value.
 	 */
-	giTable * tp = (giTable *)ptr;
+	giTable * tp = (giTable *)intern;
 	gistKey * k = tp->index.search(i, true);
 	if (!k)
 		throw internalError("table entry was not built as "
@@ -62,7 +61,7 @@ gist::_tableindex(const gist & i, bool make)
 	/*
 	 *	This is how it should be;  see above.
 	 */
-	giTable * tp = (giTable *)ptr;
+	giTable * tp = (giTable *)intern;
 	gistKey * k = tp->index.search(i, make);
 	if (!k)
 		throw indexError("table index does not exist");

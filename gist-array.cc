@@ -25,11 +25,11 @@ gist::array(unsigned l)
 		ap->cache = 0;
 
 		typ = GT_ARRAY;
-		ptr = ap;
+		intern = ap;
 	}
 	else
 	{
-		giArray * ap = (giArray *)ptr;
+		giArray * ap = (giArray *)intern;
 
 		if (l < ap->len)
 		{
@@ -63,7 +63,7 @@ gist::array(unsigned l)
 gist &
 gist::_arrayindex(long i)
 {
-	giArray * ap = (giArray *)ptr;
+	giArray * ap = (giArray *)intern;
 
 	if (i < 0)
 		i = ap->len + i;
@@ -103,7 +103,7 @@ gist::push(const gist & v)
 {
 	if (typ != GT_ARRAY)
 		throw typeError("push expects an array");
-	array(((giArray *)ptr)->len + 1);
+	array(((giArray *)intern)->len + 1);
 	(*this)[-1] = v;
 }
 
@@ -114,6 +114,6 @@ gist::pop()
 	if (typ != GT_ARRAY)
 		throw typeError("pop expects an array");
 	gist * r = new gist((*this)[-1]);
-	array(((giArray *)ptr)->len - 1);
+	array(((giArray *)intern)->len - 1);
 	return *r;
 }

@@ -27,7 +27,7 @@ gist::substr(int s, unsigned c) const
 		r.typ = GT_STR;
 		r.unique = false;
 		((gist *)this)->unique = false;
-		r.ptr = ptr;
+		r.intern = intern;
 
 		r.skip = skip + s;
 		r.cnt = cnt - s;

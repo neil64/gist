@@ -337,13 +337,13 @@ class gist
 	};
 	type_e		type() const		{ return typ; }
 
-	int		isNil() const		{ return typ == GT_NIL; }
-	int		isInt() const		{ return typ == GT_INT; }
-	int		isFloat() const		{ return typ == GT_FLOAT; }
-	int		isStr() const		{ return typ == GT_STR; }
-	int		isNumber() const	{ return typ >= GT_INT; }
-	int		isArray() const		{ return typ == GT_ARRAY; }
-	int		isTable() const		{ return typ == GT_TABLE; }
+	bool		isNil() const		{ return typ == GT_NIL; }
+	bool		isInt() const		{ return typ == GT_INT; }
+	bool		isFloat() const		{ return typ == GT_FLOAT; }
+	bool		isStr() const		{ return typ == GT_STR; }
+	bool		isNumber() const	{ return typ >= GT_INT; }
+	bool		isArray() const		{ return typ == GT_ARRAY; }
+	bool		isTable() const		{ return typ == GT_TABLE; }
 
 	/********************************/
 	/*
@@ -465,7 +465,7 @@ class gist
 		 *  A pointer to internal data, if required.  For string
 		 *  and array types, this is the string / array storage.
 		 */
-		struct gistInternal * ptr;	// Internal data
+		struct gistInternal * intern;	// Internal data
 
 		union
 		{
@@ -505,7 +505,7 @@ class gist
 	    struct {
 		type_e typ:8;
 		bool unique;
-		struct gistInternal * ptr;
+		struct gistInternal * intern;
 		union {
 		    long val;
 		    double dval;
@@ -603,6 +603,9 @@ class gist
 	 *	Tables.
 	 */
 	gist &		table(bool clear = false);
+	void		tblset(gist & key, gist & val);
+	void		tbladd(gist & key, gist & val);
+	void		tbldel(gist & key, gist & val);
 
 	/*
 	 *	Generic methods.

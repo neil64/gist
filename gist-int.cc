@@ -28,7 +28,7 @@ gist::operator long() const
 			try
 			{
 				_strflatten();
-				return ((giStr *)ptr)->toInt(true, 10);
+				return ((giStr *)intern)->toInt(true, 10);
 			}
 			catch (valueError)	{}
 			catch (overflowError)	{}
@@ -69,7 +69,7 @@ gist::operator unsigned long() const
 			try
 			{
 				_strflatten();
-				return ((giStr *)ptr)->toInt(false, 10);
+				return ((giStr *)intern)->toInt(false, 10);
 			}
 			catch (valueError)	{}
 			catch (overflowError)	{}
@@ -108,7 +108,7 @@ gist::toInt(unsigned base) const
 
 	case GT_STR:
 		_strflatten();
-		return ((giStr *)ptr)->toInt(true, base);
+		return ((giStr *)intern)->toInt(true, base);
 
 	case GT_INT:
 		return val;

@@ -170,7 +170,7 @@ gist::_strcast(bool rw) const
 		gp = &x;
 	}
 
-	giStr * sp = (giStr *)gp->ptr;
+	giStr * sp = (giStr *)gp->intern;
 
 	if (sp->index || !sp->hasNull || (!unique && rw))
 		_strflatten();
@@ -188,7 +188,7 @@ gist::_strflatten() const
 	 *	the same (const in principal).
 	 */
 	gist * gp = (gist *)this;
-	giStr * sp = (giStr *)gp->ptr;
+	giStr * sp = (giStr *)gp->intern;
 	unsigned l = gp->cnt;
 
 	if (!sp->index && gp->unique)
@@ -222,7 +222,7 @@ gist::_strzero()
 	if (!isStr())		// (should never happen)
 		return;
 
-	giStr * sp = (giStr *)ptr;
+	giStr * sp = (giStr *)intern;
 
 	sp->index = 0;
 	sp->data = 0;
@@ -269,7 +269,7 @@ gist::set(const char * s, int l)
 
 	typ = GT_STR;
 	unique = false;		// 'cause the caller may use it for other
-	ptr = sp;		// things, and 'cause it could be in read-
+	intern = sp;		// things, and 'cause it could be in read-
 	cnt = l;		// only memory, and other reasons.
 	skip = 0;
 }
@@ -293,7 +293,7 @@ gist::copy(const char * s, int l)
 
 	typ = GT_STR;
 	unique = true;
-	ptr = sp;
+	intern = sp;
 	cnt = l;
 	skip = 0;
 }
@@ -380,7 +380,7 @@ gist::strcmp(const gist & r) const
 	if (this == &r)
 		return 0;
 
-	if (ptr == r.ptr && skip == r.skip)
+	if (intern == r.intern && skip == r.skip)
 	{
 		if (cnt == r.cnt)
 			return 0;
@@ -532,7 +532,7 @@ gist::_strpiece(int & ix, const char *& pt) const
 	if (i < 0 || (unsigned)i >= cnt)
 		return 0;
 
-	giStr * sp = (giStr *)ptr;
+	giStr * sp = (giStr *)intern;
 
 	/*
 	 *	If the string is single, it's easy.
@@ -632,8 +632,8 @@ gist::strcat(const gist & r)
 		return;
 	}
 
-	giStr * ls = (giStr *)ptr;
-	giStr * rs = (giStr *)rp->ptr;
+	giStr * ls = (giStr *)intern;
+	giStr * rs = (giStr *)rp->intern;
 
 	/*
 	 *	If the right side length is less than the copy limit,
@@ -707,7 +707,7 @@ gist::strcat(const gist & r)
 			strcpy(&nls->data[cnt], *rp);
 
 			unique = true;
-			ptr = nls;
+			intern = nls;
 			skip = 0;
 			cnt += rp->cnt;
 
