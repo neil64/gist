@@ -17,24 +17,60 @@
 gist
 gist::substr(int s, unsigned c) const
 {
-	if (!isStr())
+	unsigned sc;
+	gist r;
+	r.typ = GT_SSTR;
+	r.scnt = 0;
+
+	switch (typ)
+	{
+	default:
 		throw typeError("substr() expects a string");
 
-	gist r;
+	case GT_SSTR:
+		if (s < 0)
+			s = 0;
+		sc = scnt;
+		if (s < (int)sc && c > 0)
+		{
+			sc -= s;
+			if (sc > c)
+				sc = c;
+			memcpy(&r.sstr[0], &sstr[s], sc);
+			r.scnt = sc;
+		}
+		break;
 
-	if (s < -(int)skip)
-		s = -(int)skip;
-	if (s < (int)cnt && c > 0)
-	{
-		r.typ = GT_STR;
-		r.unique = false;
-		((gist *)this)->unique = false;
-		r.intern = intern;
+	case GT_MSTR:
+		if (s < 0)
+			s = 0;
+		sc = str.cnt;
+		if (s < (int)sc && c > 0)
+		{
+			r.str.dat = str.dat + s;
+			sc -= s;
+			if (sc > c)
+				sc = c;
+			r.str.cnt = sc;
+		}
+		break;
 
-		r.skip = skip + s;
-		r.cnt = cnt - s;
-		if (r.cnt > c)
-			r.cnt = c;
+	case GT_LSTR:
+		if (s < -(int)str.skp)
+			s = -(int)str.skp;
+		if (s < (int)str.cnt && c > 0)
+		{
+			r.typ = GT_LSTR;
+			r.unique = false;
+			((gist *)this)->unique = false;
+			r.str.idx = str.idx;
+
+			r.str.skp = str.skp + s;
+			r.str.cnt = str.cnt - s;
+			if (r.str.cnt > c)
+				r.str.cnt = c;
+		}
+		break;
 	}
 
 	return r;
@@ -44,22 +80,61 @@ gist::substr(int s, unsigned c) const
 void
 gist::strtrim(int s, unsigned c)
 {
-	if (!isStr())
+	unsigned sc;
+
+	switch (typ)
+	{
+	default:
 		throw typeError("strtrim() expects a string");
 
-	if (s < -(int)skip)
-		s = -(int)skip;
-	if (s < (int)cnt && c > 0)
-	{
-		skip += s;
-		cnt -= s;
-		if (cnt > c)
-			cnt = c;
-	}
-	else
-	{
-		skip = 0;
-		cnt = 0;
+	case GT_SSTR:
+		if (s < 0)
+			s = 0;
+		sc = scnt;
+		if (s < (int)sc && c > 0)
+		{
+			sc -= s;
+			if (sc > c)
+				sc = c;
+			memcpy(&sstr[0], &sstr[s], sc);
+			scnt = sc;
+		}
+		else
+			scnt = 0;
+		break;
+
+	case GT_MSTR:
+		if (s < 0)
+			s = 0;
+		sc = str.cnt;
+		if (s < (int)sc && c > 0)
+		{
+			str.dat += s;
+			sc -= s;
+			if (sc > c)
+				sc = c;
+			str.cnt = sc;
+		}
+		else
+			str.cnt = 0;
+		break;
+
+	case GT_LSTR:
+		if (s < -(int)str.skp)
+			s = -(int)str.skp;
+		if (s < (int)str.cnt && c > 0)
+		{
+			str.skp += s;
+			str.cnt -= s;
+			if (str.cnt > c)
+				str.cnt = c;
+		}
+		else
+		{
+			str.skp = 0;
+			str.cnt = 0;
+		}
+		break;
 	}
 }
 
@@ -79,7 +154,7 @@ strlower(const gist & g)
 		throw gist::typeError("strlower expects a string");
 
 	gist r;
-	char * rp = r.strbuf(g.cnt);
+	char * rp = r.strbuf(g.strlen());
 
 	unsigned gl = 0;
 	int gi = 0;
@@ -114,7 +189,7 @@ strupper(const gist & g)
 		throw gist::typeError("strupper expects a string");
 
 	gist r;
-	char * rp = r.strbuf(g.cnt);
+	char * rp = r.strbuf(g.strlen());
 
 	unsigned gl = 0;
 	int gi = 0;
@@ -404,8 +479,9 @@ strsplit(const gist & str, const gist & sep)
 		r._strsplit(str);
 	else
 	{
-		sep._strflatten();
-		r._strsplit(str, sep.CCS(), sep.strlen());
+		unsigned l;
+		char * sp = sep._strflatten(false, false, &l);
+		r._strsplit(str, sp, l);
 	}
 	return r;
 }
@@ -415,7 +491,7 @@ strsplit(const gist & str, const gist & sep)
 bool
 strtrue(const gist & g)
 {
-	if (g.typ != gist::GT_STR)
+	if (!g.isStr())
 		return (bool)g;
 
 	if (strncasecmp(g, "t") == 0 ||

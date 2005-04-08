@@ -24,7 +24,9 @@ gist::operator -() const
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 	default:
 		throw typeError("unary -");
 
@@ -55,7 +57,9 @@ gist::operator ~() const
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 	case GT_FLOAT:
 	default:
 		throw typeError("operator ~");
@@ -85,8 +89,16 @@ gist::operator !() const
 	default:
 		throw typeError("operator !");
 
-	case GT_STR:
-		if (cnt > 0)
+	case GT_SSTR:
+		if (scnt > 0)
+			x.clear();
+		else
+			x = 1;
+		break;
+
+	case GT_MSTR:
+	case GT_LSTR:
+		if (str.cnt > 0)
 			x.clear();
 		else
 	case GT_NIL:
@@ -118,7 +130,9 @@ gist::operator ++()
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 	default:
 		throw typeError("pre-increment");
 
@@ -149,7 +163,9 @@ gist::operator ++(int)
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 	default:
 		throw typeError("post-increment");
 
@@ -178,7 +194,9 @@ gist::operator --()
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 	default:
 		throw typeError("pre-decrement");
 
@@ -209,7 +227,9 @@ gist::operator --(int)
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 	default:
 		throw typeError("post-decrement");
 

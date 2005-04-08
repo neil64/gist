@@ -22,74 +22,6 @@ const char *	ascii = " !\"#$%&'()*+,-./0123456789:;<=>?"
 
 
 void
-printGist(gist & g)
-{
-	switch (g.type())
-	{
-	case gist::GT_NIL:
-		printf("nil");
-		break;
-
-	case gist::GT_STR:
-		printf("str(intern=%x, skip=%d, cnt=%d) = \"",
-					(unsigned)g.intern, g.skip, g.cnt);
-		fflush(stdout);
-		{
-			int si = 0;
-			unsigned sl;
-			const char * sp;
-
-			for (;;)
-			{
-				sl = g.strpiece(si, sp);
-				if (sl == 0)
-					break;
-				printf("%.*s", sl, sp);
-			}
-		}
-		printf("\"");
-		break;
-
-	case gist::GT_ARRAY:
-		printf("array");
-		break;
-
-	case gist::GT_TABLE:
-		printf("table");
-		break;
-
-	case gist::GT_PTR:
-		printf("ptr");
-		break;
-
-	case gist::GT_CODE:
-		printf("code");
-		break;
-
-	case gist::GT_INT:
-		printf("int = %ld", (long)g);
-		break;
-
-	case gist::GT_FLOAT:
-		printf("float = %g", (double)g);
-		break;
-
-	case gist::GT_LONG:
-		printf("long");
-		break;
-
-	case gist::GT_REAL:
-		printf("real");
-		break;
-
-	default:
-		printf("huh?");
-		break;
-	}
-}
-
-
-void
 test_init()
 {
 	unsigned i;
@@ -98,9 +30,8 @@ test_init()
 
 	for (i = 0; i < sizeof ga / sizeof ga[0]; i++)
 	{
-		printf("\t%d: ", i);
-		printGist(ga[i]);
-		printf("\n");
+		printf("  %d:\n", i);
+		GistPr1(&ga[i], 3);
 	}
 
 	printf("init2:\n");
@@ -438,19 +369,19 @@ split(const char * str, const char * sep)
 {
 	gist s = str;
 	printf("\tsplit: ");
-	printGist(s);
+	GistPr1(&s);
 	printf("\n");
 	gist t = strsplit(s, sep);
 
 	printf("\tsplit into array of len = %d:\n", len(t));
 	printf("\tsplit: ");
-	printGist(s);
+	GistPr1(&s);
 	printf("\n");
 
 	for (int i = 0; i < (int)len(t); i++)
 	{
 		printf("\t\t%d: ", i);
-		printGist(t[i]);
+		GistPr1(&t[i]);
 		printf("\n");
 	}
 	printf("\n");
@@ -527,7 +458,7 @@ test_array()
 	for (unsigned i = 0; i < a.len(); i++)
 	{
 		printf("\t%2d: ", i);
-		printGist(a[i]);
+		GistPr1(&a[i]);
 		printf("\n");
 	}
 
@@ -539,7 +470,7 @@ test_array()
 
 	a.array(16);
 	printf("\tnew element 16 = ");
-	printGist(a[15]);
+	GistPr1(&a[15]);
 	printf("\n");
 
 	printf("array2:\n");

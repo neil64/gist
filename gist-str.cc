@@ -17,20 +17,29 @@
  */
 
 /*
- *	Convert a gist object to a null terminated string and return it.
- *	Note that we promise not to change the object (const), but we may
- *	do anyhow, except that the change will not effect the value of the
- *	object (that is, we may flatten the string or move it to add a '\0',
- *	but the value will remain the same).
- *
- *	It is tempting to leave `unique' set on the string if `rw' is false,
- *	since the caller is promising not to change the string.  However,
- *	I decided that the returned string should remain valid no matter
- *	what -- if `unique' remains set, and the original gist is modified,
- *	then the returned string becomes invalid.
  */
-char *
-gist::_strcast(bool rw) const
+unsigned
+gist::_strlen() const
+{
+	if (!isStr())
+		return 0;
+
+	if (typ == GT_SSTR)
+		return scnt;
+
+	return str.cnt;
+}
+
+
+/*
+ *	Return a pointer to the string.  Ensure that the string is '\0'
+ *	terminated.  The returned pointer is only valid so long as the
+ *	original string is not changed.  The returned string does not
+ *	necessarily reflect changes made to the original;  if the original
+ *	is changed, CCS() should be called again.
+ */
+const char *
+gist::CCS() const
 {
 	gist x;
 	gist * gp;
@@ -43,73 +52,138 @@ gist::_strcast(bool rw) const
 		gp = &x;
 	}
 
-	giStr * sp = (giStr *)gp->intern;
-	unsigned sk;
-	unsigned l = gp->cnt;
-
-	if (l == 0)
-		return "";
-
-	if (sp->index ||
-	    (!unique && rw) ||
-	    (sk = gp->skip) + l >= sp->size ||
-	    sp->data[sk+l] != '\0')
-	{
-		gp->_strflatten();
-	}
-
-	gp->unique = false;
-	return ((giStr *)gp->intern)->data + gp->skip;
+	/*
+	 *	Make sure the string is contiguous in memory and has a
+	 *	'\0' on the end of it.  Note that we do no change `unique'.
+	 */
+	return gp->_strflatten(false, true, 0);
 }
 
 
-void
-gist::_strflatten() const
+/*
+ *	Flatten a string.  Once complete, the string storage for this
+ *	gist will be one contiguous area of memory.  If `rw' is set, the
+ *	resulting string will only be referenced by this gist, and thus
+ *	can be modified in place.  If `need0' is true, the string will
+ *	also have a '\0' appended to it (if necessary), so that it can be
+ *	used directly as a C string.  A pointer to the first character in
+ *	the string storage is returned.	 If `len' is non-NIL, the string
+ *	length is stored there.	 Note that the resulting string could be
+ *	a GT_SSTR or a GT_MSTR but never a GT_LSTR.
+ */
+char *
+gist::_strflatten(bool rw, bool need0, unsigned * len) const
 {
 	/*
-	 *	We will change this gist, but the resulting value will be
-	 *	the same (const in principal).
+	 *	We cast away the const.	 We will change this gist, but the
+	 *	resulting value will be the same (const in principal).
 	 */
 	gist * gp = (gist *)this;
-	giStr * sp = (giStr *)gp->intern;
-	unsigned l = gp->cnt;
+	unsigned l;
+	char * p;
 
-	if (!sp->index)
+	switch (gp->typ)
 	{
-		char * dp = sp->data;
-		unsigned sk = gp->skip;
+	case GT_SSTR:
+		p = &gp->sstr[0];
+		l = gp->scnt;
 
-		if (dp[sk+l] == '\0')
-			return;
-
-		if (gp->unique && l < sp->size)
+		if (need0)
 		{
-			if (sk + l >= sp->size)
-			{
-				memmove(&sp->data[0], &sp->data[sk], l);
-				gp->skip = sk = 0;
-			}
-			sp->data[sk + l] = '\0';
-			return;
+			if (l >= sizeof gp->sstr)
+				goto make_mstr;
+			p[l] = '\0';
 		}
-	}
 
-	l++;				// space for a '\0'
-	char * cp = (char *)gistInternal::strAlloc(l);
-	(void)strcpy(cp, *gp);
+		goto done;
 
-	if (gp->unique)
-		sp->index = 0;
-	else
-	{
-		sp = new giStr;
-		gp->intern = sp;
+	case GT_MSTR:
+		p = gp->str.dat;
+		l = gp->str.cnt;
+
+		/*
+		 *	Figure out if we can use the current storage or if
+		 *	we need to make a copy.
+		 */
+		if (rw && !gp->unique)
+		{
+			/*
+			 *	Copy, because the caller needs to write to
+			 *	the storage and it appears that we share the
+			 *	storage with another string.
+			 */
+			goto make_mstr;
+		}
+
+		if (need0)
+		{
+			/*
+			 *	The caller expects a C string.
+			 */
+			if (l >= gp->str.sz)
+			{
+				/*
+				 *	Copy, because there is no space to
+				 *	put a '\0'.
+				 */
+				goto make_mstr;
+			}
+
+			if (p[l] != '\0')
+			{
+				if (!gp->unique)
+				{
+					/*
+					 *	Copy, because there is no
+					 *	'\0', and the storage appears
+					 *	to be shared, so we can't
+					 *	just put a '\0' there.
+					 */
+					goto make_mstr;
+				}
+
+				/*
+				 *	We can modify our own storage, and
+				 *	there is space, so put a '\0' at the
+				 *	end of the string.
+				 */
+				p[l] = '\0';
+			}
+		}
+
+		/*
+		 *	It appears that we can just return the current
+		 *	storage;  no need to copy.
+		 */
+		goto done;
+
+		/*
+		 *	Make a new copy of the string;	make it a GT_MSTR.
+		 *	This could be as a result of less than ideal
+		 *	conditions from above, or because the string is a
+		 *	GT_LSTR, which we can't deal with at all.
+		 */
+	make_mstr:
+	case GT_LSTR:
+		p = (char *)gistInternal::strAlloc(l+1);
+		strcpy(p, *gp, 0, l + 1);	// This adds a '\0' for us.
+
+		gp->str.cnt = l;
+		gp->str.sz = l + 1;
+		gp->str.dat = p;
+		gp->typ = GT_MSTR;
 		gp->unique = true;
+
+		goto done;
+
+	default:
+		throw typeError("strflatten");
 	}
 
-	sp->data = cp;
-	sp->size = l;
-	gp->skip = 0;
+  done:
+	if (len)
+		*len = l;
+	return p;
 }
 
 /**********************************************************************/
@@ -120,51 +194,36 @@ gist::_strflatten() const
  */
 
 /*
- *	gist::set() will be a very commonly used function, particularly
- *	the first "C string" version.  It is coded fairly carefully.
- *	In particular we could have a single version that took a default
- *	length argument, but that would cause the compiler to provide the
- *	default in application code for every call.  So, there are two
- *	versions of set().
+ *	gist::set() is a very commonly used function, particularly the first
+ *	"C string" version.  It is coded fairly carefully.  In particular we
+ *	could have a single version that took a default length argument, but
+ *	that would cause the compiler to provide the default in application
+ *	code for every call.  So, there are two versions of set().
  */
 void
 gist::set(const char * s)
 {
-	giStr * sp;
-
-	if (!s || !*s)
-	{
-		if (typ == GT_STR)
-			sp = (giStr *)intern;
-		else
-		{
-			sp = new giStr;
-			sp->data = "";
-			typ = GT_STR;
-			unique = false;
-			intern = sp;
-		}
-		skip = 0;
-		cnt = 0;
-
-		return;
-	}
-
-	sp = new giStr;
 	unsigned l;
 
-#if 0
-	if (!s || !*s)
+	if (!s)
 	{
-		sp->data = "";
 		l = 0;
-		goto hop;
+		goto ss;
 	}
-#endif
 
 	l = ::strlen(s);
 
-	if (gistInternal::isReadOnlyData(s))
+	if (l <= sizeof sstr)
+	{
+  ss:
+		typ = GT_SSTR;
+		scnt = l;
+		if (l > 0)
+			memcpy(sstr, s, l);
+		if (l < sizeof sstr)
+			sstr[l] = '\0';
+	}
+	else if (gistInternal::isReadOnlyData(s))
 	{
 		/*
 		 *	If the C string is in read only memory, we can
@@ -174,25 +233,27 @@ gist::set(const char * s)
 		 *	following assignment, we deliberately cast away
 		 *	the const, but since `unique' is set to false
 		 *	below, we will never attempt to modify the data.
+		 *
+		 *	We mark the string as not unique because the
+		 *	caller may use it for other reasons and because
+		 *	it is in read-only memory.
 		 */
-		sp->data = (char *)s;
+		str.cnt = l;
+		str.sz = l + 1;
+		str.dat = (char *)s;
+		typ = GT_MSTR;
+		unique = false;
 	}
 	else
 	{
-		sp->data = (char *)gistInternal::strAlloc(l+1);
-		memcpy(sp->data, s, l);
-		sp->data[l] = '\0';
+		str.cnt = l;
+		str.sz = l + 1;
+		str.dat = (char *)gistInternal::strAlloc(l+1);
+		memcpy(str.dat, s, l);
+		str.dat[l] = '\0';
+		typ = GT_MSTR;
+		unique = true;
 	}
-
-  // hop:
-	// sp->index = 0;
-	sp->size = l + 1;	// Size includes the '\0' to help _strflatten()
-
-	typ = GT_STR;
-	unique = false;		// 'cause the caller may use it for other
-	intern = sp;		// things, and 'cause it could be in read-
-	cnt = l;		// only memory, and other reasons.
-	skip = 0;
 }
 
 /******************************/
@@ -200,25 +261,26 @@ gist::set(const char * s)
 void
 gist::set(const char * s, int l)
 {
-	if (l < 0)
+	if (!s)
 	{
-		set(s);
-		return;
-	}
-
-	giStr * sp = new giStr;
-
-	if (!s || l == 0)
-	{
-		/*
-		 *	If we were not given any data, just be nice.
-		 */
-		sp->data = "";
 		l = 0;
-		goto hop;
+		goto ss;
 	}
 
-	if (gistInternal::isReadOnlyData(s))
+	if (l < 0)
+		l = ::strlen(s);
+
+	if ((unsigned)l <= sizeof sstr)
+	{
+  ss:
+		typ = GT_SSTR;
+		scnt = l;
+		if (l > 0)
+			memcpy(sstr, s, l);
+		if ((unsigned)l < sizeof sstr)
+			sstr[l] = '\0';
+	}
+	else if (gistInternal::isReadOnlyData(s))
 	{
 		/*
 		 *	If the C string is in read only memory, we can
@@ -228,25 +290,27 @@ gist::set(const char * s, int l)
 		 *	following assignment, we deliberately cast away
 		 *	the const, but since `unique' is set to false
 		 *	below, we will never attempt to modify the data.
+		 *
+		 *	We mark the string as not unique because the
+		 *	caller may use it for other reasons and because
+		 *	it is in read-only memory.
 		 */
-		sp->data = (char *)s;
+		str.cnt = l;
+		str.sz = l + 1;
+		str.dat = (char *)s;
+		typ = GT_MSTR;
+		unique = false;
 	}
 	else
 	{
-		sp->data = (char *)gistInternal::strAlloc(l+1);
-		memcpy(sp->data, s, l);
-		sp->data[l] = '\0';
+		str.cnt = l;
+		str.sz = l + 1;
+		str.dat = (char *)gistInternal::strAlloc(l+1);
+		memcpy(str.dat, s, l);
+		str.dat[l] = '\0';
+		typ = GT_MSTR;
+		unique = true;
 	}
-
-  hop:
-	// sp->index = 0;
-	sp->size = l + 1;	// Size includes the '\0' to help _strflatten()
-
-	typ = GT_STR;
-	unique = false;		// 'cause the caller may use it for other
-	intern = sp;		// things, and 'cause it could be in read-
-	cnt = l;		// only memory, and other reasons.
-	skip = 0;
 }
 
 /******************************/
@@ -256,9 +320,25 @@ gist::copy(const char * s, int l)
 {
 	if (l < 0)
 		l = ::strlen(s);
-	char * cp = strbuf(l + 1);			// space for a '\0'.
-	memcpy(cp, s, l);
-	cp[l] = '\0';
+
+	if ((unsigned)l <= sizeof sstr)
+	{
+		memcpy(sstr, s, l);
+		if ((unsigned)l < sizeof sstr)
+			sstr[l] = '\0';
+		typ = GT_SSTR;
+		scnt = l;
+	}
+	else
+	{
+		str.cnt = l;
+		str.sz = l + 1;
+		str.dat = (char *)gistInternal::strAlloc(l+1);
+		memcpy(str.dat, s, l);
+		str.dat[l] = '\0';
+		typ = GT_MSTR;
+		unique = true;
+	}
 }
 
 /******************************/
@@ -278,7 +358,9 @@ gist::toString() const
 	default:
 		throw typeError("toString");
 
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 		return *this;
 
 	case GT_INT:
@@ -341,18 +423,11 @@ gist::toString() const
 int
 gist::strcmp(const gist & r) const
 {
+	if (!isStr() || !r.isStr())
+		throw typeError("strcmp");
+
 	if (this == &r)
 		return 0;
-
-	if (intern == r.intern && skip == r.skip)
-	{
-		if (cnt == r.cnt)
-			return 0;
-		else if (cnt < r.cnt)
-			return -1;
-		else
-			return 1;
-	}
 
 	unsigned ll = 0, rl = 0;
 	int li = 0, ri = 0;
@@ -493,29 +568,36 @@ unsigned
 gist::_strpiece(int & ix, const char *& pt) const
 {
 	int i = ix;
-	if (i < 0 || (unsigned)i >= cnt)
+	if (i < 0)
 		return 0;
 
-	giStr * sp = (giStr *)intern;
-
-	/*
-	 *	If the string is single, it's easy.
-	 */
-	if (!sp->index)
+	if (typ == GT_SSTR)
 	{
-		pt = &((const char *)sp->data)[skip];
-		ix = cnt;
-		return cnt;
+		if ((unsigned)i >= scnt)
+			return 0;
+		pt = &sstr[0];
+		ix = scnt;
+		return scnt;
+	}
+
+	if (typ == GT_MSTR)
+	{
+		if ((unsigned)i >= str.cnt)
+			return 0;
+		pt = str.dat;
+		ix = str.cnt;
+		return str.cnt;
 	}
 
 	/*
-	 *	The string is multi.  Search for the string chunk that
+	 *	The string is GT_LSTR.  Search for the string chunk that
 	 *	contains the required index.  We search for index + 1 because
 	 *	giIndexInt::previous() is a "less-than" operation and we want
 	 *	"less-or-equal".
 	 */
-	int i1 = i + skip + sp->index->min;
-	intKey * kp = sp->index->previous(i1 + 1);
+	giStr * sp = str.idx;
+	int i1 = i + str.skp + sp->index.min;
+	intKey * kp = sp->index.previous(i1 + 1);
 	if (!kp)
 	{
   bogus:
@@ -566,16 +648,24 @@ strpiece(const gist & g, int & ix, const char *& pt)
 int
 gist::_stridx(long idx) const
 {
-	if (idx < 0 || (unsigned)idx >= cnt)
+	if (idx < 0)
+  tantrum:
 		throw indexError("string index out of range");
 
-	giStr * sp = (giStr *)intern;
+	if (typ == GT_SSTR)
+	{
+		if ((unsigned)idx >= scnt)
+			goto tantrum;
+		return sstr[idx];
+	}
 
-	/*
-	 *	If the string is single, it's easy.
-	 */
-	if (!sp->index)
-		return sp->data[idx + skip];
+	if ((unsigned)idx >= str.cnt)
+		goto tantrum;
+
+	if (typ == GT_MSTR)
+		return str.dat[idx];
+
+	giStr * sp = str.idx;
 
 	/*
 	 *	The string is multi.  Search for the string chunk that
@@ -583,8 +673,8 @@ gist::_stridx(long idx) const
 	 *	giIndexInt::previous() is a "less-than" operation and we want
 	 *	"less-or-equal".
 	 */
-	int i1 = idx + skip + sp->index->min;
-	intKey * kp = sp->index->previous(i1 + 1);
+	int i1 = idx + str.skp + sp->index.min;
+	intKey * kp = sp->index.previous(i1 + 1);
 	if (!kp || kp->key > i1)
 		throw gist::internalError("bogus index in gist::_strindex");
 
@@ -618,24 +708,58 @@ stridx(const gist & g, long idx)
 char *
 gist::strbuf(unsigned size)
 {
-	if (size == 0)
+	if (size <= sizeof sstr)
 	{
-		set("");
-		return 0;
+		typ = GT_SSTR;
+		scnt = size;
+		return &sstr[0];
 	}
 
-	giStr * sp = new giStr;
-	sp->size = size;
-	sp->data = (char *)gistInternal::strAlloc(size);
-	// sp->index = 0;
+	str.cnt = size;
+	str.sz = size;
+	str.dat = (char *)gistInternal::strAlloc(size);
 
-	typ = GT_STR;
+	typ = GT_MSTR;
 	unique = true;
-	intern = sp;
-	cnt = size;
-	skip = 0;
 
-	return sp->data;
+	return str.dat;
+}
+
+/******************************/
+
+char *
+gist::strdup(unsigned start, unsigned count) const
+{
+	gist x;
+	gist * gp;
+
+	/*
+	 *	Make sure it's a string.
+	 */
+	if (isStr())
+		gp = (gist *)this;
+	else
+	{
+		x = toString();
+		gp = &x;
+	}
+
+	/*
+	 *	Get the length, and return a static zero width string
+	 *	if the source string is zero width.
+	 */
+	unsigned len = gp->strlen();
+	if (len == 0)
+		return "";
+
+	/*
+	 *	Allocate space for a string copy (using the GC allocator --
+	 *	the gist::operator new), then copy the string there.
+	 */
+	char * sp = (char *)gistInternal::strAlloc(len+1);
+	strcpy(sp, *gp, start, count);
+
+	return sp;
 }
 
 /************************************************************/
@@ -643,9 +767,11 @@ gist::strbuf(unsigned size)
  *	String concatenation.
  */
 
+
 void
 giStr::makeMulti(unsigned len)
 {
+#if 0
 	giSChunk * cp = (giSChunk *)gistInternal::alloc(sizeof (giSChunk));
 	cp->data = data;
 	cp->data0 = data;
@@ -655,12 +781,15 @@ giStr::makeMulti(unsigned len)
 	index->insert(0, cp);
 	index->min = 0;
 	index->max = len;
+#endif // 0
 }
 
 
 void
 gist::strcat(const gist & r)
 {
+	throw notYetError("strcat");
+#if 0
 	const gist * rp;
 
 	/*
@@ -857,6 +986,7 @@ gist::strcat(const gist & r)
 
 		ls->index->max = i;
 	}
+#endif // 0
 }
 
 
@@ -923,6 +1053,9 @@ strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 	const char * p;
 	unsigned c;
 
+	if (!src.isStr())
+		throw gist::typeError("strcpy expects a string");
+
 	l = src._strpiece(ix, p);
 	c = start - (ix - l);
 	p += c;
@@ -943,9 +1076,6 @@ strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 		l = src._strpiece(ix, p);
 	}
 
-	if (c > 0)
-		((gist &)src).unique = false;
-
 	if (count > 0)
 	{
 		*dest++ = '\0';
@@ -954,20 +1084,3 @@ strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 
 	return c;
 }
-
-
-#if 0
-
-unsigned
-strcpy1(char * dest, const gist & src, unsigned xcnt)
-{
-#if 0
-	if (!src.isStr())
-		throw gist::internalError("not string in strcpy1");
-	if (xcnt < src.cnt+1)
-		throw gist::internalError("string too long in strcpy1");
-#endif
-	return strncpy(dest, src, xcnt);
-}
-
-#endif // 0

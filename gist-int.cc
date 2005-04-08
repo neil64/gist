@@ -24,7 +24,9 @@ gist::operator long() const
 	default:
 		return 0;
 
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 		{
 			try
 			{
@@ -33,7 +35,10 @@ gist::operator long() const
 			catch (valueError)	{}
 			catch (overflowError)	{}
 
-			return cnt > 0;
+			if (typ == GT_SSTR)
+				return scnt > 0;
+			else
+				return str.cnt > 0;
 		}
 
 	case GT_INT:
@@ -65,7 +70,9 @@ gist::operator unsigned long() const
 	default:
 		return 0;
 
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 		{
 			try
 			{
@@ -74,7 +81,10 @@ gist::operator unsigned long() const
 			catch (valueError)	{}
 			catch (overflowError)	{}
 
-			return cnt > 0;
+			if (typ == GT_SSTR)
+				return scnt > 0;
+			else
+				return str.cnt > 0;
 		}
 
 	case GT_INT:
@@ -107,7 +117,9 @@ gist::toInt(unsigned base) const
 	default:
 		throw valueError("toInt");
 
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 		return _toInt(true, base);
 
 	case GT_INT:
@@ -127,8 +139,15 @@ gist::_toInt(bool sign, unsigned base) const
 	bool seen = false;
 	int c;
 
-	_strflatten();
-	char * str = &((giStr *)intern)->data[skip];
+	/*
+	 *	We use flatten here so we can get a C string to parse.
+	 *	This is a bit lazy -- we could use strpiece() to avoid
+	 *	a possible string copy, or at least not insist on a '\0'
+	 *	being added and use a count here.  My only defense is that
+	 *	most strings converted here will already conform to the
+	 *	shape needed to avoid the copy in strflatten().
+	 */
+	char * str = _strflatten(false, true, 0);
 
 	if (base == 1 || base > 36)
 		throw gist::valueError("bad base in toInt");

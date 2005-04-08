@@ -24,8 +24,8 @@ gist::table(bool clear)
 	{
 		giTable * ap = new giTable;
 
+		tbl = ap;
 		typ = GT_TABLE;
-		intern = ap;
 	}
 
 	return *this;
@@ -49,7 +49,7 @@ gist::_tableindex(const gist & i, bool make)
 	 *	So, `make' is ignored, and we always build a new element when
 	 *	`i' doesn't match, even when the subscript is an r-value.
 	 */
-	giTable * tp = (giTable *)intern;
+	giTable * tp = tbl;
 	gistKey * k = tp->index.search(i, true);
 	if (!k)
 		throw internalError("table entry was not built as "
@@ -106,7 +106,9 @@ gist::tblnext(gist & key, gist & val)
 	switch (key.typ)
 	{
 	case GT_NIL:
-	case GT_STR:
+	case GT_SSTR:
+	case GT_MSTR:
+	case GT_LSTR:
 	case GT_INT:
 	case GT_FLOAT:
 	case GT_PTR:
@@ -117,7 +119,7 @@ gist::tblnext(gist & key, gist & val)
 					"str, int, float or ptr");
 	}
 
-	giTable * tp = (giTable *)intern;
+	giTable * tp = tbl;
 	gistKey * k = tp->index.next(key);
 	if (!k)
 		return false;

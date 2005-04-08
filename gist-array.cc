@@ -17,32 +17,30 @@ gist::array(unsigned l)
 {
 	if (typ != GT_ARRAY)
 	{
+  new1:
 		giArray * ap = new giArray;
 
 		ap->skip = 0;
 		ap->len = l;
-		ap->index = new (giIndexInt::ArrayLevels) giIndexInt;
 		ap->cache = 0;
 
 		typ = GT_ARRAY;
-		intern = ap;
+		arr = ap;
 	}
 	else
 	{
-		giArray * ap = (giArray *)intern;
+		giArray * ap = arr;
 
 		if (l == 0 && ap->len > 0)
-		{
-			ap->skip = 0;
-			ap->index = new (giIndexInt::ArrayLevels) giIndexInt;
-		}
-		else if (l < ap->len)
+			goto new1;
+
+		if (l < ap->len)
 		{
 			unsigned i;
 			unsigned pi = l / giAChunk::items;
 			unsigned px = l % giAChunk::items;
 
-			intKey * kp = ap->index->search(pi);
+			intKey * kp = ap->index.search(pi);
 
 			if (kp)
 			{
@@ -54,7 +52,7 @@ gist::array(unsigned l)
 			i = pi;
 			pi = (ap->len + 1) / giAChunk::items;
 			for (; i < pi; i++)
-				ap->index->remove(i);
+				ap->index.remove(i);
 		}
 
 		ap->len = l;
@@ -70,7 +68,7 @@ gist::arrayensure(unsigned l)
 {
 	if (typ == GT_ARRAY)
 	{
-		giArray * ap = (giArray *)intern;
+		giArray * ap = arr;
 		if (l + 1 < ap->len)
 			return *this;
 	}
@@ -82,7 +80,7 @@ gist::arrayensure(unsigned l)
 gist &
 gist::_arrayindex(long i)
 {
-	giArray * ap = (giArray *)intern;
+	giArray * ap = arr;
 
 	if (i < 0)
 		i = ap->len + i;
@@ -97,7 +95,7 @@ gist::_arrayindex(long i)
 		pp = ap->cache;
 	else
 	{
-		intKey * kp = ap->index->search(pi);
+		intKey * kp = ap->index.search(pi);
 		if (kp)
 			pp = kp->achunk;
 		else
@@ -106,7 +104,7 @@ gist::_arrayindex(long i)
 			 *	No such piece, so make one.
 			 */
 			pp = (giAChunk *)gistInternal::alloc(sizeof (giAChunk));
-			ap->index->insert(pi, pp);
+			ap->index.insert(pi, pp);
 		}
 
 		ap->cache = pp;
@@ -122,7 +120,7 @@ gist::push(const gist & v)
 {
 	if (typ != GT_ARRAY)
 		throw typeError("push expects an array");
-	array(((giArray *)intern)->len + 1);
+	array(arr->len + 1);
 	(*this)[-1] = v;
 }
 
@@ -133,6 +131,6 @@ gist::pop()
 	if (typ != GT_ARRAY)
 		throw typeError("pop expects an array");
 	gist * r = new gist((*this)[-1]);
-	array(((giArray *)intern)->len - 1);
+	array(arr->len - 1);
 	return *r;
 }

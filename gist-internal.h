@@ -39,10 +39,10 @@ class giIndexInt
 {
     public:
 	giIndexInt();
-	~giIndexInt();
+	// ~giIndexInt();
 
-	void *		operator new(unsigned sz, int levels);
-	void		operator delete(void *)		{}
+	// void *		operator new(unsigned sz, int levels);
+	// void		operator delete(void *)		{}
 
     public:
 	/*
@@ -80,7 +80,8 @@ class giIndexInt
 
     private:
 	unsigned char	levels;
-	unsigned char	maxLevel;
+	enum { maxLevel = 16 };
+	// unsigned char	maxLevel;
 
 	/*
 	 *	The last entry returned.  The skip list code may use this
@@ -111,8 +112,8 @@ class giIndexInt
 	 */
 	enum
 	{
-		StrLevels = 8,
-		ArrayLevels = 16,
+		// StrLevels = 8,
+		// ArrayLevels = 16,
 		MaxLevel = 16
 	};
 
@@ -120,12 +121,13 @@ class giIndexInt
 	/*
 	 *	Skip list head pointers.
 	 */
-	intKey *	head[0];
+	intKey *	head[maxLevel];
+	// intKey *	head[0];
 
 	/*
 	 *	Debugging.
 	 */
-	friend void	gistPrintIntIndex(giIndexInt *, bool, int);
+	friend void	gistPrintIntIndex(void *, giIndexInt *, bool, int);
 };
 
 /******************************/
@@ -236,6 +238,8 @@ struct gistInternal
 
 
 /*
+ *		Comment obsolete.
+ *
  *	A string can be in two major states, dubbed "single" and "multi".
  *	Single is a string who's data is contained in a single chunk of
  *	memory with all characters consecutive.	 Multi is a collection of
@@ -282,9 +286,7 @@ struct gistInternal
  */
 struct giStr : gistInternal
 {
-	giIndexInt *	index;
-	char *		data;
-	unsigned	size;
+	giIndexInt	index;
 	giSChunk *	chunk;
 
 	/********/
@@ -314,12 +316,12 @@ struct giStr : gistInternal
 
 struct giArray : gistInternal
 {
-	unsigned	skip;
-	unsigned	len;
-
-	giIndexInt *	index;
+	giIndexInt	index;
 	giAChunk *	cache;
 	unsigned	ci;
+
+	unsigned	skip;
+	unsigned	len;
 };
 
 /******************************/

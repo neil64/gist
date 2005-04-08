@@ -30,10 +30,10 @@ gist::file(const char * fn, const char * mode)
 		typ = GT_FILE;
 		fp = new giFile;
 		fp->open = false;
-		intern = fp;
+		fil = fp;
 	}
 	else
-		fp = (giFile *)intern;
+		fp = fil;
 
 	/*
 	 *	Close the file if it is currently open.
@@ -165,14 +165,14 @@ gist::read(unsigned amount)
 		throw typeError("file read");
 
 	gist r = "";
-	giFile * fp = (giFile *)intern;
+	giFile * fp = fil;
 
 	if (!fp->readable)
 		throw fileError("not readable");
 
 	while (amount > 0)
 	{
-		if (fp->buffer.cnt == 0)
+		if (fp->buffer.strlen() == 0)
 		{
 			if (fp->eof)
   eof:
@@ -197,7 +197,7 @@ gist::read(unsigned amount)
 				goto eof;
 			}
 
-			fp->buffer.cnt = x;
+			fp->buffer.strtrim(0, x);
 		}
 
 		/*
@@ -205,7 +205,7 @@ gist::read(unsigned amount)
 		 *	(This is not a memory to memory copy;  it is setting
 		 *	 up multiple strings to point to the same buffer.)
 		 */
-		unsigned x = fp->buffer.cnt;
+		unsigned x = fp->buffer.strlen();
 		if (x > amount)
 			x = amount;
 

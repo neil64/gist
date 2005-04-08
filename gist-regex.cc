@@ -31,9 +31,9 @@ giRegex *
 giRegex::ensure(gist * g)
 {
 	if (g->typ == gist::GT_REGEX)
-		return (giRegex *)g->intern;
+		return g->rgx;
 
-	char * re = g->_strcast(false);
+	char * re = g->_strflatten(false, true, 0);
 	giRegex * gp = new giRegex;
 
 	if (regcomp(&gp->re, re, REG_EXTENDED) != 0)
@@ -41,7 +41,7 @@ giRegex::ensure(gist * g)
 #warning "need a finalizer for the RE"
 
 	g->typ = gist::GT_REGEX;
-	g->intern = gp;
+	g->rgx = gp;
 
 	return gp;
 }

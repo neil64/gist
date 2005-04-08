@@ -205,7 +205,7 @@ class gist
 	 *	Return a pointer to the string storage of the gist object.
 	 *	If necessary, the string storage is manipulated to make
 	 *	it a C++ string, by ensuring the string is in contiguous
-	 *	storage and that it is null terminated.
+	 *	storage and that it is '\0' terminated.
 	 *
 	 *	With "const char *", a pointer to existing storage is
 	 *	returned.  Repeated casts will return the same pointer.
@@ -213,24 +213,16 @@ class gist
 	 *	the string data though this pointer can have unpredictable
 	 *	and undesirable results.
 	 *
-	 *	With "char *", the string storage is made to be unique before
-	 *	returning a pointer to it.  Repeated casts will return
-	 *	a pointer to different storage, copying the string data
-	 *	if necessary.  So long as the original gist string object is
-	 *	not modified or used in any way (including another cast), the
-	 *	string data referred to by the pointer can be modified and
-	 *	the changes will be reflected in the original gist string.
-	 *	As soon as the original object is used or changed, the
-	 *	pointer should be considered to refer to read-only data;
-	 *	changing the string data though the pointer after the object
-	 *	has been used or modified can have unpredictable results.
+	 *	With "char *", the string is copied with `strdup()' and the
+	 *	newly copied string is returned.  The memory containing the
+	 *	returned string is allocated using the Garbage Collecting
+	 *	allocator, so it does not need to be explicitly freed.
 	 */
 			operator const char *() const
-				{ return (const char *)_strcast(false); }
+				{ return CCS(); }
 			operator char *() const
-				{ return _strcast(true); }
-	const char *	CCS() const
-				{ return (const char *)_strcast(false); }
+				{ return strdup(); }
+	const char *	CCS() const;
 
 	/********************************/
 	/*
@@ -338,31 +330,35 @@ class gist
 	 */
 	enum type_e
 	{
-		GT_NIL = 0,
-		GT_STR,
+		GT_NIL = 0,		// 0 - 7;  (typ & 0xf8) == 0
 		GT_ARRAY,
 		GT_TABLE,
 		GT_PTR,
 		GT_CODE,
 		GT_FILE,
 		GT_REGEX,
-		GT_INT,
-		GT_FLOAT,
-		GT_LONG,
-		GT_REAL
+
+		GT_INT = 8,		// (typ & 0x08) != 0
+		GT_FLOAT = 9,
+		GT_LONG = 10,
+		GT_REAL = 11,
+
+		GT_SSTR = 0x10,		// typ >= GT_SSTR
+		GT_MSTR = 0x11,
+		GT_LSTR = 0x12,
 	};
 	type_e		type() const		{ return typ; }
 
 	bool		isNil() const		{ return typ == GT_NIL; }
-	bool		isInt() const		{ return typ == GT_INT; }
-	bool		isFloat() const		{ return typ == GT_FLOAT; }
-	bool		isStr() const		{ return typ == GT_STR; }
-	bool		isNumber() const	{ return typ >= GT_INT; }
 	bool		isArray() const		{ return typ == GT_ARRAY; }
 	bool		isTable() const		{ return typ == GT_TABLE; }
 	bool		isPtr() const		{ return typ == GT_PTR; }
 	bool		isFile() const		{ return typ == GT_FILE; }
 	bool		isRegex() const		{ return typ == GT_REGEX; }
+	bool		isInt() const		{ return typ == GT_INT; }
+	bool		isFloat() const		{ return typ == GT_FLOAT; }
+	bool		isNumber() const	{ return typ & 0x08; }
+	bool		isStr() const		{ return typ >= GT_SSTR; }
 
 	/********************************/
 	/*
@@ -492,42 +488,87 @@ class gist
 	    {
 		union
 		{
-		    /*
-		     *	The value of this object if the object type is
-		     *	GT_INT.
-		     */
-		    long	val;		// Integer type
+			/*
+			 *  GT_ARRAY:
+			 *	`array' points to an internal indexing
+			 *	structure.
+			 */
+			struct giArray * arr;
 
-		    /*
-		     *	The value of this object if the object type is
-		     *	GT_FLOAT.
-		     */
-		    double	dval;		// Float type
+			/*
+			 *  GT_TABLE:
+			 *	`table' points to an internal indexing
+			 *	structure.
+			 */
+			struct giTable * tbl;
 
-		    /*
-		     *	String and array bounds.  Usually `skip' is zero and
-		     *	`cnt' equal to the object size.	 These values are
-		     *	adjusted to provide a subset of the underlying value,
-		     *	such as that returned by the `substr' function.
-		     */
-		    struct
-		    {
-			unsigned    cnt;
-			unsigned    skip;
-		    };
+			/*
+			 *  GT_PTR:
+			 *	`ptr' is the pointer value.
+			 */
+			void *		ptr;
 
-		    /*
-		     *	The value of this object if the object type is
-		     *	GT_PTR.
-		     */
-		    void *	ptr;		// Pointer type
+			/*
+			 *  GT_FILE:
+			 *	`file' points to an internal file control
+			 *	structure.
+			 */
+			struct giFile *	fil;
+
+			/*
+			 *  GT_REGEX:
+			 *	`regex' points to an internal regular
+			 *	expression control structure.
+			 */
+			struct giRegex * rgx;
+
+			/*
+			 *  GT_INT:
+			 *	`val' is the integer value.
+			 */
+			long		val;
+
+			/*
+			 *  GT_FLOAT:
+			 *	`dval' is the floating point value.
+			 */
+			double		dval;
+
+			/*
+			 *  GT_SSTR:
+			 *	`sstr' is up to 12 bytes of character
+			 *	data, the size of which is stored in
+			 *	`scnt' below.
+			 */
+			char		sstr[12];
+
+			/*
+			 *  GT_MSTR:
+			 *  GT_LSTR:
+			 *	Both MSTR and LSTR use `cnt' as the string
+			 *	length.	 If the string is an MSTR, `dat'
+			 *	points to a buffer used for string storage.
+			 *	If the string is a LSTR, `idx' refers to an
+			 *	internal indexing structure used to store
+			 *	string fragments, and `skp' is the offset
+			 *	from the start of string storage to the first
+			 *	character of this string.
+			 */
+			struct
+			{
+				unsigned cnt;
+				union {
+					unsigned sz;
+					int	skp;
+				};
+				union {
+					char * dat;
+					struct giStr * idx;
+				};
+
+			}
+				str;
 		};
-
-		/*
-		 *  A pointer to internal data, if required.  For string
-		 *  and array types, this is the string / array storage.
-		 */
-		struct gistInternal * intern;	// Internal data
 
 		/*
 		 *  Object type.  Set to one of the values from the
@@ -544,15 +585,21 @@ class gist
 		 *  for string types, to allow the string to be modified
 		 *  directly rather than having to copy it first; it is
 		 *  not initialized on objects that don't use it, such as
-		 *  integer and floating types.
+		 *  integer and floating point types.
 		 */
 		bool	unique;			// Set if no other refs to this
 
 		/*
-		 *	2 bytes reserved for future use.  However, see
+		 *  The character count for small strings (GT_SSTR);  unused
+		 *  for other types.
+		 */
+		unsigned char	scnt;
+
+		/*
+		 *	1 byte reserved for future use.  However, see
 		 *	gist::opertor new() in gist.cc before using this.
 		 */
-		// short	res0;
+		// char	res0;
 	    };
 
 	    /*
@@ -568,20 +615,22 @@ class gist
 		    double dval;
 		    struct { unsigned cnt; unsigned skip; } s;
 		    void * ptr;
+		    char sstr[12];
 		};
-		struct gistInternal * intern;
 		type_e typ:8;
 		bool unique;
+		unsigned char scnt;
 	    } all;
 	};
 
 	/*
 	 *	Private methods.
 	 */
-	char *		_strcast(bool rw) const;
+	unsigned	_strlen() const;
+	// char *		_strcast(bool rw) const;
 	unsigned	_strpiece(int & index, const char *& ptr) const;
 	int		_stridx(long) const;
-	void		_strflatten() const;
+	char *		_strflatten(bool rw, bool need0, unsigned * len) const;
 	// void		_strzero();
 	void		_strsplit(const gist &);
 	void		_strsplit(const gist &, const char *, int);
@@ -609,11 +658,14 @@ class gist
 	/*
 	 *	Strings.
 	 */
-	unsigned	strlen() const
-					{ return typ == GT_STR ? cnt : 0; }
-	friend unsigned	strlen(const gist & g)
-					{ return g.typ == GT_STR ? g.cnt : 0; }
+	unsigned	strlen() const			{ return _strlen(); }
+	friend unsigned	strlen(const gist & g)		{ return g._strlen(); }
 
+	/********/
+	/*
+	 *	Compare two strings using symantics similar to `strcmp()' in
+	 *	the C library.
+	 */
 	int		strcmp(const char *) const;
 	int		strcmp(const gist &) const;
 	friend int	strcmp(const gist &, const char *);
@@ -640,15 +692,72 @@ class gist
 	friend int	strncasecmp(const char *, const gist &, int = -1);
 	friend int	strncasecmp(const gist &, const gist &, int = -1);
 
+	/********/
+	/*
+	 *	Return a string in pieces.  For GT_SSTR and GT_MSTR types,
+	 *	the whole string is returned.  For GT_LSTR, each substring is
+	 *	returned in turn.  On return, `ptr' points to the beginning
+	 *	of the piece that contains the character referred to by
+	 *	`index', `index' now refers to the first character of the
+	 *	next piece, and the returned value is the size of the piece
+	 *	pointed to by `ptr'.  That is, an `index' that refers to
+	 *	a character within a piece still returns the whole piece.
+	 *	A return value of 0 indicates that no data remains in
+	 *	the string.  `index' is usually set to zero before the
+	 *	first call to `strpiece()'.
+	 */
 	unsigned	strpiece(int & index, const char *& ptr) const;
 	friend unsigned	strpiece(const gist &, int & index, const char *& ptr);
 
+	/*
+	 *	Return a character from this string.  If the given character
+	 *	index is out of range, a `gist::indexError' exception is
+	 *	thrown.
+	 */
 	int		stridx(long) const;
 	friend int	stridx(const gist &, long);
 
+	/*
+	 *	Set this gist to be a string of the given `size'.  The string
+	 *	storage is not initialized.  A pointer to the start of the
+	 *	storage is returned.  Strings of this type are typically
+	 *	used for buffering (such as file buffering), with buffered
+	 *	data later split into smaller strings with the likes of
+	 *	`substr()'.
+	 */
 	char *		strbuf(unsigned size);
 	friend char *	strbuf(gist & g, unsigned size)
 				{ return g.strbuf(size); }
+
+	/*
+	 *	Copy the given portion of this string into newly allocated
+	 *	memory and return a pointer to that memory.  The memory is
+	 *	allocated using the Garbage Collected allocator and does not
+	 *	need to be explicitly freed.
+	 */
+	char *		strdup(unsigned start = 0, unsigned count = (~0U>>1))
+									const;
+	friend char *	strdup(const gist & src,
+				unsigned start = 0, unsigned count = (~0U>>1))
+					{ return src.strdup(start, count); }
+
+	/*
+	 *	Return a writable reference to the storage for this string.
+	 *	The string data can be modifed via the returned pointer and
+	 *	the changes will be reflected in the original string.
+	 *
+	 *	CAUTION:  Care must be taken when modifying a string in this
+	 *		  way;	Only characters within the string should
+	 *		  be modified (from ptr[0] to ptr[length - 1]).
+	 *		  All changes to the string storage should be
+	 *		  completed before ANY operation on the original
+	 *		  string;  an operation on the string -- even a read
+	 *		  operation -- can cause changes in the string that
+	 *		  will make the storage referred to by the return
+	 *		  pointer invalid.
+	 */
+	char *		strref(bool need0 = true);
+	friend char *	strref(const gist & src, bool need0 = true);
 
 	void		strcat(int);
 	void		strcat(const char *, int count = -1);
@@ -772,6 +881,8 @@ class gist
 	 *	Debugging.
 	 */
 	friend void	GistPrint(gist *);
+	friend void	GistPr1(gist *, int level = 0);
+	friend void	GistPr2(gist *, int level = 0);
 
 	/*
 	 *	A NIL gist, for convenience, such as when wanting to

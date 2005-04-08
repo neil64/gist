@@ -35,6 +35,8 @@ giIndexInt::giIndexInt()
 }
 
 
+#if 0
+
 /*
  *	Free all resources in a skip list.
  */
@@ -50,6 +52,10 @@ giIndexInt::~giIndexInt()
 	}
 }
 
+#endif // 0
+
+
+#if 0
 
 void *
 giIndexInt::operator new(unsigned sz, int lvl)
@@ -60,6 +66,8 @@ giIndexInt::operator new(unsigned sz, int lvl)
 
 	return (void *)ip;
 }
+
+#endif // 0
 
 
 /*
@@ -343,7 +351,9 @@ cmpGist(const gist & l, const gist & r)
 		default:
 			return 0;
 
-		case gist::GT_STR:
+		case gist::GT_SSTR:
+		case gist::GT_MSTR:
+		case gist::GT_LSTR:
 			return strcmp(l, r);
 
 		case gist::GT_INT:

@@ -25,8 +25,12 @@ gist::operator bool() const
 	default:
 		return false;
 
-	case GT_STR:
-		return cnt > 0;
+	case GT_SSTR:
+		return scnt > 0;
+
+	case GT_MSTR:
+	case GT_LSTR:
+		return str.cnt > 0;
 
 	case GT_INT:
 		return val != 0;

@@ -55,7 +55,9 @@ gist::operator [](const gist & i)
 		switch (i.typ)
 		{
 		case GT_NIL:
-		case GT_STR:
+		case GT_SSTR:
+		case GT_MSTR:
+		case GT_LSTR:
 		case GT_INT:
 		case GT_FLOAT:
 		case GT_PTR:
@@ -100,7 +102,9 @@ gist::operator [](const gist & i) const
 		switch (i.typ)
 		{
 		case GT_NIL:
-		case GT_STR:
+		case GT_SSTR:
+		case GT_MSTR:
+		case GT_LSTR:
 		case GT_INT:
 		case GT_FLOAT:
 		case GT_PTR:
