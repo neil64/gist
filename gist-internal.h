@@ -288,6 +288,8 @@ struct giStr : gistInternal
 {
 	giIndexInt	index;
 	giSChunk *	chunk;
+	unsigned	size;
+	// char *		data;
 
 	/********/
 
@@ -300,15 +302,22 @@ struct giStr : gistInternal
 		/*
 		 *	The maximum number of characters that we will copy
 		 *	when concatenating strings.  If greater than this,
-		 *	we create a "multi" string.
+		 *	we create a "multi" string.  This must not be greater
+		 *	than strChunk.
 		 */
-		maxCopy = 32,
+		maxCopy = 64,
 
 		/*
 		 *	String space is allocated in multiples of this value.
 		 *	This must be a power of two.
 		 */      
 		strChunk = 64,
+
+		/*
+		 *	When creating a chunk, this many bytes must remain
+		 *	available (strcat).  Must be greater than 1.
+		 */
+		strChunkMin = 24,
 	};
 };
 
@@ -361,16 +370,12 @@ struct giChunk
 
 /*
  *	A string chunk.  Used to store pieces of strings in the skip list.
- *	`data' is the string data, `len' is the string length;  `data0'
- *	points to the start of the string storage chunk.  It is not used
- *	other than to create a reference for the garbage collector, since
- *	we promise the GC that we would not have internal references.
+ *	`data' is the string data and `len' is the string length.
  */
 struct giSChunk : giChunk
 {
 	char *		data;
 	unsigned	len;
-	char *		data0;
 };
 
 /*

@@ -16,20 +16,6 @@
  *	Private gist member functions.
  */
 
-/*
- */
-unsigned
-gist::_strlen() const
-{
-	if (!isStr())
-		return 0;
-
-	if (typ == GT_SSTR)
-		return scnt;
-
-	return str.cnt;
-}
-
 
 /*
  *	Return a pointer to the string.  Ensure that the string is '\0'
@@ -163,8 +149,9 @@ gist::_strflatten(bool rw, bool need0, unsigned * len) const
 		 *	conditions from above, or because the string is a
 		 *	GT_LSTR, which we can't deal with at all.
 		 */
-	make_mstr:
 	case GT_LSTR:
+		l = gp->str.cnt;
+	make_mstr:
 		p = (char *)gistInternal::strAlloc(l+1);
 		strcpy(p, *gp, 0, l + 1);	// This adds a '\0' for us.
 
@@ -218,8 +205,8 @@ gist::set(const char * s)
   ss:
 		typ = GT_SSTR;
 		scnt = l;
-		if (l > 0)
-			memcpy(sstr, s, l);
+		for (unsigned i = 0; i < l; i++)
+			sstr[i] = s[i];
 		if (l < sizeof sstr)
 			sstr[l] = '\0';
 	}
@@ -275,8 +262,8 @@ gist::set(const char * s, int l)
   ss:
 		typ = GT_SSTR;
 		scnt = l;
-		if (l > 0)
-			memcpy(sstr, s, l);
+		for (int i = 0; i < l; i++)
+			sstr[i] = s[i];
 		if ((unsigned)l < sizeof sstr)
 			sstr[l] = '\0';
 	}
@@ -323,7 +310,8 @@ gist::copy(const char * s, int l)
 
 	if ((unsigned)l <= sizeof sstr)
 	{
-		memcpy(sstr, s, l);
+		for (int i = 0; i < l; i++)
+			sstr[i] = s[i];
 		if ((unsigned)l < sizeof sstr)
 			sstr[l] = '\0';
 		typ = GT_SSTR;
@@ -748,7 +736,7 @@ gist::strdup(unsigned start, unsigned count) const
 	 *	Get the length, and return a static zero width string
 	 *	if the source string is zero width.
 	 */
-	unsigned len = gp->strlen();
+	unsigned len = gp->_strlen();
 	if (len == 0)
 		return "";
 
@@ -788,8 +776,6 @@ giStr::makeMulti(unsigned len)
 void
 gist::strcat(const gist & r)
 {
-	throw notYetError("strcat");
-#if 0
 	const gist * rp;
 
 	/*
@@ -801,192 +787,236 @@ gist::strcat(const gist & r)
 	if (r.isStr())
 		rp = &r;
 	else
+	{
+		/*
+		 *	A minor point here:  Normally we would have a
+		 *	"gist rx", would assign the result of toString()
+		 *	to it and take the address.  This would be faster
+		 *	since it avoides calling the allocator.  But,
+		 *	a gist in the full function scope would require
+		 *	initializing it to NIL in all cases.  This case
+		 *	is assumed to be rare.  Another point, allocating
+		 *	a new gist this way avoids reseting the unique
+		 *	flag as would happen with the assignment in the
+		 *	other method.
+		 */
 		rp = new gist(r.toString());
+	}
 
 	/*
 	 *	Check for the degenerate cases.
 	 */
-	if (rp->cnt == 0)
+	unsigned rl = rp->_strlen();
+	if (rl == 0)
 		return;
-	if (cnt == 0)
+
+	/*
+	 *	If the left is a short string, things are a little more
+	 *	simple, and this is also a fairly common case.
+	 */
+	if (typ == GT_SSTR)
+	{
+		unsigned ll = scnt;
+		if (ll == 0)
+		{
+			*this = *rp;
+			return;
+		}
+
+		unsigned nl = ll + rl;
+		if (nl >= sizeof sstr)
+		{
+			/*
+			 *	The short string is no longer large enough.
+			 *	Convert it to a medium string that is long
+			 *	enough for both side, plus a little extra.
+			 *	This size rounding leaves space for a '\0'.
+			 */
+			unsigned xl = nl + giStr::strChunk - 1;
+			xl &= ~giStr::strChunk;
+			if (xl - nl < giStr::strChunkMin)
+				xl += giStr::strChunk;
+
+			char * dp = (char *)gistInternal::strAlloc(xl);
+
+			memcpy(dp, &sstr[0], ll);
+			strcpy(dp + ll, *rp);
+
+			str.cnt = nl;
+			str.sz = xl;
+			str.dat = dp;
+			typ = GT_MSTR;
+			unique = true;
+
+			return;
+		}
+
+		scnt = nl;
+		if (rp->typ == GT_SSTR)
+			memcpy(&sstr[ll], &rp->sstr[0], rl);
+		else if (rp->typ == GT_MSTR)
+			memcpy(&sstr[ll], rp->str.dat, rl);
+		else
+			strcpy(&sstr[ll], *rp);
+
+		return;
+	}
+
+	unsigned ll = str.cnt;
+	if (ll == 0)
 	{
 		*this = *rp;
 		return;
 	}
-
-	giStr * ls = (giStr *)intern;
-	giStr * rs = (giStr *)rp->intern;
+	unsigned nl = ll + rl;
 
 	/*
 	 *	If the right side length is less than the copy limit,
 	 *	try for various optimizations.
 	 */
-	if (rp->cnt <= giStr::maxCopy)
+	if (rl <= giStr::maxCopy)
 	{
-		/*
-		 *	NOTE:	There is code that expects strcat to do a
-		 *		copy no matter what if the right is below
-		 *		the copy limit.  For instance, strcat(int)
-		 *		(below) creates a gist string using a local
-		 *		variable buffer, so that gist must be
-		 *		completely invalid once strcat finishes.
-		 */
-		do
+		if (unique)
 		{
-			if (!unique)
-				break;
-
 			/*
-			 *	The left is unique, so we can try to copy
-			 *	the right directly into the left, if there
-			 *	is enough space available.
+			 *	The left is unique, so we have a chance of
+			 *	copying directly into any available space.
 			 */
-			unsigned o;
-			if (!ls->index)
-				o = skip + cnt;
-			else if (!ls->chunk)
-				break;
-			else
-				o = ls->chunk->len;
-
-			unsigned l = rp->cnt;
-			if (l > (ls->size - o))
-				break;
-
-			/*
-			 *	We are allowed to write to the left directly,
-			 *	and there is space available.  Go for it.
-			 */
-			strncpy(&ls->data[o], *rp, ls->size - o);
-			cnt += l;
-			if (ls->index)
+			if (typ == GT_MSTR)
 			{
-				ls->chunk->len += l;
-				ls->index->max += l;
+				if (str.sz - ll <= rl)
+				{
+					strcpy(&str.dat[ll], *rp);
+					str.cnt = nl;
+					return;
+				}
 			}
-			return;
-
-		} while (0);
+			else // if (typ == GT_LSTR)
+			{
+				giStr * ls = str.idx;
+				if (ls->chunk)
+				{
+					unsigned o = ls->chunk->len;
+					if (ls->size - o <= rl)
+					{
+						strcpy(&ls->chunk->data[o],
+									*rp);
+						ls->chunk->len += rl;
+						ls->index.max += rl;
+						str.cnt = nl;
+						return;
+					}
+				}
+			}
+		}
 
 		/*
 		 *	There was not enough space at the end of the chunk.
 		 *	Try for a total length that might be less than the
 		 *	copy limit.
 		 */
-		if (cnt + rp->cnt <= giStr::maxCopy)
+		if (nl <= giStr::maxCopy)
 		{
 			/*
-			 *	Create a new chunk and copy both the left
-			 *	and right strings to it.
+			 *	Make the left into a MSTR and copy both
+			 *	sides to it.
 			 */
-			giStr * nls = (giStr *)gistInternal::alloc(
-							sizeof (giStr));
-			nls->data = (char *)gistInternal::strAlloc(
-							giStr::strChunk);
-			nls->size = giStr::strChunk;
-			nls->index = 0;
+			unsigned xl = nl + giStr::strChunk - 1;
+			xl &= ~giStr::strChunk;
+			if (xl - nl < giStr::strChunkMin)
+				xl += giStr::strChunk;
 
-			strncpy(&nls->data[0], *this, giStr::strChunk);
-			strncpy(&nls->data[cnt], *rp, giStr::strChunk - cnt);
+			char * dp = (char *)gistInternal::strAlloc(xl);
+			strcpy(dp, *this);
+			strcpy(dp + ll, *rp);
 
+			str.cnt = nl;
+			str.sz = xl;
+			str.dat = dp;
+			typ = GT_MSTR;
 			unique = true;
-			intern = nls;
-			skip = 0;
-			cnt += rp->cnt;
 
 			return;
 		}
-
-		/*
-		 *	Simple copies failed, so now allocate a new chunk
-		 *	and add it to the end of the current chunk list,
-		 *	making the left into a multi if needed.
-		 */
-		if (!ls->index)
-			ls->makeMulti(skip + cnt);
-
-		giSChunk * cp =
-			(giSChunk *)gistInternal::alloc(sizeof (giSChunk));
-		cp->data = (char *)gistInternal::strAlloc(giStr::strChunk);
-		cp->data0 = cp->data;
-		cp->len = rp->cnt;
-		strncpy(cp->data, *rp, giStr::strChunk);
-
-		ls->index->insert(ls->index->max, cp);
-		ls->index->max += rp->cnt;
-
-		ls->data = cp->data;
-		// ls->len = rp->cnt;
-		ls->chunk = cp;
-		ls->size = giStr::strChunk;
-
-		cnt += rp->cnt;
-
-		/*
-		 *	Setting `unique' here is subtle -- unique on a multi
-		 *	string really means that only the last chunk is
-		 *	unique, and then only if the chunk uses the `data'
-		 *	and `size' references in the giStr.  This allows
-		 *	the next concatenation to copy into that last chunk
-		 *	if needed.  The index structure itself, and all of
-		 *	the other chunks in it are never touched.
-		 */
-		unique = true;
-
-		return;
 	}
 
 	/*
 	 *	The right was too big to copy, so we will place references
 	 *	to it in our index.  If we (the left) don't have an index,
 	 *	make one.  Since there will be cross referencing, neither
-	 *	the left nor the right will remain unique.
+	 *	the left nor the right will remain unique.  Note that neither
+	 *	the left nor the right can be a SSTR at this point.
 	 */
-	if (!ls->index)
-		ls->makeMulti(skip + cnt);
-
-	// ls->data = 0;
-	ls->chunk = 0;
-	((gist *)this)->unique = false;
-	((gist *)rp)->unique = false;
-	cnt += rp->cnt;
-
-	if (!rs->index)
+	giStr * sp;
+	giSChunk * cp;
+	if (typ == GT_LSTR)
+		sp = str.idx;
+	else
 	{
-		/*
-		 *	The right is a (big) single.  Create a reference
-		 *	(giSChunk) to it and store it in our index.
-		 */
-		giSChunk * cp =
-			(giSChunk *)gistInternal::alloc(sizeof (giSChunk));
-		cp->data0 = rs->data;
-		cp->data = rs->data + rp->skip;
-		cp->len = rp->cnt;
+		cp = (giSChunk *)gistInternal::alloc(sizeof (giSChunk));
+		cp->data = str.dat;
+		cp->len = ll;
 
-		ls->index->insert(ls->index->max, cp);
-		ls->index->max += cp->len;
+		sp = new giStr;
+		sp->index.insert(0, cp);
+		sp->index.min = 0;
+		sp->index.max = ll;
+
+		str.idx = sp;
+		str.skp = 0;
+		typ = GT_LSTR;
+	}
+
+	if (rp->typ == GT_SSTR)
+	{
+		char * dp = (char *)gistInternal::strAlloc(giStr::strChunk);
+		memcpy(dp, &rp->sstr[0], rl);
+
+		cp = (giSChunk *)gistInternal::alloc(sizeof (giSChunk));
+		cp->data = dp;
+		cp->len = rl;
+
+		sp->index.insert(sp->index.max, cp);
+		sp->index.max += rl;
+	}
+	else if (rp->typ == GT_MSTR)
+	{
+		cp = (giSChunk *)gistInternal::alloc(sizeof (giSChunk));
+		cp->data = rp->str.dat;
+		cp->len = rp->str.cnt;
+
+		sp->index.insert(sp->index.max, cp);
+		sp->index.max += rl;
 	}
 	else
 	{
 		/*
-		 *	The right is a multi.  Insert all of its chunks
-		 *	into our index.
+		 *	Copy all of the chunks from the right to the left,
+		 *	taking into account that the right may be the same
+		 *	object as the left.
 		 */
-		int i = ls->index->max;
+		int i = sp->index.max;
+		int m = i;
 		intKey * kp;
+		giStr * rs = rp->str.idx;
 
-#warning "broken if left is the same gist as the right"
-		for (kp = rs->index->first();
+		for (kp = rs->index.first();
 		     kp;
-		     kp = rs->index->next(kp->key))
+		     kp = rs->index.next(kp->key))
 		{
-			ls->index->insert(i, kp->chunk);
+			sp->index.insert(i, kp->chunk);
 			i += kp->schunk->len;
+			if (i >= m)
+				break;
 		}
 
-		ls->index->max = i;
+		sp->index.max = i;
 	}
-#endif // 0
+
+	unique = false;
+	((gist *)rp)->unique = false;
+	str.cnt += rl;
+	sp->chunk = 0;
 }
 
 

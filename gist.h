@@ -626,7 +626,8 @@ class gist
 	/*
 	 *	Private methods.
 	 */
-	unsigned	_strlen() const;
+	unsigned	_strlen() const
+		{ return typ == GT_SSTR ? scnt : str.cnt; }
 	// char *		_strcast(bool rw) const;
 	unsigned	_strpiece(int & index, const char *& ptr) const;
 	int		_stridx(long) const;
@@ -658,8 +659,10 @@ class gist
 	/*
 	 *	Strings.
 	 */
-	unsigned	strlen() const			{ return _strlen(); }
-	friend unsigned	strlen(const gist & g)		{ return g._strlen(); }
+	unsigned	strlen() const
+				{ return isStr() ? _strlen() : 0; }
+	friend unsigned	strlen(const gist & g)
+				{ return g.isStr() ? g._strlen() : 0; }
 
 	/********/
 	/*

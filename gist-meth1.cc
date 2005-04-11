@@ -17,7 +17,7 @@ gist::len() const
 	if (typ == GT_ARRAY)
 		return arr->len;
 	else if (isStr())
-		return strlen();
+		return _strlen();
 	else
 		throw typeError("len() of unsized object");
 }
@@ -29,7 +29,7 @@ len(const gist & g)
 	if (g.typ == gist::GT_ARRAY)
 		return g.arr->len;
 	else if (g.isStr())
-		return g.strlen();
+		return g._strlen();
 	else
 		throw gist::typeError("len() of unsized object");
 }

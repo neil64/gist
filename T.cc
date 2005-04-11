@@ -26,6 +26,15 @@ test_init()
 {
 	unsigned i;
 
+#if 0
+	printf("init0 (set benchmark):\n");
+
+	gist s;
+	for (int i = 0; i < 10000000; i++)
+		s.set("0123456789");
+	exit(0);
+#endif // 0
+
 	printf("init1:\n");
 
 	for (i = 0; i < sizeof ga / sizeof ga[0]; i++)

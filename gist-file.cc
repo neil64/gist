@@ -172,7 +172,7 @@ gist::read(unsigned amount)
 
 	while (amount > 0)
 	{
-		if (fp->buffer.strlen() == 0)
+		if (fp->buffer._strlen() == 0)
 		{
 			if (fp->eof)
   eof:
@@ -205,7 +205,7 @@ gist::read(unsigned amount)
 		 *	(This is not a memory to memory copy;  it is setting
 		 *	 up multiple strings to point to the same buffer.)
 		 */
-		unsigned x = fp->buffer.strlen();
+		unsigned x = fp->buffer._strlen();
 		if (x > amount)
 			x = amount;
 

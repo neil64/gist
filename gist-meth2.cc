@@ -154,7 +154,7 @@ strlower(const gist & g)
 		throw gist::typeError("strlower expects a string");
 
 	gist r;
-	char * rp = r.strbuf(g.strlen());
+	char * rp = r.strbuf(g._strlen());
 
 	unsigned gl = 0;
 	int gi = 0;
@@ -189,7 +189,7 @@ strupper(const gist & g)
 		throw gist::typeError("strupper expects a string");
 
 	gist r;
-	char * rp = r.strbuf(g.strlen());
+	char * rp = r.strbuf(g._strlen());
 
 	unsigned gl = 0;
 	int gi = 0;
@@ -289,7 +289,7 @@ strncasecmp(const gist & l, const char * rp, int rl)
 		throw gist::typeError("strncasecmp expects a string");
 
 	if (rl < 0)
-		rl = strlen(rp);
+		rl = ::strlen(rp);
 
 	unsigned ll = 0;
 	int li = 0;
@@ -466,7 +466,7 @@ strsplit(const gist & str, const char * sep)
 	if (!sep || !*sep)
 		r._strsplit(str);
 	else
-		r._strsplit(str, sep, strlen(sep));
+		r._strsplit(str, sep, ::strlen(sep));
 	return r;
 }
 
