@@ -884,8 +884,8 @@ class gist
 	 *	Debugging.
 	 */
 	friend void	GistPrint(gist *);
-	friend void	GistPr1(gist *, int level = 0);
-	friend void	GistPr2(gist *, int level = 0);
+	friend void	GistPr1(gist *, int level = 0, int col = 0);
+	friend void	GistPr2(gist *, int level = 0, int col = 0);
 
 	/*
 	 *	A NIL gist, for convenience, such as when wanting to

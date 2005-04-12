@@ -14,42 +14,46 @@
  */
 
 static void
-indent(FILE * fd, const char * label, int level)
+tab(FILE * fd, int indent)
 {
-	fprintf(fd, "%.*s%s: ",
-		level*2,
-		"                                    ",
-		label ? label : "");
+	fprintf(fd, "%*s", indent, "");
 }
 
 
-static void	gistPrint(FILE *, gist * gp, const char * label, int level);
+static void	gistPrint(FILE *, gist * gp, int indent, int col);
 
 void
-gistPrintIntIndex(void * fd1, giIndexInt * ip, bool str, int level)
+gistPrintIntIndex(void * fd1, giIndexInt * ip, bool str, int indent)
 {
 	FILE * fd = (FILE *)fd1;
 
-	indent(fd, str ? "string index" : "array index", level);
-	fprintf(fd, "levels=%d, maxlevel=%d, min=%d, max=%d\n",
+	tab(fd, indent);
+	fprintf(fd, "levels=%d, maxlevel=%d, min=%d, max=%d",
 		ip->levels, ip->maxLevel, ip->min, ip->max);
 
-	indent(fd, "head", level+1);
 	for (int i = 0; i < ip->levels; i++)
+	{
+		if (i % 4 == 0)
+		{
+			fprintf(fd, "\n");
+			tab(fd, indent);
+			fprintf(fd, "heads: ");
+		}
 		fprintf(fd, " 0x%08x", (int)ip->head[i]);
+	}
 	fprintf(fd, "\n");
 
 	for (intKey * kp = ip->head[0]; kp; kp = kp->fwd[0])
 	{
-		indent(fd, "key", level+2);
-		fprintf(fd, "0x%08x, key=%d, ", (int)kp, kp->key);
+		tab(fd, indent);
+		fprintf(fd, "key: 0x%08x, key=%d, ", (int)kp, kp->key);
 		if (str)
 		{
 			giSChunk * cp = kp->schunk;
 			unsigned z = cp->len;
-			if (z > 32)
-				z = 32;
-			fprintf(fd, "len=%d, %.*s%s",
+			if (z > 16)
+				z = 16;
+			fprintf(fd, "len=%d, \"%.*s\"%s",
 				cp->len,
 				z, &cp->data[0],
 				z < cp->len ? " ..." : "");
@@ -60,23 +64,23 @@ gistPrintIntIndex(void * fd1, giIndexInt * ip, bool str, int level)
 			fprintf(fd, "\n");
 			giAChunk * cp = kp->achunk;
 			for (int i = 0; i < giAChunk::items; i++)
-				gistPrint(fd, &cp->g[i], "", level+3);
+				gistPrint(fd, &cp->g[i], indent + 4, 0);
 		}
 	}
 }
 
 
 static void
-gistPrint(FILE * fd, gist * gp, const char * label, int level)
+gistPrint(FILE * fd, gist * gp, int indent, int col)
 {
-	if (level >= 16)
+	if (indent >= 40)
 	{
-		indent(fd, label, 16);
+		tab(fd, 40);
 		fprintf(fd, "...\n");
 		return;
 	}
 
-	indent(fd, label, level);
+	tab(fd, indent - col);
 
 	switch (gp->typ)
 	{
@@ -99,14 +103,13 @@ gistPrint(FILE * fd, gist * gp, const char * label, int level)
 
 	case gist::GT_MSTR:
 		{
-			fprintf(fd, "MSTR  unique=%s, cnt=%d,\n",
-				gp->unique ? "true" : "false", gp->str.cnt);
-			indent(fd, "    ", level);
-			fprintf(fd, "     "
-					"dat=0x%08x, size=%d\n",
-					(int)gp->str.dat, gp->str.sz);
+			fprintf(fd, "MSTR  unique=%s, cnt=%d, sz=%d\n",
+				gp->unique ? "true" : "false",
+				gp->str.cnt,
+				gp->str.sz);
+			tab(fd, indent + 6);
+			fprintf(fd, "dat=0x%08x: ", (int)gp->str.dat);
 
-			indent(fd, "data", level+1);
 			unsigned z = gp->str.cnt;
 			if (z > 32)
 				z = 32;
@@ -119,17 +122,19 @@ gistPrint(FILE * fd, gist * gp, const char * label, int level)
 	case gist::GT_LSTR:
 		{
 			giStr * sp = gp->str.idx;
-			giSChunk * cp = sp->chunk;
 
-			fprintf(fd, "STR  unique=%s, skip=%d, cnt=%d, "
+			fprintf(fd, "LSTR  unique=%s, skp=%d, cnt=%d, "
 					"idx=0x%08x, \n",
 				gp->unique ? "true" : "false",
 				gp->str.skp, gp->str.cnt, (int)sp);
-			indent(fd, "    ", level);
-			fprintf(fd, "     "
-					"chunk=0x%08x\n", (int)cp);
+			tab(fd, indent + 6);
+			fprintf(fd, "idx: "
+					"chunk=0x%08x, size=%d\n",
+					(int)sp->chunk, sp->size);
 
-			gistPrintIntIndex(fd, &sp->index, true, level+1);
+			tab(fd, indent + 6);
+			fprintf(fd, "idx.index:\n");
+			gistPrintIntIndex(fd, &sp->index, true, indent + 10);
 		}
 		break;
 
@@ -138,15 +143,16 @@ gistPrint(FILE * fd, gist * gp, const char * label, int level)
 			giArray * ap = gp->arr;
 
 			fprintf(fd, "ARRAY  unique=%s, "
-					"arr=0x%08x, \n",
+					"arr=0x%08x\n",
 				gp->unique ? "true" : "false",
 				(int)ap);
-			indent(fd, "    ", level);
-			fprintf(fd, "     "
-					"skip=%d, len=%d\n",
+			tab(fd, indent + 7);
+			fprintf(fd, "arr: skip=%d, len=%d\n",
 				ap->skip, ap->len);
 
-			gistPrintIntIndex(fd, &ap->index, false, level+1);
+			tab(fd, indent + 7);
+			fprintf(fd, "arr.index:\n");
+			gistPrintIntIndex(fd, &ap->index, false, indent + 11);
 		}
 		break;
 
@@ -174,7 +180,7 @@ gistPrint(FILE * fd, gist * gp, const char * label, int level)
 				fp->writable ? 'w' : '-',
 				fp->eof ? 'e' : '-',
 				fp->fd);
-			gistPrint(fd, &fp->buffer, "buffer", level+1);
+			gistPrint(fd, &fp->buffer, indent + 6, 0);
 		}
 		break;
 
@@ -197,19 +203,19 @@ gistPrint(FILE * fd, gist * gp, const char * label, int level)
 void
 GistPrint(gist * gp)
 {
-	gistPrint(stderr, gp, "gist", 0);
+	gistPrint(stderr, gp, 0, 0);
 }
 
 
 void
-GistPr1(gist * gp, int level)
+GistPr1(gist * gp, int indent, int col)
 {
-	gistPrint(stdout, gp, "gist", level);
+	gistPrint(stdout, gp, indent, col);
 }
 
 
 void
-GistPr2(gist * gp, int level)
+GistPr2(gist * gp, int indent, int col)
 {
-	gistPrint(stderr, gp, "gist", level);
+	gistPrint(stderr, gp, indent, col);
 }

@@ -568,10 +568,11 @@ gist::_strpiece(int & ix, const char *& pt) const
 		return scnt;
 	}
 
+	if ((unsigned)i >= str.cnt)
+		return 0;
+
 	if (typ == GT_MSTR)
 	{
-		if ((unsigned)i >= str.cnt)
-			return 0;
 		pt = str.dat;
 		ix = str.cnt;
 		return str.cnt;
@@ -824,7 +825,7 @@ gist::strcat(const gist & r)
 		}
 
 		unsigned nl = ll + rl;
-		if (nl >= sizeof sstr)
+		if (nl > sizeof sstr)
 		{
 			/*
 			 *	The short string is no longer large enough.
@@ -833,7 +834,7 @@ gist::strcat(const gist & r)
 			 *	This size rounding leaves space for a '\0'.
 			 */
 			unsigned xl = nl + giStr::strChunk - 1;
-			xl &= ~giStr::strChunk;
+			xl &= ~(giStr::strChunk-1);
 			if (xl - nl < giStr::strChunkMin)
 				xl += giStr::strChunk;
 
@@ -884,7 +885,7 @@ gist::strcat(const gist & r)
 			 */
 			if (typ == GT_MSTR)
 			{
-				if (str.sz - ll <= rl)
+				if (rl <= str.sz - ll)
 				{
 					strcpy(&str.dat[ll], *rp);
 					str.cnt = nl;
@@ -897,7 +898,7 @@ gist::strcat(const gist & r)
 				if (ls->chunk)
 				{
 					unsigned o = ls->chunk->len;
-					if (ls->size - o <= rl)
+					if (rl <= ls->size - o)
 					{
 						strcpy(&ls->chunk->data[o],
 									*rp);
@@ -922,7 +923,7 @@ gist::strcat(const gist & r)
 			 *	sides to it.
 			 */
 			unsigned xl = nl + giStr::strChunk - 1;
-			xl &= ~giStr::strChunk;
+			xl &= ~(giStr::strChunk-1);
 			if (xl - nl < giStr::strChunkMin)
 				xl += giStr::strChunk;
 
@@ -978,6 +979,10 @@ gist::strcat(const gist & r)
 
 		sp->index.insert(sp->index.max, cp);
 		sp->index.max += rl;
+		sp->chunk = cp;
+		sp->size = giStr::strChunk;
+
+		unique = true;
 	}
 	else if (rp->typ == GT_MSTR)
 	{
@@ -987,6 +992,10 @@ gist::strcat(const gist & r)
 
 		sp->index.insert(sp->index.max, cp);
 		sp->index.max += rl;
+		sp->chunk = 0;
+
+		unique = false;
+		((gist *)rp)->unique = false;
 	}
 	else
 	{
@@ -1011,12 +1020,13 @@ gist::strcat(const gist & r)
 		}
 
 		sp->index.max = i;
+		sp->chunk = 0;
+
+		unique = false;
+		((gist *)rp)->unique = false;
 	}
 
-	unique = false;
-	((gist *)rp)->unique = false;
 	str.cnt += rl;
-	sp->chunk = 0;
 }
 
 

@@ -39,8 +39,8 @@ test_init()
 
 	for (i = 0; i < sizeof ga / sizeof ga[0]; i++)
 	{
-		printf("  %d:\n", i);
-		GistPr1(&ga[i], 3);
+		printf("  %2d: ", i);
+		GistPr1(&ga[i], 6, 6);
 	}
 
 	printf("init2:\n");
@@ -378,20 +378,19 @@ split(const char * str, const char * sep)
 {
 	gist s = str;
 	printf("\tsplit: ");
-	GistPr1(&s);
+	GistPr1(&s, 15, 15);
 	printf("\n");
 	gist t = strsplit(s, sep);
 
 	printf("\tsplit into array of len = %d:\n", len(t));
 	printf("\tsplit: ");
-	GistPr1(&s);
+	GistPr1(&s, 15, 15);
 	printf("\n");
 
 	for (int i = 0; i < (int)len(t); i++)
 	{
-		printf("\t\t%d: ", i);
-		GistPr1(&t[i]);
-		printf("\n");
+		printf("\t\t%2d: ", i);
+		GistPr1(&t[i], 20, 20);
 	}
 	printf("\n");
 }
@@ -462,23 +461,22 @@ test_array()
 	a[1] = "one";
 	a[2].array(5)[3] = "2/3";
 
-	printf("\tarray length = %d (%d)\n", a.len(), len(a));
+	printf("  array length = %d (%d)\n", a.len(), len(a));
 
 	for (unsigned i = 0; i < a.len(); i++)
 	{
-		printf("\t%2d: ", i);
-		GistPr1(&a[i]);
-		printf("\n");
+		printf("    %2d: ", i);
+		GistPr1(&a[i], 6, 6);
 	}
 
 	a.array(16);
 	a[15] = "fifteen";
 	gist s = a.pop();
-	printf("\ta[15] = %s\n", s.CCS());
-	printf("\ta.len = %d\n", a.len());
+	printf("  a[15] = %s\n", s.CCS());
+	printf("  a.len = %d\n", a.len());
 
 	a.array(16);
-	printf("\tnew element 16 = ");
+	printf("  new element 16 = ");
 	GistPr1(&a[15]);
 	printf("\n");
 
@@ -486,7 +484,7 @@ test_array()
 
 	a.array(0);
 	int i, x = 500000;
-	printf("\t%d random pushed array entries... ", x);
+	printf("  %d random pushed array entries... ", x);
 	fflush(stdout);
 	srandom(0);
 	for (i = 0; i < x; i++)
