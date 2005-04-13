@@ -175,6 +175,8 @@ gist::_toInt(bool sign, unsigned base) const
 			seen = true;
 		}
 	}
+	if (base == 0)
+		base = 10;
 
 	while ((c = *str))
 	{

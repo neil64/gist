@@ -47,11 +47,16 @@ gist::substr(int s, unsigned c) const
 		sc = str.cnt;
 		if (s < (int)sc && c > 0)
 		{
-			r.str.dat = str.dat + s;
+			r.typ = GT_MSTR;
+			r.unique = false;
+			((gist *)this)->unique = false;
+
 			sc -= s;
 			if (sc > c)
 				sc = c;
 			r.str.cnt = sc;
+			r.str.sz = str.sz - s;
+			r.str.dat = str.dat + s;
 		}
 		break;
 
