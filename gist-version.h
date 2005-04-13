@@ -8,8 +8,8 @@
 /**********************************************************************/
 
 #define VERSION_VERSION		1
-#define VERSION_RELEASE		0
-#define VERSION_REVISION	967
+#define VERSION_RELEASE		1
+#define VERSION_REVISION	974
 
 #define VERSION		((VERSION_VERSION << 16) |	\
 			 (VERSION_RELEASE << 8) |	\
