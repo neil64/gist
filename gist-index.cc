@@ -324,7 +324,7 @@ giIndexGist::~giIndexGist()
 
 
 void *
-giIndexGist::operator new(unsigned sz)
+giIndexGist::operator new(size_t sz)
 {
 	giIndexGist * ip = (giIndexGist *)gistInternal::alloc(sz);
 	return (void *)ip;

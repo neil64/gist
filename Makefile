@@ -13,6 +13,9 @@ OBJS =		gist.o gist-index.o gist-array.o gist-table.o gist-int.o \
 
 
 CXXFLAGS =	-g -Wall
+## CXXFLAGS =	-m32
+CXXFLAGS +=     -I/opt/local/include
+CXXFLAGS +=     -L/opt/local/lib
 ## CXXFLAGS =	-g -O3 -Wall
 ## CXXFLAGS =	-O3 -Wall
 OPTIM =

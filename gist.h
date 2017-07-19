@@ -29,6 +29,7 @@
 #ifndef __GIST_H__
 #define __GIST_H__
 
+#include <new>
 
 /**********************************************************************/
 
@@ -128,7 +129,7 @@ class gist
 	/*
 	 *	Memory allocation.
 	 */
-	void *		operator new(unsigned);
+	void *		operator new(size_t);
 	void		operator delete(void * p) {}
 
 	/********************************/

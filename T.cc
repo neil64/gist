@@ -6,6 +6,7 @@
 #include	<assert.h>
 #include	<stdlib.h>
 #include	<unistd.h>
+#include	<new>
 
 #include	"gist.h"
 #include	"sgml.h"
@@ -46,9 +47,15 @@ test_init()
 	printf("init2:\n");
 	gist * a = new gist;
 	gist * b = new gist;
+#if __x86_64__
+	printf("\tGC allocated a to 0x%16lx and b to 0x%16lx "
+		"(%ld bytes difference)\n",
+		(size_t)a, (size_t)b, (char *)a - (char *)b);
+#else // __x86_64__
 	printf("\tGC allocated a to 0x%08x and b to 0x%08x "
 		"(%d bytes difference)\n",
-		(int)a, (int)b, (char *)a - (char *)b);
+		(size_t)a, (size_t)b, (char *)a - (char *)b);
+#endif // __x86_64__
 }
 
 
@@ -593,11 +600,16 @@ test_misc()
 	{
 		// For testing read only regions.
 
-		char * hw1 = "Hello world";
+		char * hw1 = (char *)"Hello world";
 		static char hw2[] = "Hello world";
 
+#if __x86_64__
+		printf("\t&hw1 = %lx, &hw2 = %lx\n",
+					(size_t)hw1, (size_t)hw2);
+#else // __x86_64__
 		printf("\t&hw1 = %x, &hw2 = %x\n",
 					(unsigned)hw1, (unsigned)hw2);
+#endif // __x86_64__
 	}
 }
 
@@ -617,9 +629,9 @@ int
 main(int argc, char ** argv)
 {
 	printf("Test gist (gist version %s)\n\n", gist::version.CCS());
-	printf("\tSize of gist = %d\n", sizeof (gist));
+	printf("\tSize of gist = %lu\n", sizeof (gist));
 
-	char * t = "Inib=fsatm";
+	char * t = (char *)"Inib=fsatm";
 	if (argc >= 2)
 		t = argv[1];
 

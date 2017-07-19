@@ -150,7 +150,7 @@ class giIndexGist
 	giIndexGist();
 	~giIndexGist();
 
-	void *		operator new(unsigned sz);
+	void *		operator new(size_t sz);
 	void		operator delete(void *)		{}
 
     public:
@@ -221,7 +221,7 @@ struct gistInternal
 	/*
 	 *	GC allocator stuff.
 	 */
-	void *		operator new(unsigned);
+	void *		operator new(size_t);
 	void		operator delete(void *) {}
 
 	static void *	alloc(unsigned);

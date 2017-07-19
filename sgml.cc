@@ -5,6 +5,7 @@
 #include	<stdio.h>
 #include	<ctype.h>
 #include	<string.h>
+#include	<stdlib.h>
 
 #include	"gist.h"
 #include	"sgml.h"
@@ -203,17 +204,17 @@ SGML_t::parse(const char * in, int sz)
 				char * x = 0;
 
 				if (datx == 0)
-					x = "& ";
+					x = (char *)"& ";
 				else if (strcmp(data, "lt") == 0)
-					x = "<";
+					x = (char *)"<";
 				else if (strcmp(data, "gt") == 0)
-					x = ">";
+					x = (char *)">";
 				else if (strcmp(data, "amp") == 0)
-					x = "&";
+					x = (char *)"&";
 				else if (strcmp(data, "quot") == 0)
-					x = "\"";
+					x = (char *)"\"";
 				else if (strcmp(data, "apos") == 0)
-					x = "'";
+					x = (char *)"'";
 
 				if (x)
 				{

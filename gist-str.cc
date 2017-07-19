@@ -739,7 +739,7 @@ gist::strdup(unsigned start, unsigned count) const
 	 */
 	unsigned len = gp->_strlen();
 	if (len == 0)
-		return "";
+		return (char *)"";
 
 	/*
 	 *	Allocate space for a string copy (using the GC allocator --

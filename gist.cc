@@ -64,7 +64,7 @@ gcInit()
 
 
 void *
-gist::operator new(unsigned sz)
+gist::operator new(size_t sz)
 {
 	gcInit();
 
@@ -95,7 +95,7 @@ gist::operator new(unsigned sz)
 
 
 void *
-gistInternal::operator new(unsigned sz)
+gistInternal::operator new(size_t sz)
 {
 	gcInit();
 
@@ -165,7 +165,7 @@ gistInternal::free(void * p)
  */
 
 void *
-operator new(unsigned sz)
+operator new(size_t sz)
 {
 	gcInit();
 
