@@ -12,9 +12,9 @@ The data types it supports are:
 
     *  32-bit integers
     *  character strings
-    *  IEEE-748 floating point (C++'s \fBdouble\fP type)
+    *  IEEE-748 floating point (C++'s double type)
     *  single dimensional arrays containing any gist object (indexed from zero)
-    *  associative arrays containing any gist object (indexable by a variety
+    *  associative arrays containing any gist object (indexed by a variety
        of data types).
 
 In the future, gist may also support:
@@ -26,22 +26,19 @@ In the future, gist may also support:
 Gist overloads almost all C++ operators allowing gist objects to be used
 as if they were first class data types.  Gist objects are managed by a
 garbage collecting allocator.  Objects never need to be freed.  In fact,
-the delete operator and the gist destructor both have no effect.  Note,
-if you are using a garbage collector in the same program as gist, you
-should consider the remifications.
+the delete operator and the gist destructor both have no effect.
 
 
 
-NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE  NOTE
-----  ----  ----  ----  ----  ----  ----  ----  ----  ----
+        ----------------------  NOTE  ----------------------
+        ----  ----  ----  ----  ----  ----  ----  ----  ----
 
 Gist is not finished.  I have used it for a few projects, and it works well,
-but it needs more testing.  Also, I wrote Gist around on a Linux machine in
-2005, when 64-bit machines were still relatively new.  Compilers were still
-configured to compile in 32-bit by default.  So Gist still needs a lot of
-work for 64-bit.
+but it needs more testing.  Also, I wrote Gist on Linux in 2005, when 64-bit
+machines were still relatively new.  Compilers were still configured to
+compile in 32-bit by default.  So Gist still needs a lot of work for 64-bit.
 
-I'm publishing it now to get it pout there.  Maybe someone else will pick it
+I'm publishing it now to get it out there.  Maybe someone else will pick it
 up and complete it, or maybe I'll find the time to do it.  It was always
 intended to be published;  I should have done it a long time ago.
 
