@@ -199,18 +199,23 @@ gist::_toInt(bool sign, unsigned base) const
 		if (n1 < n)
 			goto overflow;
 		n = n1 + c;
+                if (n < n1)     // edge case, such as ULONG_MAX - 6, c >= 7
+			goto overflow;
 	}
 
 	while (c == ' ' || c == '\t' || c == '\n')
-		c = *str++;
-	if (*str != '\0')
+		c = *++str;
+	if (c != '\0')
 		goto value;
+
+	if (!seen)
+        	goto value;
 
 	if (sign)
 	{
-		if (neg && n == (~0U>>1) + 1)
+		if (neg && n == (~0UL>>1) + 1)
 			return n;
-		if (n > (~0U>>1))
+		if (n > (~0UL>>1))
 			goto overflow;
 		if (neg)
 			return -(long)n;

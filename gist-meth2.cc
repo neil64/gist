@@ -36,7 +36,7 @@ gist::substr(int s, unsigned c) const
 			sc -= s;
 			if (sc > c)
 				sc = c;
-			memcpy(&r.sstr[0], &sstr[s], sc);
+			memmove(&r.sstr[0], &sstr[s], sc);
 			r.scnt = sc;
 		}
 		break;
@@ -101,7 +101,7 @@ gist::strtrim(int s, unsigned c)
 			sc -= s;
 			if (sc > c)
 				sc = c;
-			memcpy(&sstr[0], &sstr[s], sc);
+			memmove(&sstr[0], &sstr[s], sc);
 			scnt = sc;
 		}
 		else
@@ -115,6 +115,7 @@ gist::strtrim(int s, unsigned c)
 		if (s < (int)sc && c > 0)
 		{
 			str.dat += s;
+                        str.sz -= s;
 			sc -= s;
 			if (sc > c)
 				sc = c;
@@ -145,11 +146,13 @@ gist::strtrim(int s, unsigned c)
 
 /**********************************************************************/
 
+#if 0
 int
 atoi(const gist & g, int base)
 {
 	return g._toInt(true, base);
 }
+#endif // 0
 
 
 gist
@@ -233,20 +236,22 @@ isdigit(const gist & l)
 	int li = 0;
 	const char * lp = 0;
 
+	ll = l._strpiece(li, lp);
+	if (ll == 0)
+		return false;       // Empty string
+
 	for (;;)
 	{
-		if (ll == 0)
-			ll = l._strpiece(li, lp);
-
-		if (ll == 0)
-			return true;
-
 		while (ll-- > 0)
 		{
 			int c = *lp++;
 			if (c < '0' || c > '9')
 				return false;
 		}
+
+		ll = l._strpiece(li, lp);
+		if (ll == 0)
+			return true;
 	}
 }
 
@@ -275,7 +280,7 @@ gist::strncmp(const gist & r, int z) const
 	return ::strncmp(ll, rr, (unsigned)z);
 }
 
-
+#if 0
 int
 strncmp(const char * l, const gist & r, int z)
 {
@@ -284,6 +289,7 @@ strncmp(const char * l, const gist & r, int z)
 		z = r.len();
 	return ::strncmp(l, rr, (unsigned)z);
 }
+#endif // 0
 
 /**********************************************************************/
 
@@ -541,6 +547,8 @@ strstrip(const gist & g)
 {
 	if (!g.isStr())
 		throw gist::typeError("strstrip expects a string");
+	if (g.len() == 0)
+        	return g;
 
 	unsigned gl = 0;
 	int gi = 0;
@@ -558,7 +566,8 @@ strstrip(const gist & g)
 		{
 			gl--;
 			int c = *gp++;
-			if (c != ' ' && c != '\t' && c != '\n')
+			if (c != ' ' && c != '\t' && c != '\n' &&
+			    c != '\r' && c != '\f')
 				goto brk1;
 			front++;
 		}
@@ -586,7 +595,8 @@ strstrip(const gist & g)
 		{
 			gl--;
 			int c = gp[gl];
-			if (c != ' ' && c != '\t' && c != '\n')
+			if (c != ' ' && c != '\t' && c != '\n' &&
+			    c != '\r' && c != '\f')
 				goto brk2;
 			back++;
 		}

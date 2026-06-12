@@ -76,7 +76,7 @@ gist::match(gist & str, gist & result)
 	if (regexec(&gp->re, str.CCS(), nmatch, match, 0) != 0)
 		return false;
 
-	for (m = nmatch - 1; m >= 0; m++)
+	for (m = nmatch - 1; m >= 0; m--)
 		if (match[m].rm_so != -1)
 			break;
 	m++;
@@ -105,7 +105,7 @@ gist::match(const char * str, gist & result)
 	if (regexec(&gp->re, str, nmatch, match, 0) != 0)
 		return false;
 
-	for (m = nmatch - 1; m >= 0; m++)
+	for (m = nmatch - 1; m >= 0; m--)
 		if (match[m].rm_so != -1)
 			break;
 	m++;

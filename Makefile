@@ -12,10 +12,11 @@ OBJS =		gist.o gist-index.o gist-array.o gist-table.o gist-int.o \
 		sgml.o
 
 
+LFLAGS =
 CXXFLAGS =	-g -Wall
 ## CXXFLAGS =	-m32
 CXXFLAGS +=     -I/opt/local/include
-CXXFLAGS +=     -L/opt/local/lib
+LFLAGS +=       -L/opt/local/lib
 ## CXXFLAGS =	-g -O3 -Wall
 ## CXXFLAGS =	-O3 -Wall
 OPTIM =
@@ -28,7 +29,7 @@ all:		T libgist.a
 
 
 T:		T.o libgist.a
-	$(CXX) -o T $(CXXFLAGS) T.o libgist.a -lgc -ldl
+	$(CXX) -o T $(LFLAGS) T.o libgist.a -lgc -ldl
 
 
 libgist.a:	$(OBJS)

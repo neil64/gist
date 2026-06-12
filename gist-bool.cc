@@ -22,6 +22,7 @@ gist::operator bool() const
 	case GT_CODE:
 	case GT_LONG:
 	case GT_REAL:
+	case GT_REGEX:
 	default:
 		return false;
 

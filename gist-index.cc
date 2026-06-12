@@ -340,8 +340,8 @@ giIndexGist::operator new(size_t sz)
  *	such as arrays, tables and code.  It is assumed that the caller has
  *	taken care of those types.
  */
-static int
-cmpGist(const gist & l, const gist & r)
+int
+compareGist(const gist & l, const gist & r)
 {
 	if (l.typ == r.typ)
 	{
@@ -403,7 +403,7 @@ giIndexGist::search(const gist & key, bool make)
 
 	do
 	{
-		while ((p = pp[i]) && (x = cmpGist(p->key, key)) < 0)
+		while ((p = pp[i]) && (x = compareGist(p->key, key)) < 0)
 			pp = &p->fwd[0];
 		update[i] = pp;
 		if (x == 0)
@@ -515,7 +515,7 @@ giIndexGist::next(const gist & key)
 
 	do
 	{
-		while ((p = pp[i]) && (x = cmpGist(p->key, key)) < 0)
+		while ((p = pp[i]) && (x = compareGist(p->key, key)) < 0)
 			pp = &p->fwd[0];
 		if (x == 0)
 			return p->fwd[0];
@@ -540,7 +540,7 @@ giIndexGist::previous(const gist & key)
 
 	do
 	{
-		while ((p = pp[i]) && cmpGist(p->key, key))
+		while ((p = pp[i]) && compareGist(p->key, key))
 		{
 			px = p;
 			pp = &p->fwd[0];
@@ -568,7 +568,7 @@ giIndexGist::insert(const gist & key, const gist & data)
 
 	do
 	{
-		while ((p = pp[i]) && (x = cmpGist(p->key, key)) < 0)
+		while ((p = pp[i]) && (x = compareGist(p->key, key)) < 0)
 			pp = &p->fwd[0];
 		update[i] = pp;
 	} while (--i >= 0);
@@ -652,7 +652,7 @@ giIndexGist::remove(const gist & key)
 
 	do
 	{
-		while ((p = pp[i]) && (x = cmpGist(p->key, key)) < 0)
+		while ((p = pp[i]) && (x = compareGist(p->key, key)) < 0)
 			pp = &p->fwd[0];
 		update[i] = pp;
 	} while (--i >= 0);

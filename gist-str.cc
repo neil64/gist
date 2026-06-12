@@ -236,7 +236,7 @@ gist::set(const char * s)
 		str.cnt = l;
 		str.sz = l + 1;
 		str.dat = (char *)gistInternal::strAlloc(l+1);
-		memcpy(str.dat, s, l);
+		memmove(str.dat, s, l);
 		str.dat[l] = '\0';
 		typ = GT_MSTR;
 		unique = true;
@@ -293,7 +293,7 @@ gist::set(const char * s, int l)
 		str.cnt = l;
 		str.sz = l + 1;
 		str.dat = (char *)gistInternal::strAlloc(l+1);
-		memcpy(str.dat, s, l);
+		memmove(str.dat, s, l);
 		str.dat[l] = '\0';
 		typ = GT_MSTR;
 		unique = true;
@@ -305,7 +305,9 @@ gist::set(const char * s, int l)
 void
 gist::copy(const char * s, int l)
 {
-	if (l < 0)
+        if (!s)
+        	l = 0;
+        else if (l < 0)
 		l = ::strlen(s);
 
 	if ((unsigned)l <= sizeof sstr)
@@ -322,7 +324,7 @@ gist::copy(const char * s, int l)
 		str.cnt = l;
 		str.sz = l + 1;
 		str.dat = (char *)gistInternal::strAlloc(l+1);
-		memcpy(str.dat, s, l);
+		memmove(str.dat, s, l);
 		str.dat[l] = '\0';
 		typ = GT_MSTR;
 		unique = true;
@@ -353,12 +355,32 @@ gist::toString() const
 
 	case GT_INT:
 		{
-			char a[12];
+			char a[24];
 			char * ap = &a[sizeof a];
 			long n = val;
 			bool sign = n < 0;
 			if (sign)
+                        {
+                                /*
+                                 *  check for MAX_LONG and deal with it.
+                                 */
+                                if (n == (long)((unsigned long)1 <<
+                                		(sizeof (long) * 8 - 1)))
+                                {
+                                	const char * xp;
+                                	if (sizeof (long) == 4)
+                                        	xp = "-2147483648";
+                                	else if (sizeof (long) == 8)
+                                        	xp = "-9223372036854775808";
+                                        else
+                                        	throw valueError("toString");
+
+					gist r;
+					r.copy(xp, ::strlen(xp));
+					return r;
+                                }
 				n = -n;
+                        }
 
 			*--ap = '\0';
 			if (n == 0)
@@ -374,15 +396,14 @@ gist::toString() const
 				*--ap = '-';
 
 			gist r;
-			r.copy(ap, &a[sizeof a] - ap);
-
+			r.copy(ap, ::strlen(ap));
 			return r;
 		}
 
 	case GT_FLOAT:
 		{
 			int x;
-			char a[64];
+			char a[368];
 
 			double d = dval;
 			if (d < 0.0)
@@ -552,6 +573,13 @@ strcmp(const gist & l, const gist & r)
 
 /******************************/
 
+/*
+ *	Find the piece of string storage that contains the requested `ix'
+ *	indexed character.  On entry, `ix' is the index into the string (0
+ *	is the first character).  On exit, 'ix' contains the index of the
+ *	start of the next chunk, `pt' is a pointer to the first character of
+ *	the chunk, and the returned value is the length of the chunk.
+ */
 unsigned
 gist::_strpiece(int & ix, const char *& pt) const
 {
@@ -841,7 +869,7 @@ gist::strcat(const gist & r)
 			char * dp = (char *)gistInternal::strAlloc(xl);
 
 			memcpy(dp, &sstr[0], ll);
-			strcpy(dp + ll, *rp);
+			strcpy(dp + ll, *rp, 0, rl);
 
 			str.cnt = nl;
 			str.sz = xl;
@@ -858,7 +886,7 @@ gist::strcat(const gist & r)
 		else if (rp->typ == GT_MSTR)
 			memcpy(&sstr[ll], rp->str.dat, rl);
 		else
-			strcpy(&sstr[ll], *rp);
+			strcpy(&sstr[ll], *rp, 0, rl);
 
 		return;
 	}
@@ -887,7 +915,7 @@ gist::strcat(const gist & r)
 			{
 				if (rl <= str.sz - ll)
 				{
-					strcpy(&str.dat[ll], *rp);
+					strcpy(&str.dat[ll], *rp, 0, rl);
 					str.cnt = nl;
 					return;
 				}
@@ -901,7 +929,7 @@ gist::strcat(const gist & r)
 					if (rl <= ls->size - o)
 					{
 						strcpy(&ls->chunk->data[o],
-									*rp);
+								*rp, 0, rl);
 						ls->chunk->len += rl;
 						ls->index.max += rl;
 						str.cnt = nl;
@@ -928,8 +956,8 @@ gist::strcat(const gist & r)
 				xl += giStr::strChunk;
 
 			char * dp = (char *)gistInternal::strAlloc(xl);
-			strcpy(dp, *this);
-			strcpy(dp + ll, *rp);
+			strcpy(dp, *this, 0, ll);
+			strcpy(dp + ll, *rp, 0, rl);
 
 			str.cnt = nl;
 			str.sz = xl;
@@ -971,7 +999,7 @@ gist::strcat(const gist & r)
 	if (rp->typ == GT_SSTR)
 	{
 		char * dp = (char *)gistInternal::strAlloc(giStr::strChunk);
-		memcpy(dp, &rp->sstr[0], rl);
+		memmove(dp, &rp->sstr[0], rl);
 
 		cp = (giSChunk *)gistInternal::alloc(sizeof (giSChunk));
 		cp->data = dp;
@@ -1005,7 +1033,6 @@ gist::strcat(const gist & r)
 		 *	object as the left.
 		 */
 		int i = sp->index.max;
-		int m = i;
 		intKey * kp;
 		giStr * rs = rp->str.idx;
 
@@ -1015,7 +1042,7 @@ gist::strcat(const gist & r)
 		{
 			sp->index.insert(i, kp->chunk);
 			i += kp->schunk->len;
-			if (i >= m)
+			if (i >= nl)
 				break;
 		}
 
@@ -1033,7 +1060,7 @@ gist::strcat(const gist & r)
 void
 gist::strcat(int c)
 {
-	char a[2] = { c, '\0' };
+	char a[2] = { (char)c, '\0' };
 	gist cx(a);
 	strcat(cx);
 }
@@ -1054,12 +1081,13 @@ gist::strcat(const char * r, int count)
 void
 strcat(gist & g, int c)
 {
-	char a[2] = { c, '\0' };
+	char a[2] = { (char)c, '\0' };
 	gist cx(a);
 	g.strcat(cx);
 }
 
 
+#if 0
 void
 strcat(gist & g, const char * r, int count)
 {
@@ -1068,6 +1096,7 @@ strcat(gist & g, const char * r, int count)
 	gist rx(r, count);
 	g.strcat(rx);
 }
+#endif // 0
 
 
 void
@@ -1107,7 +1136,7 @@ strcpy(char * dest, const gist & src, unsigned start, unsigned count)
 		if (l > count)
 			l = count;
 
-		memcpy(dest, p, l);
+		memmove(dest, p, l);
 
 		dest += l;
 		c += l;

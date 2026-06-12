@@ -8,4 +8,6 @@
 /str.*
 /stub.C
 /.gdb_history
+/cscope.out
+/.DS_Store
 *.o

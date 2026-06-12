@@ -481,6 +481,8 @@ class gist
 	 *	  lines of internal gist code, or use macros.  So, the data
 	 *	  members of the gist class are not private.  User's, please
 	 *	  pretend that they are private. ]
+         *	[ The above rant dones't apply to the LLVM compiler, at least
+         *	  on MacOSx;  everything below is private. ]
 	 */
     private:
 	union
@@ -647,8 +649,8 @@ class gist
 	/*
 	 *	Some internal structures that we call friends.
 	 */
-	friend class giStr;
-	friend class giRegex;
+	friend struct giStr;
+	friend struct giRegex;
 
 	/**************************************************************/
 	/**************************************************************/
@@ -680,7 +682,8 @@ class gist
 	int		strncmp(const gist &, int = -1) const;
 	friend int	strncmp(const gist & l, const char * r, int z = -1)
 				{ return l.strncmp(r, z); }
-	friend int	strncmp(const char *, const gist &, int = -1);
+	friend int	strncmp(const char * l, const gist & r, int z = -1)
+        			{ return -r.strncmp(l, z); }
 	friend int	strncmp(const gist & l, const gist & r, int z = -1)
 				{ return l.strncmp(r, z); }
 
@@ -692,9 +695,9 @@ class gist
 
 	int		strncasecmp(const char *, int = -1) const;
 	int		strncasecmp(const gist &, int = -1) const;
-	friend int	strncasecmp(const gist &, const char *, int = -1);
-	friend int	strncasecmp(const char *, const gist &, int = -1);
-	friend int	strncasecmp(const gist &, const gist &, int = -1);
+	friend int	strncasecmp(const gist &, const char *, int);
+	friend int	strncasecmp(const char *, const gist &, int);
+	friend int	strncasecmp(const gist &, const gist &, int);
 
 	/********/
 	/*
@@ -760,16 +763,21 @@ class gist
 	 *		  will make the storage referred to by the return
 	 *		  pointer invalid.
 	 */
-	char *		strref(bool need0 = true);
-	friend char *	strref(const gist & src, bool need0 = true);
+	char *		strref(bool need0 = true) const;
+	friend char *	strref(const gist & src, bool need0 = true)
+        			{ return src.strref(need0); }
 
 	void		strcat(int);
 	void		strcat(const char *, int count = -1);
 	void		strcopycat(const char *, int count = -1);
 	void		strcat(const gist &);
 	friend void	strcat(gist &, int);
-	friend void	strcat(gist &, const char *, int count = -1);
-	friend void	strcopycat(gist &, const char *, int count = -1);
+	friend void	strcat(gist & g, const char * r, int count = -1)
+        			{ if (count == 0) return;
+                                  gist rx(r, count);
+                                  g.strcat(rx);
+                                }
+	friend void	strcopycat(gist &, const char *, int count);
 	friend void	strcat(gist &, const gist &);
 	friend void	strcat(char *, const gist &);
 	friend void	strncat(char *, const gist &, unsigned count);
@@ -780,7 +788,7 @@ class gist
 	void		strins(const gist &);
 
 	friend unsigned	strcpy(char * dest, const gist & src,
-				unsigned start = 0, unsigned count = (~0U>>1));
+			       unsigned start, unsigned count);
 	friend unsigned	strncpy(char * dest, const gist & src, unsigned count)
 				{ return strcpy(dest, src, 0, count); }
 
@@ -806,11 +814,12 @@ class gist
 	friend bool	isupper(const gist &);
 	friend bool	isspace(const gist &);
 
-	friend int	atoi(const gist &, int base = 0);
+	friend int	atoi(const gist & g, int base = 0)
+        			{ return g._toInt(true, base); }
 	friend gist	strlower(const gist &);
 	friend gist	strupper(const gist &);
 
-	friend gist	strsplit(const gist & str, const char * sep = 0);
+	friend gist	strsplit(const gist & str, const char * sep);
 	friend gist	strsplit(const gist & str, const gist & sep);
 
 	friend bool	strtrue(const gist &);
@@ -881,12 +890,19 @@ class gist
 	 */
 	char *		fmt(const char *, ...);
 
+        /*
+         *	Specialized.
+         */
+        friend int	compareGist(const gist & l, const gist & r);
+
 	/*
 	 *	Debugging.
 	 */
-	friend void	GistPrint(gist *);
-	friend void	GistPr1(gist *, int level = 0, int col = 0);
-	friend void	GistPr2(gist *, int level = 0, int col = 0);
+	friend void	GistPrint(gist *, void * fd, int level, int col);
+	friend void	GistPr1(gist * g, int level = 0, int col = 0)
+        			{ GistPrint(g, (void *)1, level, col); }
+	friend void	GistPr2(gist * g, int level = 0, int col = 0)
+        			{ GistPrint(g, (void *)2, level, col); }
 
 	/*
 	 *	A NIL gist, for convenience, such as when wanting to
@@ -899,6 +915,19 @@ class gist
 	 */
 	static gist	version;
 };
+
+/*
+ *	Friend function definitions.
+ */
+int		strncasecmp(const gist &, const char *, int = -1);
+int		strncasecmp(const char *, const gist &, int = -1);
+int		strncasecmp(const gist &, const gist &, int = -1);
+void		strcopycat(gist &, const char *, int count = -1);
+unsigned	strcpy(char * dest, const gist & src,
+		       unsigned start = 0, unsigned count = (~0U>>1));
+gist		strsplit(const gist & str, const char * sep = 0);
+void		GistPrint(gist *, void * fd = (void *)2,
+			  int level = 0, int col = 0);
 
 /**********************************************************************/
 /*

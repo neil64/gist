@@ -106,11 +106,17 @@ gist::operator !() const
 		break;
 
 	case GT_INT:
-		x.val = !x.val;
+		if (!x.val)
+                	x.val = 1;
+                else
+                	x.val = 0;
 		break;
 
 	case GT_FLOAT:
-		x.dval = !x.dval;
+		if (!x.dval)
+                	x = 1;
+                else
+                	x = 0;
 		break;
 	}
 

@@ -1,0 +1,188 @@
+GIST LIBRARY -- KNOWN BUGS
+==========================
+
+
+gist-op2.cc
+-----------
+
+1. OP1f macro truncates float operand when LHS is GT_INT.
+
+   In compound assignment operators (-=, *=, /=) for gist-vs-gist, the OP1f
+   macro dispatches on the type of `this`:
+
+       if (isInt())  { val op r.toInt();   return *this; }
+       if (isFloat()) { dval op r.toFloat(); return *this; }
+
+   When `this` is GT_INT and `r` is GT_FLOAT, `r.toInt()` is called, silently
+   truncating the float.  Example: `gist(5) -= gist(1.7)` yields 4, not 3.3.
+   The correct behaviour is to promote `this` to float (as OP2g already does
+   for literal-float operands).
+
+   Affected operators: -=  *=  /=
+
+
+gist-op3.cc  /  gist-op1.cc  /  gist-op2.cc
+--------------------------------------------
+
+2. long long / unsigned long long operators declared but never implemented.
+
+   gist.h declares friend operators for `long long` and `unsigned long long`
+   via the GIST_OPS1 macro family, but none of the gist-op*.cc files provide
+   definitions.  Linking any translation unit that uses these operators will
+   fail with undefined-reference errors.
+
+
+gist-op5.cc
+-----------
+
+3. operator! returns GT_NIL for a false integer instead of GT_INT(0).
+
+   In operator!(), when the operand is a non-zero GT_INT:
+
+       else x.clear();   // makes result GT_NIL
+
+   GT_NIL cannot be compared to an integer with operator==; the comparison
+   throws typeError.  Expected behaviour: a false boolean result should be
+   GT_INT(0), consistent with how a true result is GT_INT(1).
+
+   Same issue applies to GT_FLOAT: the false branch calls x.clear(), producing
+   GT_NIL instead of GT_INT(0).
+
+   Fix: replace `x.clear()` with `x = 0` in both the GT_INT and GT_FLOAT
+   cases of operator!().
+
+
+gist-str.cc
+-----------
+
+4. ::strcpy buffer overflow in MSTR unique-in-place append (around line 917).
+
+   When appending a small string to a unique GT_MSTR with exactly `rl` bytes
+   of free space:
+
+       if (rl <= str.sz - ll)
+           strcpy(&str.dat[ll], *rp);   // ::strcpy writes rl+1 bytes
+
+   ::strcpy (called via operator const char*()) writes `rl` data bytes plus a
+   null terminator.  The condition only guarantees room for `rl` bytes.  When
+   `rl == str.sz - ll`, the null is written to str.dat[str.sz], one byte past
+   the allocated buffer.
+
+   This is reachable after gist::set(s), which allocates strlen(s)+1 bytes and
+   sets str.sz = strlen(s)+1.  A subsequent strcat of a 1-character string
+   satisfies the condition with equality and overflows.
+
+   Fix: change the condition to `rl + 1 <= str.sz - ll` (i.e. strict `<`).
+
+5. ::strcpy buffer overflow in LSTR chunk append (around line 930).
+
+   Identical issue in the GT_LSTR unique-in-place path:
+
+       if (rl <= ls->size - o)
+           strcpy(&ls->chunk->data[o], *rp);   // writes rl+1 bytes
+
+   When `rl == ls->size - o`, the null terminator overflows the chunk
+   allocation.
+
+   Fix: change the condition to `rl + 1 <= ls->size - o`.
+
+
+gist-int.cc  (_toInt)
+---------------------
+
+6. Addition overflow not detected.
+
+   The digit accumulation loop checks for multiplication overflow but not
+   addition overflow:
+
+       unsigned long n1 = n * base;
+       if (n1 < n) goto overflow;   // catches multiplication wrap
+       n = n1 + c;                  // addition wrap NOT checked
+
+   If n1 + c wraps, n becomes a small value and the error goes undetected.
+
+   Fix: add `if (n < n1) goto overflow;` after `n = n1 + c`.
+
+7. Trailing character check is off by one.
+
+   After the digit loop, whitespace is skipped and remaining characters are
+   checked:
+
+       while (c == ' ' || c == '\t' || c == '\n')
+           c = *str++;          // reads *str then advances str
+       if (*str != '\0')
+           goto value;
+
+   When the loop body executes, it reads the character at `str` into `c` and
+   then increments `str`.  On exit, `c` holds the first non-whitespace
+   character but `str` is already one position past it.  The check `*str !=
+   '\0'` therefore tests the wrong position, silently accepting strings with a
+   single trailing non-whitespace character.
+
+   Example: _toInt(true, 10) on "42 x" returns 42 instead of throwing
+   valueError.
+
+   Fix: replace `if (*str != '\0')` with `if (c != '\0')`.
+
+8. Signed overflow bounds use 32-bit UINT_MAX instead of 64-bit ULONG_MAX.
+
+   The overflow check for signed conversion uses `~0U` (unsigned int, 32 bits
+   on all common platforms):
+
+       if (neg && n == (~0U>>1) + 1)   return n;
+       if (n > (~0U>>1))               goto overflow;
+
+   On a 64-bit system where `long` is 64 bits, `~0U >> 1` is 0x7FFFFFFF
+   (INT_MAX, not LONG_MAX).  Consequences:
+   - Any value above 2147483647 throws spurious overflowError.
+   - The LONG_MIN special case fires at 0x80000000 and returns it as a
+     positive long value, not the correct -2147483648 for 64-bit.
+
+   Fix: replace `~0U` with `~0UL` on both lines.
+
+9. No-digit input returns 0 instead of throwing.
+
+   The `seen` flag is set whenever a valid digit is parsed, but it is never
+   consulted before returning.  Inputs such as "", "   ", or "-" (for signed)
+   parse zero digits and silently return 0.
+
+   Fix: add `if (!seen) goto value;` before the signed/unsigned return logic.
+
+
+gist-regex.cc
+-------------
+
+10. str and result parameters may alias, corrupting the result.
+
+    In match(gist& str, gist& result), if the caller passes the same object
+    for both arguments, `result.array(m)` converts `str` to GT_ARRAY in place.
+    The subsequent `str.substr(...)` calls then operate on an array and throw
+    typeError with no diagnostic.
+
+11. regfree() is never called (acknowledged with #warning).
+
+    The compiled regex_t inside giRegex holds malloc'd memory that is outside
+    the Boehm GC heap.  Without a finalizer calling regfree(), this memory
+    leaks for the lifetime of the process.
+
+
+gist-bool.cc
+------------
+
+12. GT_REGEX type not handled in operator bool().
+
+    The switch falls through to `default: return false` for GT_REGEX objects.
+    A compiled regex is a valid, non-nil value and should arguably return true.
+
+
+gist-table.cc
+-------------
+
+13. Dead #else block references non-existent member `intern`.
+
+    The disabled alternative implementation of _tableindex uses:
+
+        giTable * tp = (giTable *)intern;
+
+    The correct member name is `tbl`.  If the #else branch is ever re-enabled
+    it will fail to compile.

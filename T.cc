@@ -6,6 +6,7 @@
 #include	<assert.h>
 #include	<stdlib.h>
 #include	<unistd.h>
+#include	<string.h>
 #include	<new>
 
 #include	"gist.h"
@@ -47,15 +48,15 @@ test_init()
 	printf("init2:\n");
 	gist * a = new gist;
 	gist * b = new gist;
-#if __x86_64__
-	printf("\tGC allocated a to 0x%16lx and b to 0x%16lx "
+#if __x86_64__ || __aarch64__
+	printf("\tGC allocated a to 0x%016zx and b to 0x%016zx "
 		"(%ld bytes difference)\n",
 		(size_t)a, (size_t)b, (char *)a - (char *)b);
-#else // __x86_64__
-	printf("\tGC allocated a to 0x%08x and b to 0x%08x "
+#else // __x86_64__ || __aarch64__
+	printf("\tGC allocated a to 0x%08zx and b to 0x%08zx "
 		"(%d bytes difference)\n",
 		(size_t)a, (size_t)b, (char *)a - (char *)b);
-#endif // __x86_64__
+#endif // __x86_64__ || __aarch64__
 }
 
 
@@ -142,11 +143,11 @@ test_int()
 
 	a = 0xf0e1a537;
 	b = ~a;
-	printf("\ta = %#x, ~a = %#x\n", (int)a, (int)b);
-	assert(b == 0x0f1e5ac8);
+	printf("\ta = %#lx, ~a = %#lx\n", (long)a, (long)b);
+	assert((b == 0x0f1e5ac8 || b == 0xffffffff0f1e5ac8));
 
 	b = !a;
-	printf("\ta = %#x, !a = %#x\n", (int)a, (int)b);
+	printf("\ta = %#lx, !a = %#lx\n", (long)a, (long)b);
 	assert(b == 0);
 
 	printf("int5:\n");
@@ -428,7 +429,8 @@ test_string()
 	for (i = 32; i < 126; i++)
 		s.strcat(i);
 	const char * cp = s.CCS();
-	printf("\tstrlen(s):  %d, %d, %d\n", s.strlen(), strlen(s), strlen(cp));
+	printf("\tstrlen(s):  %d, %d, %zd\n",
+                            s.strlen(), strlen(s), strlen(cp));
 	printf("\ts: %.64s\n\t   %.64s\n", cp, cp+64);
 	// printf("\ts: %.64s\n", s.CCS());
 	// printf("\ts: %.64s\n", s.CCS() + 64);
@@ -436,11 +438,12 @@ test_string()
 	s = "";
 	for (i = 32; i < 126; i += 2)
 	{
-		char a[3] = { i, i+1, 0 };
+		char a[3] = { (char)i, (char)(i+1), 0 };
 		strcat(s, a);
 	}
 	cp = s.CCS();
-	printf("\tstrlen(s):  %d, %d, %d\n", s.strlen(), strlen(s), strlen(cp));
+	printf("\tstrlen(s):  %d, %d, %zd\n",
+                            s.strlen(), strlen(s), strlen(cp));
 	printf("\ts: %.64s\n\t   %.64s\n", cp, cp+64);
 
 	printf("string4:\n");
@@ -603,13 +606,13 @@ test_misc()
 		char * hw1 = (char *)"Hello world";
 		static char hw2[] = "Hello world";
 
-#if __x86_64__
+#if __x86_64__ || __aarch64__
 		printf("\t&hw1 = %lx, &hw2 = %lx\n",
 					(size_t)hw1, (size_t)hw2);
-#else // __x86_64__
+#else // __x86_64__ || __aarch64__
 		printf("\t&hw1 = %x, &hw2 = %x\n",
 					(unsigned)hw1, (unsigned)hw2);
-#endif // __x86_64__
+#endif // __x86_64__ || __aarch64__
 	}
 }
 

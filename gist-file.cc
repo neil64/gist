@@ -115,10 +115,12 @@ gist::file(const char * fn, const char * mode)
 	 */
 	int fd = ::open(fn, md);
 	if (fd == -1)
+        {
 		if (errno == ENOENT)
 			throw noSuchFileError("file not found");
 		else
 			throw ioError("can't open");
+	}
 
 	/*
 	 *	All is well.  Tidy up.

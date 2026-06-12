@@ -11,9 +11,9 @@
  *	Indexing.
  */
 
-class giChunk;				// Forward references
-class giSChunk;
-class giAChunk;
+struct giChunk;				// Forward references
+struct giSChunk;
+struct giAChunk;
 
 
 /*
@@ -286,6 +286,7 @@ struct gistInternal
  */
 struct giStr : gistInternal
 {
+    public:
 	giIndexInt	index;
 	giSChunk *	chunk;
 	unsigned	size;
@@ -388,7 +389,6 @@ struct giAChunk : giChunk
 	};
 	gist		g[items];
 };
-
 
 /**********************************************************************/
 
