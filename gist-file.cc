@@ -25,7 +25,7 @@ gist::file(const char * fn, const char * mode)
 	/*
 	 *	Make sure the object is a file object.
 	 */
-	if (typ != GT_PTR)
+	if (typ != GT_PTR)          //  XXX - should be GT_FILE?
 	{
 		typ = GT_FILE;
 		fp = new giFile;
@@ -39,7 +39,8 @@ gist::file(const char * fn, const char * mode)
 	 *	Close the file if it is currently open.
 	 */
 	if (fp->open)
-		close();
+		close();        // XXX - calls member function to close, 
+                                //       which is not implemented yet
 
 	/*
 	 *	If there is no new file name, we are done.  We are supposed
@@ -157,6 +158,14 @@ void
 gist::close()
 {
 	throw notYetError("close");
+            // XXX - This is really needed if files are to be production ready.
+            //       This is probably not done yet becasue we need to create
+            //       a finalizer for the GC to call us if a File object is
+            //       abandoned.  For this to work with the Boehm GC, care
+            //       needs to be taken.  For the documentation -- "Files
+            //       should be explicitly closed when no longer needed, as
+            //       the Garbage Collector takes an undefinited amount of
+            //       time to find and remove abandoned objects."
 }
 
 
@@ -218,3 +227,6 @@ gist::read(unsigned amount)
 
 	return r;
 }
+
+
+//  XXX -   gist:write() needs to be implemented.  (And others?)
